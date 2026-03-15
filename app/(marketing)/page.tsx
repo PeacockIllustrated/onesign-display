@@ -35,14 +35,14 @@ export default function MarketingHome() {
                         Menus that update themselves.
                     </h2>
                     <p className="text-xl text-neutral-400 leading-relaxed">
-                        Tired of USB sticks, print runs, and outdated boards? Onesign streams your menu content directly to your screens—live, scheduled, or on-demand. Your breakfast menu at 6am, lunch at 11am, dinner at 5pm. Automatically.
+                        Tired of USB sticks, print runs, and outdated boards? Onesign Display streams your menu content directly to your screens—live, scheduled, or on-demand. Your breakfast menu at 6am, lunch at 11am, dinner at 5pm. Automatically.
                     </p>
                 </div>
             </SectionWrapper>
 
             <SectionWrapper>
                 <div className="mb-20">
-                    <h2 className="text-3xl font-bold mb-4">How Onesign works</h2>
+                    <h2 className="text-3xl font-bold mb-4">How Onesign Display works</h2>
                     <p className="text-neutral-500 max-w-xl">From kitchen to screen in four simple steps.</p>
                 </div>
                 <NumberedSteps

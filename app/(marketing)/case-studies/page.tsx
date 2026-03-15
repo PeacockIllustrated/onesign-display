@@ -7,7 +7,7 @@ export default function CaseStudiesPage() {
         <>
             <MarketingHero
                 headline="Proven at Scale"
-                subhead="See how leading brands use Onesign to protect their image and streamline operations."
+                subhead="See how leading brands use Onesign Display to protect their image and streamline operations."
             />
 
             <SectionWrapper>

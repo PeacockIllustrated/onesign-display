@@ -35,13 +35,13 @@ export default function UserGuidePage() {
                 </div>
                 <div className="prose prose-zinc max-w-none text-zinc-600">
                     <p>
-                        Understanding the Onesign hierarchy is key to managing your network effectively:
+                        Understanding the Onesign Display hierarchy is key to managing your network effectively:
                     </p>
                     <ul className="list-disc pl-5 space-y-2 mt-2">
                         <li><strong>Clients:</strong> The top-level tenants using the system. Each client has its own media, stores, and screens.</li>
                         <li><strong>Stores:</strong> Physical locations (e.g., "Downtown Branch"). All screens belong to a store. Timezones are set at the store level.</li>
                         <li><strong>Screen Sets:</strong> Logical groups of screens within a store (e.g., "Menu Boards", "Window Displays"). This helps organize devices.</li>
-                        <li><strong>Screens:</strong> The actual physical displays running the Onesign Player.</li>
+                        <li><strong>Screens:</strong> The actual physical displays running the Onesign Display Player.</li>
                     </ul>
                 </div>
             </section>

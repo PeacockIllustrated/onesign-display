@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: 'Digital Menu Board Pricing — Onesign Display',
-    description: 'Simple monthly pricing. Every plan includes scheduling, unlimited updates, and Onesign design included.',
+    description: 'Simple monthly pricing. Every plan includes scheduling, unlimited updates, and Onesign Display design included.',
 };
 
 export default function PricingPage() {
@@ -119,7 +119,7 @@ export default function PricingPage() {
                             </li>
                         </ul>
                         <p className="mt-8 text-sm text-neutral-500 italic">
-                            "Design remains intentional. Onesign enforces it."
+                            "Design remains intentional. Onesign Display enforces it."
                         </p>
                     </div>
                 </div>

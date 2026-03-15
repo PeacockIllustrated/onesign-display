@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: 'Menu Templates — Onesign Display',
-    description: 'Pre-built digital menu layouts designed by the Onesign team.',
+    description: 'Pre-built digital menu layouts designed by the Onesign Display team.',
 };
 
 export default function TemplatesPage() {

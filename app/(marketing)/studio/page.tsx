@@ -23,7 +23,7 @@ export default function StudioPage() {
                     <div>
                         <h2 className="text-3xl font-bold mb-6">Today's special?<br />Done in 30 seconds.</h2>
                         <p className="text-neutral-500 mb-6">
-                            Enter your dish name, price, and optional photo. Onesign handles the layout, typography, and styling automatically. Every special looks professional—every time.
+                            Enter your dish name, price, and optional photo. Onesign Display handles the layout, typography, and styling automatically. Every special looks professional—every time.
                         </p>
                         <ul className="space-y-4">
                             {[
@@ -51,7 +51,7 @@ export default function StudioPage() {
 
             <SectionWrapper className="bg-neutral-50">
                 <div className="text-center max-w-2xl mx-auto">
-                    <h2 className="text-3xl font-bold mb-4">Your team focuses on food. Onesign handles the design.</h2>
+                    <h2 className="text-3xl font-bold mb-4">Your team focuses on food. Onesign Display handles the design.</h2>
                     <p className="text-neutral-500">
                         By removing design tools from the equation, we eliminate user error. Your staff enters the daily specials—the system makes them look amazing.
                     </p>

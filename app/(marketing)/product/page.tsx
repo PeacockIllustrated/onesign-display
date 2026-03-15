@@ -15,7 +15,7 @@ export default function ProductPage() {
         <>
             <MarketingHero
                 headline="Menu boards that run themselves."
-                subhead="From breakfast to late-night, Onesign automatically streams the right menu to the right screen at the right time."
+                subhead="From breakfast to late-night, Onesign Display automatically streams the right menu to the right screen at the right time."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
             />
 
@@ -27,7 +27,7 @@ export default function ProductPage() {
                             USB sticks. Outdated specials. Staff who don't know how to "use the TV." Sound familiar?
                         </p>
                         <p className="text-neutral-500 leading-relaxed">
-                            Onesign eliminates the friction between your kitchen and your screens. Change a price, update a special, schedule your dayparts—all from one dashboard, synced to every screen in seconds.
+                            Onesign Display eliminates the friction between your kitchen and your screens. Change a price, update a special, schedule your dayparts—all from one dashboard, synced to every screen in seconds.
                         </p>
                     </div>
                     <div className="bg-neutral-50 p-8 rounded-2xl border border-neutral-200">
