@@ -11,19 +11,19 @@ export default async function SchedulesPage({ searchParams }: { searchParams: Pr
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/auth/login')
 
-    const { data: role } = await supabase.from('profiles').select('client_id, role').eq('id', user.id).single()
+    const { data: role } = await supabase.from('display_profiles').select('client_id, role').eq('id', user.id).single()
 
     let activeClientId = role?.client_id
     let availableClients: { id: string, name: string }[] = []
 
     if (role?.role === 'super_admin') {
-        const { data: clients } = await supabase.from('clients').select('id, name').order('name')
+        const { data: clients } = await supabase.from('display_clients').select('id, name').order('name')
         availableClients = clients || []
         activeClientId = searchClientId || availableClients[0]?.id
     }
 
     // Fetch Stores for dropdown (Filtered by Active Client)
-    let storeQuery = supabase.from('stores').select('id, name').order('name')
+    let storeQuery = supabase.from('display_stores').select('id, name').order('name')
     if (activeClientId) {
         storeQuery = storeQuery.eq('client_id', activeClientId)
     }
@@ -32,10 +32,10 @@ export default async function SchedulesPage({ searchParams }: { searchParams: Pr
     // Fetch Schedules (Filtered by Active Client via Store)
     // Note: Using !inner on join to filter by relation field
     let schedulesQuery = supabase
-        .from('schedules')
+        .from('display_schedules')
         .select(`
             *,
-            store:stores!inner(name, client_id)
+            store:display_stores!inner(name, client_id)
         `)
         .order('created_at', { ascending: false })
         .limit(20)

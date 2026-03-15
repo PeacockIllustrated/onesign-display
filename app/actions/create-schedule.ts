@@ -23,7 +23,7 @@ export async function createSchedule(storeId: string, formData: FormData) {
     // RLS handles permission checks, but good to be explicit if needed.
     // We trust RLS "Manage schedules": check if store belongs to user's client.
 
-    const { data, error } = await supabase.from('schedules').insert({
+    const { data, error } = await supabase.from('display_schedules').insert({
         store_id: storeId,
         name,
         start_time: startTime,

@@ -21,7 +21,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
     // Check if super admin
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('display_profiles')
         .select('role')
         .eq('id', user.id)
         .single()
@@ -32,7 +32,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
 
     // Fetch prospect
     const { data: prospect } = await supabase
-        .from('prospects')
+        .from('display_prospects')
         .select('*')
         .eq('id', id)
         .single()

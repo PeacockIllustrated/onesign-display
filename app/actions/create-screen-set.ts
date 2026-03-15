@@ -13,10 +13,10 @@ export async function createScreenSet(storeId: string, name: string) {
     // Check if user has access to this store (via client_id)
     // We can do a join or optimized query.
     // For now, simpler: get store's client_id, then check user's role/client_id
-    const { data: store } = await supabase.from('stores').select('client_id').eq('id', storeId).single()
+    const { data: store } = await supabase.from('display_stores').select('client_id').eq('id', storeId).single()
     if (!store) return { error: 'Store not found' }
 
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
     const isSuperAdmin = profile?.role === 'super_admin'
     const isClientAdmin = profile?.role === 'client_admin' && profile.client_id === store.client_id
 
@@ -24,7 +24,7 @@ export async function createScreenSet(storeId: string, name: string) {
         return { error: 'Unauthorized: Insufficient permissions' }
     }
 
-    const { data, error } = await supabase.from('screen_sets')
+    const { data, error } = await supabase.from('display_screen_sets')
         .insert({
             store_id: storeId,
             name: name

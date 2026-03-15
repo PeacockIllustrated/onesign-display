@@ -14,8 +14,8 @@ export async function GET(request: NextRequest) {
 
     // 1. Find Screen by Token
     const { data: screen } = await supabase
-        .from('screens')
-        .select('id, store_id, refresh_version, store:stores(client_id)')
+        .from('display_screens')
+        .select('id, store_id, refresh_version, store:display_stores(client_id)')
         .eq('player_token', token)
         .single() // @ts-ignore
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // 2. Fetch Plan & Status
     // @ts-ignore
     const clientId = screen.store?.client_id
-    const { data: planRaw } = await supabase.from('client_plans').select('*').eq('client_id', clientId).single()
+    const { data: planRaw } = await supabase.from('display_client_plans').select('*').eq('client_id', clientId).single()
 
     const plan = planRaw || {
         status: 'active',
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
 
     // 3. Resolve Content (Server-Side Logic)
     const { data: mediaId } = await supabase
-        .rpc('resolve_screen_media', {
+        .rpc('display_resolve_screen_media', {
             p_screen_id: screen.id,
             p_now: new Date().toISOString()
         })
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     if (mediaId) {
         const { data: media } = await supabase
-            .from('media_assets')
+            .from('display_media_assets')
             .select('storage_path, mime')
             .eq('id', mediaId)
             .single()
@@ -96,9 +96,9 @@ export async function GET(request: NextRequest) {
 
     // Fetch relevant schedules for this screen
     const { data: scheds } = await supabase
-        .from('scheduled_screen_content')
+        .from('display_scheduled_screen_content')
         .select(`
-            schedule:schedules (
+            schedule:display_schedules (
                 start_time,
                 end_time,
                 days_of_week

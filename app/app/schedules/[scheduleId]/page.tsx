@@ -8,17 +8,17 @@ export default async function ScheduleDetailPage({ params }: { params: Promise<{
     const { scheduleId } = await params
     const supabase = await createClient()
 
-    const { data: schedule } = await supabase.from('schedules').select('*, store:stores(id, name, client_id)').eq('id', scheduleId).single()
+    const { data: schedule } = await supabase.from('display_schedules').select('*, store:display_stores(id, name, client_id)').eq('id', scheduleId).single()
     if (!schedule) return notFound()
 
     // Fetch Screens in this store
-    const { data: screens } = await supabase.from('screens').select('id, name').eq('store_id', schedule.store_id).order('name')
+    const { data: screens } = await supabase.from('display_screens').select('id, name').eq('store_id', schedule.store_id).order('name')
 
     // Fetch Media in this client
-    const { data: media } = await supabase.from('media_assets').select('*').eq('client_id', schedule.store.client_id)
+    const { data: media } = await supabase.from('display_media_assets').select('*').eq('client_id', schedule.store.client_id)
 
     // Fetch existing assignments
-    const { data: assignments } = await supabase.from('scheduled_screen_content').select('*').eq('schedule_id', scheduleId)
+    const { data: assignments } = await supabase.from('display_scheduled_screen_content').select('*').eq('schedule_id', scheduleId)
 
     return (
         <div className="space-y-6 max-w-6xl mx-auto">

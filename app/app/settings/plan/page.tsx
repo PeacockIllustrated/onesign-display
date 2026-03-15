@@ -7,7 +7,7 @@ export default async function SettingsPlanPage() {
 
     if (!user) return redirect('/auth/login');
 
-    const { data: profile } = await supabase.from('profiles').select('client_id').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('display_profiles').select('client_id').eq('id', user.id).single();
 
     if (!profile?.client_id) {
         return <div className="p-8">No client associated with this account.</div>;

@@ -19,7 +19,7 @@ export async function createUserForClient(clientId: string, email: string, name:
     const { data: { user: requestor } } = await supabase.auth.getUser()
     if (!requestor) return { error: 'Unauthorized' }
 
-    const { data: requestorProfile } = await supabase.from('profiles').select('role').eq('id', requestor.id).single()
+    const { data: requestorProfile } = await supabase.from('display_profiles').select('role').eq('id', requestor.id).single()
     if (requestorProfile?.role !== 'super_admin') {
         return { error: 'Unauthorized: Super Admin only' }
     }
@@ -54,7 +54,7 @@ export async function createUserForClient(clientId: string, email: string, name:
     // Schema has `create table profiles`. No triggers mentioned in the snippet I read.
     // So we manually insert the profile.
 
-    const { error: profileError } = await adminClient.from('profiles').insert({
+    const { error: profileError } = await adminClient.from('display_profiles').insert({
         id: newUser.user.id,
         role,
         client_id: role === 'super_admin' ? null : clientId, // Super admins generally don't have a client_id

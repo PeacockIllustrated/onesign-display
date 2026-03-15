@@ -9,7 +9,7 @@ export default async function ClientsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) redirect('/auth/login')
 
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role').eq('id', user.id).single()
 
     if (profile?.role !== 'super_admin') {
         return (
@@ -19,7 +19,7 @@ export default async function ClientsPage() {
         )
     }
 
-    const { data: clients } = await supabase.from('clients').select('*, stores(count)').order('created_at', { ascending: false })
+    const { data: clients } = await supabase.from('display_clients').select('*, display_stores(count)').order('created_at', { ascending: false })
 
     return (
         <div className="space-y-6">
@@ -38,7 +38,7 @@ export default async function ClientsPage() {
                         <p className="text-sm text-gray-500 mt-1">{client.slug}</p>
                         <div className="mt-4 flex items-center text-sm text-gray-500">
                             <span className="bg-gray-100 text-gray-600 py-1 px-2 rounded-full text-xs">
-                                {client.stores?.[0]?.count ?? 0} Stores
+                                {client.display_stores?.[0]?.count ?? 0} Stores
                             </span>
                         </div>
                     </Link>

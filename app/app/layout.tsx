@@ -17,7 +17,7 @@ export default async function AppLayout({
 
     // Fetch profile for role and client_id
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('display_profiles')
         .select('role, client_id')
         .eq('id', user.id)
         .single()
@@ -27,7 +27,7 @@ export default async function AppLayout({
 
     if (profile?.client_id) {
         const { data: client } = await supabase
-            .from('clients')
+            .from('display_clients')
             .select('name')
             .eq('id', profile.client_id)
             .single()

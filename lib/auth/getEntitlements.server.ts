@@ -33,7 +33,7 @@ export async function getEntitlements(overrideClientId?: string): Promise<Entitl
     } else {
         // Get user profile to find client_id
         const { data: profile, error: profileError } = await supabase
-            .from('profiles')
+            .from('display_profiles')
             .select('client_id, role')
             .eq('id', user.id)
             .single();
@@ -57,7 +57,7 @@ export async function getEntitlements(overrideClientId?: string): Promise<Entitl
     }
 
     const { data: plan, error: planError } = await supabase
-        .from('client_plans')
+        .from('display_client_plans')
         .select('*')
         .eq('client_id', targetClientId)
         .single();

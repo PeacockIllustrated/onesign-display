@@ -12,13 +12,13 @@ export default async function NewSpecialPage({ searchParams }: { searchParams: P
     }
 
     // Fetch Profile Role
-    const { data: profile } = await supabase.from('profiles').select('client_id, role').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('display_profiles').select('client_id, role').eq('id', user.id).single();
 
     let clients: { id: string, name: string }[] = [];
     let userClientId: string | undefined = undefined;
 
     if (profile?.role === 'super_admin') {
-        const { data: fetchedClients } = await supabase.from('clients').select('id, name').order('name');
+        const { data: fetchedClients } = await supabase.from('display_clients').select('id, name').order('name');
         clients = fetchedClients || [];
     } else {
         userClientId = profile?.client_id;
@@ -30,7 +30,7 @@ export default async function NewSpecialPage({ searchParams }: { searchParams: P
     let customTemplates: any[] = [];
     if (activeClientId) {
         // Feature Gate Check
-        const { data: plan } = await supabase.from('client_plans')
+        const { data: plan } = await supabase.from('display_client_plans')
             .select('specials_studio_enabled, design_package_included, managed_design_support')
             .eq('client_id', activeClientId)
             .single();

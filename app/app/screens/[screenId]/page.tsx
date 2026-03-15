@@ -11,17 +11,17 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
 
     // 1. Fetch User Role
     const { data: { user } } = await supabase.auth.getUser()
-    const { data: role } = user ? await supabase.from('profiles').select('role').eq('id', user.id).single() : { data: null }
+    const { data: role } = user ? await supabase.from('display_profiles').select('role').eq('id', user.id).single() : { data: null }
 
     // Fetch Screen
     const { data: screen } = await supabase
-        .from('screens')
+        .from('display_screens')
         .select(`
         *,
-        store:stores(id, name),
-        screen_content(
+        store:display_stores(id, name),
+        display_screen_content(
             *,
-            media_asset:media_assets(*)
+            media_asset:display_media_assets(*)
         )
     `)
         .eq('id', screenId)
@@ -30,20 +30,20 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
     if (!screen) return notFound()
 
     // Get active media
-    const activeContent = Array.isArray(screen.screen_content)
-        ? screen.screen_content.find((sc: any) => sc.active)
-        : (screen.screen_content as any)?.active ? screen.screen_content : null
+    const activeContent = Array.isArray(screen.display_screen_content)
+        ? screen.display_screen_content.find((sc: any) => sc.active)
+        : (screen.display_screen_content as any)?.active ? screen.display_screen_content : null
 
     const activeMedia = activeContent?.media_asset
 
     // Fetch available media for this client
     // Get client_id via store relation
-    const { data: store } = await supabase.from('stores').select('client_id').eq('id', screen.store_id).single()
+    const { data: store } = await supabase.from('display_stores').select('client_id').eq('id', screen.store_id).single()
     const clientId = store?.client_id
 
     // Explicitly type or cast if needed, but select usually infers enough
     const { data: mediaAssets } = await supabase
-        .from('media_assets')
+        .from('display_media_assets')
         .select('id, filename, storage_path')
         .eq('client_id', clientId) // Filter by client
         .order('created_at', { ascending: false })

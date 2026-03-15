@@ -12,7 +12,7 @@ export async function assignToSchedule(scheduleId: string, screenId: string, med
 
     // First, find if exists
     const { data: existing } = await supabase
-        .from('scheduled_screen_content')
+        .from('display_scheduled_screen_content')
         .select('id')
         .eq('schedule_id', scheduleId)
         .eq('screen_id', screenId)
@@ -21,13 +21,13 @@ export async function assignToSchedule(scheduleId: string, screenId: string, med
     if (existing) {
         // Update
         await supabase
-            .from('scheduled_screen_content')
+            .from('display_scheduled_screen_content')
             .update({ media_asset_id: mediaId })
             .eq('id', existing.id)
     } else {
         // Insert
         await supabase
-            .from('scheduled_screen_content')
+            .from('display_scheduled_screen_content')
             .insert({
                 schedule_id: scheduleId,
                 screen_id: screenId,
@@ -40,6 +40,6 @@ export async function assignToSchedule(scheduleId: string, screenId: string, med
 
 export async function removeFromSchedule(assignmentId: string, scheduleId: string) {
     const supabase = await createClient()
-    await supabase.from('scheduled_screen_content').delete().eq('id', assignmentId)
+    await supabase.from('display_scheduled_screen_content').delete().eq('id', assignmentId)
     revalidatePath(`/app/schedules/${scheduleId}`)
 }

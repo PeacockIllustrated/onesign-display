@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
 
         // Insert prospect into database
         const { data, error } = await supabase
-            .from('prospects')
+            .from('display_prospects')
             .insert({
                 name,
                 email,

@@ -8,13 +8,13 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ st
     const supabase = await createClient()
 
     // Fetch Store
-    const { data: store } = await supabase.from('stores').select('*').eq('id', storeId).single()
+    const { data: store } = await supabase.from('display_stores').select('*').eq('id', storeId).single()
     if (!store) return notFound()
 
     // Fetch Screen Sets
     const { data: screenSets } = await supabase
-        .from('screen_sets')
-        .select('*, screens(count)')
+        .from('display_screen_sets')
+        .select('*, display_screens(count)')
         .eq('store_id', storeId)
         .order('name')
 
@@ -37,7 +37,7 @@ export default async function StoreDetailPage({ params }: { params: Promise<{ st
                             <div className="p-6">
                                 <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900">{set.name}</h3>
                                 <div className="mt-2 text-sm text-zinc-500">
-                                    {set.screens?.[0]?.count ?? 0} Screens
+                                    {set.display_screens?.[0]?.count ?? 0} Screens
                                 </div>
                             </div>
                             <div className="bg-zinc-50 px-6 py-3 border-t border-zinc-100 flex items-center justify-between">

@@ -19,7 +19,7 @@ export default async function ProspectsPage() {
 
     // Check if super admin
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('display_profiles')
         .select('role')
         .eq('id', user.id)
         .single()
@@ -30,7 +30,7 @@ export default async function ProspectsPage() {
 
     // Fetch prospects
     const { data: prospects } = await supabase
-        .from('prospects')
+        .from('display_prospects')
         .select('*')
         .order('created_at', { ascending: false })
 

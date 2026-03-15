@@ -24,14 +24,14 @@ export async function addScreen(formData: FormData) {
     }
 
     // 3. Fetch Context & Check Permissions
-    const { data: screenSet } = await supabase.from('screen_sets')
+    const { data: screenSet } = await supabase.from('display_screen_sets')
         .select('*, store:stores(client_id)')
         .eq('id', screenSetId)
         .single()
 
     if (!screenSet) throw new Error('Screen Set not found')
 
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
 
     // @ts-ignore - Supabase types might not infer the join perfectly
     const storeClientId = screenSet.store?.client_id
@@ -84,7 +84,7 @@ export async function addScreen(formData: FormData) {
         // Optional: Enforce for Super Admin too? "Manageable" implies they change the plan. 
         // If they try to add a screen to a capped client, they should probably see the error or bump the plan first.
         // Let's fetch plan for target client.
-        const { data: plan } = await supabase.from('client_plans').select('*').eq('client_id', targetClientId).single();
+        const { data: plan } = await supabase.from('display_client_plans').select('*').eq('client_id', targetClientId).single();
         if (plan) { // If no plan, assume safe default or skip
             // Use the PLAN_DEFS helper if needed or just cast
             const { PLAN_DEFS } = await import('@/lib/slate/plans'); // dynamic import to avoid circular if any/cleanup
@@ -107,7 +107,7 @@ export async function addScreen(formData: FormData) {
     // 5. Insert Screen
     const token = `token-${Math.random().toString(36).substring(2, 10)}`
 
-    const { error } = await supabase.from('screens').insert({
+    const { error } = await supabase.from('display_screens').insert({
         screen_set_id: screenSetId,
         store_id: screenSet.store_id,
         name,
@@ -133,7 +133,7 @@ export async function updateScreen(screenId: string, formData: FormData) {
     if (!user) throw new Error('Unauthorized')
 
     // 2. Fetch Screen & Context
-    const { data: screen } = await supabase.from('screens')
+    const { data: screen } = await supabase.from('display_screens')
         .select('*, store:stores(client_id)')
         .eq('id', screenId)
         .single()
@@ -141,7 +141,7 @@ export async function updateScreen(screenId: string, formData: FormData) {
     if (!screen) throw new Error('Screen not found')
 
     // 3. Check Permissions
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
 
     // @ts-ignore
     const storeClientId = screen.store?.client_id
@@ -157,7 +157,7 @@ export async function updateScreen(screenId: string, formData: FormData) {
     const orientation = formData.get('orientation') as string
     const displayType = formData.get('display_type') as string
 
-    const { error } = await supabase.from('screens').update({
+    const { error } = await supabase.from('display_screens').update({
         name,
         orientation,
         display_type: displayType
@@ -179,7 +179,7 @@ export async function deleteScreen(screenId: string, screenSetId: string) {
     if (!user) throw new Error('Unauthorized')
 
     // 2. Fetch Screen & Context
-    const { data: screen } = await supabase.from('screens')
+    const { data: screen } = await supabase.from('display_screens')
         .select('*, store:stores(client_id)')
         .eq('id', screenId)
         .single()
@@ -187,7 +187,7 @@ export async function deleteScreen(screenId: string, screenSetId: string) {
     if (!screen) throw new Error('Screen not found')
 
     // 3. Check Permissions
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
 
     // @ts-ignore
     const storeClientId = screen.store?.client_id
@@ -199,7 +199,7 @@ export async function deleteScreen(screenId: string, screenSetId: string) {
     }
 
     // 4. Delete
-    const { error } = await supabase.from('screens').delete().eq('id', screenId)
+    const { error } = await supabase.from('display_screens').delete().eq('id', screenId)
 
     if (error) {
         console.error('Failed to delete screen:', error)

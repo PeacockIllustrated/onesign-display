@@ -14,7 +14,7 @@ export default async function ClientPlanPage({ params }: { params: Promise<{ cli
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return <div>Please login</div>;
 
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single();
     if (!profile) return <div>Unauthorized</div>;
 
     const isSuperAdmin = profile.role === 'super_admin';
@@ -25,7 +25,7 @@ export default async function ClientPlanPage({ params }: { params: Promise<{ cli
     }
 
     // Fetch Plan
-    const { data: plan } = await supabase.from('client_plans').select('*').eq('client_id', clientId).single();
+    const { data: plan } = await supabase.from('display_client_plans').select('*').eq('client_id', clientId).single();
 
     // Default
     const effectivePlan = plan || {

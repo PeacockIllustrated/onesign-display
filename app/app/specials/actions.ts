@@ -8,7 +8,7 @@ import { SpecialsProject } from '@/components/specials/types';
 export async function getSpecialsProjects(clientId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('specials_projects')
+        .from('display_specials_projects')
         .select('*')
         .eq('client_id', clientId)
         .order('updated_at', { ascending: false });
@@ -24,7 +24,7 @@ export async function getSpecialsProjects(clientId: string) {
 export async function getSpecialsProject(id: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('specials_projects')
+        .from('display_specials_projects')
         .select('*')
         .eq('id', id)
         .single();
@@ -39,7 +39,7 @@ export async function getSpecialsProject(id: string) {
 export async function createSpecialsProject(clientId: string, name: string, preset: string, designJson: any) {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('specials_projects')
+        .from('display_specials_projects')
         .insert({
             client_id: clientId,
             name,
@@ -62,7 +62,7 @@ export async function createSpecialsProject(clientId: string, name: string, pres
 export async function updateSpecialsProject(id: string, updates: { name?: string, design_json?: any, thumbnail_url?: string }) {
     const supabase = await createClient();
     const { error } = await supabase
-        .from('specials_projects')
+        .from('display_specials_projects')
         .update({
             ...updates,
             updated_at: new Date().toISOString()
@@ -79,7 +79,7 @@ export async function updateSpecialsProject(id: string, updates: { name?: string
 export async function deleteSpecialsProject(id: string) {
     const supabase = await createClient();
     const { error } = await supabase
-        .from('specials_projects')
+        .from('display_specials_projects')
         .delete()
         .eq('id', id);
 
@@ -116,7 +116,7 @@ export async function publishSpecialThumbnail(formData: FormData) {
 
     // Insert into Media Assets (Admin)
     const { data, error: dbError } = await supabase
-        .from('media_assets')
+        .from('display_media_assets')
         .insert({
             client_id: clientId,
             filename: filename,
@@ -140,7 +140,7 @@ export async function publishSpecialThumbnail(formData: FormData) {
 export async function getTemplates(clientId: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('specials_templates')
+        .from('display_specials_templates')
         .select('*')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false });
@@ -155,7 +155,7 @@ export async function getTemplates(clientId: string) {
 export async function createTemplate(clientId: string, name: string, preset: string, designJson: any, thumbnailUrl?: string) {
     const supabase = await createClient();
     const { data, error } = await supabase
-        .from('specials_templates')
+        .from('display_specials_templates')
         .insert({
             client_id: clientId,
             name,

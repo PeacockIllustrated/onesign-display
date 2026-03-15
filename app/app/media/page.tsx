@@ -12,7 +12,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
     if (!user) return null
 
     // Fetch Role
-    const { data: role } = await supabase.from('profiles').select('client_id, role').eq('id', user.id).single()
+    const { data: role } = await supabase.from('display_profiles').select('client_id, role').eq('id', user.id).single()
 
     // Determine Active Client ID
     // 1. If Client Admin, use their ID (forcing it overrides searchParams)
@@ -21,14 +21,14 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
     let availableClients: { id: string, name: string }[] = []
 
     if (role?.role === 'super_admin') {
-        const { data: clients } = await supabase.from('clients').select('id, name').order('name')
+        const { data: clients } = await supabase.from('display_clients').select('id, name').order('name')
         availableClients = clients || []
 
         // Use search param or default to first
         activeClientId = searchClientId || availableClients[0]?.id
     }
 
-    let query = supabase.from('media_assets').select('*').order('created_at', { ascending: false })
+    let query = supabase.from('display_media_assets').select('*').order('created_at', { ascending: false })
 
     // Filter by Active Client
     if (activeClientId) {

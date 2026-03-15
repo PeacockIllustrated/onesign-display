@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
 
             // Create DB Record
             const { data: asset, error: dbError } = await supabase
-                .from('media_assets')
+                .from('display_media_assets')
                 .insert({
                     client_id: clientId,
                     store_id: storeId || null,
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
             if (storeId && (assignedScreenIndex || assignedOrientation)) {
                 // ... (existing logic) ...
                 // Find matching screen in this store
-                let query = supabase.from('screens').select('id, refresh_version').eq('store_id', storeId)
+                let query = supabase.from('display_screens').select('id, refresh_version').eq('store_id', storeId)
 
                 if (assignedScreenIndex) query = query.eq('index_in_set', assignedScreenIndex).eq('orientation', 'landscape')
                 else if (assignedOrientation) query = query.eq('orientation', assignedOrientation)
@@ -109,17 +109,17 @@ export async function POST(request: NextRequest) {
                     const targetScreen = screens[0]
 
                     // Deactivate old active content
-                    await supabase.from('screen_content').update({ active: false }).eq('screen_id', targetScreen.id)
+                    await supabase.from('display_screen_content').update({ active: false }).eq('screen_id', targetScreen.id)
 
                     // Insert new active content
-                    await supabase.from('screen_content').insert({
+                    await supabase.from('display_screen_content').insert({
                         screen_id: targetScreen.id,
                         media_asset_id: asset.id,
                         active: true
                     })
 
                     // Increment Refresh Version
-                    await supabase.from('screens').update({ refresh_version: (targetScreen.refresh_version || 0) + 1 }).eq('id', targetScreen.id)
+                    await supabase.from('display_screens').update({ refresh_version: (targetScreen.refresh_version || 0) + 1 }).eq('id', targetScreen.id)
 
                     results.push({ file: file.name, status: 'assigned', screen: targetScreen.id, publicUrl, mediaId: asset.id })
                 } else {

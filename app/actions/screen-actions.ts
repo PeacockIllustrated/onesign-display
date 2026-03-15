@@ -10,7 +10,7 @@ export async function refreshScreens(screenSetId?: string, storeId?: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
-    let query = supabase.from('screens').select('id, refresh_version')
+    let query = supabase.from('display_screens').select('id, refresh_version')
 
     if (screenSetId) {
         query = query.eq('screen_set_id', screenSetId)
@@ -30,11 +30,11 @@ export async function refreshScreens(screenSetId?: string, storeId?: string) {
             refresh_version: (s.refresh_version || 0) + 1
         }))
 
-        const { error } = await supabase.from('screens').upsert(updates)
+        const { error } = await supabase.from('display_screens').upsert(updates)
         if (error) return { error: error.message }
 
         // Audit Log
-        await supabase.from('audit_log').insert({
+        await supabase.from('display_audit_log').insert({
             actor_id: user.id,
             entity: 'screens',
             entity_id: screenSetId || storeId, // using set or store id as proxy

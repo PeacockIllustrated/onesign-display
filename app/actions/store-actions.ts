@@ -10,7 +10,7 @@ export async function createStore(clientId: string, name: string) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
-    const { data: profile } = await supabase.from('profiles').select('role, client_id').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
 
     const isSuperAdmin = profile?.role === 'super_admin'
     const isClientAdmin = profile?.role === 'client_admin' && profile.client_id === clientId
@@ -19,7 +19,7 @@ export async function createStore(clientId: string, name: string) {
         return { error: 'Unauthorized: Insufficient permissions' }
     }
 
-    const { data, error } = await supabase.from('stores')
+    const { data, error } = await supabase.from('display_stores')
         .insert({
             client_id: clientId,
             name: name,

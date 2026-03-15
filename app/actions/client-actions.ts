@@ -11,10 +11,10 @@ export async function createClient(name: string, slug: string) {
     if (!user) return { error: 'Unauthorized' }
 
     // Verify role (security check)
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('role').eq('id', user.id).single()
     if (profile?.role !== 'super_admin') return { error: 'Unauthorized: Super Admin only' }
 
-    const { data, error } = await supabase.from('clients').insert({ name, slug }).select().single()
+    const { data, error } = await supabase.from('display_clients').insert({ name, slug }).select().single()
 
     if (error) {
         if (error.code === '23505') return { error: 'Client slug already exists' }

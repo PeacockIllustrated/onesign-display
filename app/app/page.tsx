@@ -10,12 +10,12 @@ async function DashboardContent() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
 
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('display_profiles').select('*').eq('id', user.id).single()
     const role = profile?.role || 'client_admin'
 
     // If super_admin, show all clients
     if (role === 'super_admin') {
-        const { data: clients } = await supabase.from('clients').select('*, stores(count)').order('created_at', { ascending: false })
+        const { data: clients } = await supabase.from('display_clients').select('*, display_stores(count)').order('created_at', { ascending: false })
 
         return (
             <div className="space-y-6">
@@ -41,7 +41,7 @@ async function DashboardContent() {
                                 <p className="text-sm text-zinc-500 mt-1">{client.slug}</p>
                                 <div className="mt-4 flex items-center text-sm text-zinc-500">
                                     <span className="bg-zinc-100 text-zinc-700 font-bold uppercase tracking-wider py-1 px-2 rounded-full text-xs">
-                                        {client.stores?.[0]?.count ?? 0} Stores
+                                        {client.display_stores?.[0]?.count ?? 0} Stores
                                     </span>
                                 </div>
                             </div>
@@ -61,7 +61,7 @@ async function DashboardContent() {
     }
 
     // Client Admin View
-    const { data: stores } = await supabase.from('stores').select('*, screen_sets(count)').eq('client_id', profile?.client_id).order('name')
+    const { data: stores } = await supabase.from('display_stores').select('*, display_screen_sets(count)').eq('client_id', profile?.client_id).order('name')
 
     return (
         <div className="space-y-6">
@@ -77,7 +77,7 @@ async function DashboardContent() {
                         <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900">{store.name}</h3>
                         <div className="mt-4 flex items-center text-sm text-zinc-500">
                             <span className="bg-zinc-100 text-zinc-700 font-bold uppercase tracking-wider py-1 px-2 rounded-full text-xs">
-                                {store.screen_sets?.[0]?.count ?? 0} Screen Sets
+                                {store.display_screen_sets?.[0]?.count ?? 0} Screen Sets
                             </span>
                         </div>
                     </Link>

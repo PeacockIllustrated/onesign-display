@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     // Update last_seen_at
     const { error } = await supabase
-        .from('screens')
+        .from('display_screens')
         .update({
             last_seen_at: new Date().toISOString(),
             // We could also update display_type here if it changed

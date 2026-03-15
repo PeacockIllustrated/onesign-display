@@ -15,7 +15,7 @@ export async function updateSchedule(scheduleId: string, formData: FormData) {
         throw new Error('Missing required fields')
     }
 
-    const { error } = await supabase.from('schedules').update({
+    const { error } = await supabase.from('display_schedules').update({
         name,
         start_time: startTime,
         end_time: endTime,
@@ -32,6 +32,6 @@ export async function updateSchedule(scheduleId: string, formData: FormData) {
 
 export async function deleteSchedule(scheduleId: string) {
     const supabase = await createClient()
-    await supabase.from('schedules').delete().eq('id', scheduleId)
+    await supabase.from('display_schedules').delete().eq('id', scheduleId)
     revalidatePath('/app/schedules')
 }

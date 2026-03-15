@@ -11,7 +11,7 @@ export async function updateProspectStatus(prospectId: string, status: string) {
     if (!user) throw new Error('Not authenticated');
 
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('display_profiles')
         .select('role')
         .eq('id', user.id)
         .single();
@@ -21,7 +21,7 @@ export async function updateProspectStatus(prospectId: string, status: string) {
     }
 
     const { error } = await supabase
-        .from('prospects')
+        .from('display_prospects')
         .update({ status, updated_at: new Date().toISOString() })
         .eq('id', prospectId);
 
@@ -37,7 +37,7 @@ export async function updateProspectNotes(prospectId: string, notes: string) {
     if (!user) throw new Error('Not authenticated');
 
     const { data: profile } = await supabase
-        .from('profiles')
+        .from('display_profiles')
         .select('role')
         .eq('id', user.id)
         .single();
@@ -47,7 +47,7 @@ export async function updateProspectNotes(prospectId: string, notes: string) {
     }
 
     const { error } = await supabase
-        .from('prospects')
+        .from('display_prospects')
         .update({ notes, updated_at: new Date().toISOString() })
         .eq('id', prospectId);
 

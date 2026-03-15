@@ -13,7 +13,7 @@ export async function deleteMediaAsset(assetId: string, storagePath: string) {
         if (authError || !user) throw new Error('Unauthorized');
 
         const { data: profile } = await supabase
-            .from('profiles')
+            .from('display_profiles')
             .select('role, client_id')
             .eq('id', user.id)
             .single();
@@ -23,7 +23,7 @@ export async function deleteMediaAsset(assetId: string, storagePath: string) {
         // 2. Get Asset Metadata (to check ownership)
         // Use admin client to ensure we can read it even if RLS is strict
         const { data: asset, error: fetchError } = await adminClient
-            .from('media_assets')
+            .from('display_media_assets')
             .select('client_id')
             .eq('id', assetId)
             .single();
@@ -50,7 +50,7 @@ export async function deleteMediaAsset(assetId: string, storagePath: string) {
 
         // 5. Delete from DB (using Admin Client)
         const { error: dbError } = await adminClient
-            .from('media_assets')
+            .from('display_media_assets')
             .delete()
             .eq('id', assetId);
 
@@ -100,7 +100,7 @@ export async function registerMediaAsset(
 
         // 1. Create DB Record
         const { data: asset, error: dbError } = await supabase
-            .from('media_assets')
+            .from('display_media_assets')
             .insert({
                 client_id: clientId,
                 store_id: storeId || null,
@@ -134,7 +134,7 @@ export async function registerMediaAsset(
         let assignedScreenId = null;
 
         if (storeId && (assignedScreenIndex || assignedOrientation)) {
-            let query = supabase.from('screens').select('id, refresh_version').eq('store_id', storeId);
+            let query = supabase.from('display_screens').select('id, refresh_version').eq('store_id', storeId);
 
             if (assignedScreenIndex) query = query.eq('index_in_set', assignedScreenIndex).eq('orientation', 'landscape');
             else if (assignedOrientation) query = query.eq('orientation', assignedOrientation);
@@ -145,17 +145,17 @@ export async function registerMediaAsset(
                 const targetScreen = screens[0];
 
                 // Deactivate old active content
-                await supabase.from('screen_content').update({ active: false }).eq('screen_id', targetScreen.id);
+                await supabase.from('display_screen_content').update({ active: false }).eq('screen_id', targetScreen.id);
 
                 // Insert new active content
-                await supabase.from('screen_content').insert({
+                await supabase.from('display_screen_content').insert({
                     screen_id: targetScreen.id,
                     media_asset_id: asset.id,
                     active: true
                 });
 
                 // Increment Refresh Version
-                await supabase.from('screens').update({ refresh_version: (targetScreen.refresh_version || 0) + 1 }).eq('id', targetScreen.id);
+                await supabase.from('display_screens').update({ refresh_version: (targetScreen.refresh_version || 0) + 1 }).eq('id', targetScreen.id);
 
                 resultStatus = 'assigned';
                 assignedScreenId = targetScreen.id;

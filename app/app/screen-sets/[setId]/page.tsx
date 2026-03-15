@@ -11,7 +11,7 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
     const { setId } = await params
     const supabase = await createClient()
 
-    const { data: screenSet } = await supabase.from('screen_sets').select('*, store:stores(id, name)').eq('id', setId).single()
+    const { data: screenSet } = await supabase.from('display_screen_sets').select('*, store:display_stores(id, name)').eq('id', setId).single()
     if (!screenSet) return notFound()
 
     // Auth check loose
@@ -20,15 +20,15 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
 
     // Fetch Screens with their active content
     const { data: screens } = await supabase
-        .from('screens')
+        .from('display_screens')
         .select(`
         *,
-        screen_content(
-            media_asset:media_assets(*)
+        display_screen_content(
+            media_asset:display_media_assets(*)
         )
     `)
         .eq('screen_set_id', setId)
-        .eq('screen_content.active', true)
+        .eq('display_screen_content.active', true)
         .order('name', { ascending: true })
 
     // Group screens

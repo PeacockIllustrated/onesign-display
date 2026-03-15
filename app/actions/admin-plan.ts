@@ -28,7 +28,7 @@ export async function updateClientPlan(formData: FormData) {
     }
 
     // Check Role
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    const { data: profile } = await supabase.from('display_profiles').select('role').eq('id', user.id).single();
     if (profile?.role !== 'super_admin') {
         return { error: 'Forbidden: Only Super Admins can manage plans.' };
     }
@@ -56,7 +56,7 @@ export async function updateClientPlan(formData: FormData) {
     const data = parse.data;
 
     // Diffing
-    const { data: oldPlan } = await supabase.from('client_plans').select('*').eq('client_id', data.clientId).single();
+    const { data: oldPlan } = await supabase.from('display_client_plans').select('*').eq('client_id', data.clientId).single();
 
     const updates = {
         client_id: data.clientId,
@@ -74,7 +74,7 @@ export async function updateClientPlan(formData: FormData) {
         updated_at: new Date().toISOString()
     };
 
-    const { error } = await supabase.from('client_plans').upsert(updates);
+    const { error } = await supabase.from('display_client_plans').upsert(updates);
 
     if (error) {
         console.error('Plan update failed:', error);
@@ -96,7 +96,7 @@ export async function updateClientPlan(formData: FormData) {
         changes['new_plan'] = updates;
     }
 
-    await supabase.from('audit_log').insert({
+    await supabase.from('display_audit_log').insert({
         actor_id: user.id,
         entity: 'client_plan',
         entity_id: data.clientId,

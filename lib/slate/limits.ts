@@ -6,9 +6,9 @@ export async function countClientScreens(clientId: string): Promise<number> {
 
     // Count all screens belonging to stores of this client
     const { count, error } = await supabase
-        .from('screens')
-        .select('id, stores!inner(client_id)', { count: 'exact', head: true })
-        .eq('stores.client_id', clientId);
+        .from('display_screens')
+        .select('id, display_stores!inner(client_id)', { count: 'exact', head: true })
+        .eq('display_stores.client_id', clientId);
 
     if (error) {
         console.error('Error counting screens:', error);

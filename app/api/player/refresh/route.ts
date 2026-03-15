@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     const supabase = await createAdminClient()
 
     const { data: screen } = await supabase
-        .from('screens')
+        .from('display_screens')
         .select('id, refresh_version') // Select ID for RPC
         .eq('player_token', token)
         .single()
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
 
     // Smart Refresh: Check if Time-Based Content Changed
     if (!shouldRefresh) {
-        const { data: resolvedMediaId } = await supabase.rpc('resolve_screen_media', {
+        const { data: resolvedMediaId } = await supabase.rpc('display_resolve_screen_media', {
             p_screen_id: screen.id,
             p_now: new Date().toISOString()
         })

@@ -50,7 +50,7 @@ export default function EditSpecialPage() {
         const fetchProject = async () => {
             const supabase = createClient();
             const { data, error } = await supabase
-                .from('specials_projects')
+                .from('display_specials_projects')
                 .select('*')
                 .eq('id', id)
                 .single();

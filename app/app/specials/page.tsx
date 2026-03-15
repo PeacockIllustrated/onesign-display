@@ -14,13 +14,13 @@ export default async function SpecialsListPage({ searchParams }: { searchParams:
     if (!user) return <div>Please login</div>;
 
     // Fetch Role and Client Context
-    const { data: role } = await supabase.from('profiles').select('client_id, role').eq('id', user.id).single();
+    const { data: role } = await supabase.from('display_profiles').select('client_id, role').eq('id', user.id).single();
 
     let activeClientId = role?.client_id;
     let availableClients: { id: string, name: string }[] = [];
 
     if (role?.role === 'super_admin') {
-        const { data: clients } = await supabase.from('clients').select('id, name').order('name');
+        const { data: clients } = await supabase.from('display_clients').select('id, name').order('name');
         availableClients = clients || [];
         // Use search param if available, otherwise default to first client
         activeClientId = searchClientId || availableClients[0]?.id;
@@ -46,7 +46,7 @@ export default async function SpecialsListPage({ searchParams }: { searchParams:
     }
 
     // Check Entitlements (New)
-    const { data: plan } = await supabase.from('client_plans').select('specials_studio_enabled, design_package_included, managed_design_support').eq('client_id', activeClientId).single();
+    const { data: plan } = await supabase.from('display_client_plans').select('specials_studio_enabled, design_package_included, managed_design_support').eq('client_id', activeClientId).single();
     // Default false if no plan found (safe default)
     const isEnabled = plan?.specials_studio_enabled || plan?.design_package_included || plan?.managed_design_support || false;
 

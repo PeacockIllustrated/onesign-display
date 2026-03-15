@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
     // We try to find a media_asset record with this path. 
     // If RLS prevents seeing it, this returns null/error.
     const { data: asset, error } = await supabase
-        .from('media_assets')
+        .from('display_media_assets')
         .select('id')
         .eq('storage_path', path)
         .single()

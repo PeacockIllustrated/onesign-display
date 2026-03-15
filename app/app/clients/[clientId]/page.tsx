@@ -8,9 +8,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
     const { clientId } = await params
     const supabase = await createClient()
 
-    const { data: client } = await supabase.from('clients').select('*').eq('id', clientId).single()
-    const { data: stores } = await supabase.from('stores').select('*, screen_sets(count)').eq('client_id', clientId).order('name')
-    const { data: users } = await supabase.from('profiles').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
+    const { data: client } = await supabase.from('display_clients').select('*').eq('id', clientId).single()
+    const { data: stores } = await supabase.from('display_stores').select('*, display_screen_sets(count)').eq('client_id', clientId).order('name')
+    const { data: users } = await supabase.from('display_profiles').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
 
     if (!client) return notFound()
 
@@ -41,7 +41,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
                                         </div>
                                         <div className="flex items-center space-x-4">
                                             <p className="text-sm text-zinc-500 flex items-center">
-                                                {store.screen_sets?.[0]?.count ?? 0} Screen Sets
+                                                {store.display_screen_sets?.[0]?.count ?? 0} Screen Sets
                                             </p>
                                             <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                                 <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
