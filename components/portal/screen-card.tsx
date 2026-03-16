@@ -13,14 +13,14 @@ interface ScreenCardProps {
         orientation: string
         display_type: string
         last_seen_at?: string
-        screen_content?: any | any[]
+        display_screen_content?: any | any[]
     }
 }
 
 export function ScreenCard({ screen }: ScreenCardProps) {
-    const activeMedia = Array.isArray(screen.screen_content)
-        ? screen.screen_content[0]?.media_asset
-        : screen.screen_content?.media_asset
+    const activeMedia = Array.isArray(screen.display_screen_content)
+        ? screen.display_screen_content[0]?.media_asset
+        : screen.display_screen_content?.media_asset
 
     const videoRef = useRef<HTMLVideoElement>(null)
     const [videoUrl, setVideoUrl] = useState<string | null>(null)

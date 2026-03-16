@@ -25,7 +25,7 @@ export async function addScreen(formData: FormData) {
 
     // 3. Fetch Context & Check Permissions
     const { data: screenSet } = await supabase.from('display_screen_sets')
-        .select('*, store:stores(client_id)')
+        .select('*, store:display_stores(client_id)')
         .eq('id', screenSetId)
         .single()
 
@@ -134,7 +134,7 @@ export async function updateScreen(screenId: string, formData: FormData) {
 
     // 2. Fetch Screen & Context
     const { data: screen } = await supabase.from('display_screens')
-        .select('*, store:stores(client_id)')
+        .select('*, store:display_stores(client_id)')
         .eq('id', screenId)
         .single()
 
@@ -180,7 +180,7 @@ export async function deleteScreen(screenId: string, screenSetId: string) {
 
     // 2. Fetch Screen & Context
     const { data: screen } = await supabase.from('display_screens')
-        .select('*, store:stores(client_id)')
+        .select('*, store:display_stores(client_id)')
         .eq('id', screenId)
         .single()
 
