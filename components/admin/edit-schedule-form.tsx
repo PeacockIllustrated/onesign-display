@@ -57,7 +57,7 @@ export function EditScheduleForm({ schedule }: { schedule: Schedule }) {
                     name="name"
                     type="text"
                     defaultValue={schedule.name}
-                    className="w-full border-zinc-300 rounded-md bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:ring-black focus:outline-none transition-colors placeholder:text-zinc-400"
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black transition-colors"
                     required
                 />
             </div>
@@ -86,7 +86,7 @@ export function EditScheduleForm({ schedule }: { schedule: Schedule }) {
                         name="startTime"
                         type="time"
                         defaultValue={schedule.start_time}
-                        className="w-full border-zinc-300 rounded-md bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:ring-black focus:outline-none transition-colors"
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black transition-colors"
                         required
                     />
                 </div>
@@ -97,7 +97,7 @@ export function EditScheduleForm({ schedule }: { schedule: Schedule }) {
                         type="time"
                         defaultValue={schedule.start_time.split(':').length === 3 ? schedule.end_time : schedule.end_time + ':00'}
                         key={schedule.end_time}
-                        className="w-full border-zinc-300 rounded-md bg-white px-3 py-2 text-sm text-zinc-900 focus:border-black focus:ring-black focus:outline-none transition-colors"
+                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black transition-colors"
                         required
                     />
                 </div>

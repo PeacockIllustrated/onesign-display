@@ -48,7 +48,7 @@ export default function LoginPage() {
                                 type="email"
                                 autoComplete="email"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-zinc-300 placeholder-zinc-500 text-zinc-900 rounded-t-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full bg-white px-3 py-2 border border-zinc-300 placeholder:text-zinc-400 text-zinc-900 rounded-t-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black focus:z-10 text-sm"
                                 placeholder="Email address"
                             />
                         </div>
@@ -62,7 +62,7 @@ export default function LoginPage() {
                                 type="password"
                                 autoComplete="current-password"
                                 required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-zinc-300 placeholder-zinc-500 text-zinc-900 rounded-b-md focus:outline-none focus:ring-black focus:border-black focus:z-10 sm:text-sm"
+                                className="appearance-none rounded-none relative block w-full bg-white px-3 py-2 border border-zinc-300 placeholder:text-zinc-400 text-zinc-900 rounded-b-md focus:outline-none focus:ring-1 focus:ring-black focus:border-black focus:z-10 text-sm"
                                 placeholder="Password"
                             />
                         </div>

@@ -57,7 +57,7 @@ export function CreateScreenButton({ screenSetId }: { screenSetId: string }) {
                                     required
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black sm:text-sm"
+                                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                 />
                             </div>
 
@@ -66,7 +66,7 @@ export function CreateScreenButton({ screenSetId }: { screenSetId: string }) {
                                 <select
                                     value={orientation}
                                     onChange={(e) => setOrientation(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black sm:text-sm"
+                                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                 >
                                     <option value="landscape">Landscape (Horizontal)</option>
                                     <option value="portrait">Portrait (Vertical)</option>
@@ -78,7 +78,7 @@ export function CreateScreenButton({ screenSetId }: { screenSetId: string }) {
                                 <select
                                     value={displayType}
                                     onChange={(e) => setDisplayType(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black sm:text-sm"
+                                    className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                 >
                                     <option value="pc">PC / Web Browser</option>
                                     <option value="android">Android / FireStick</option>

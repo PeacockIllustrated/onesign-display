@@ -44,7 +44,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                             type="number"
                             value={Math.round(selectedNode.x)}
                             onChange={e => onUpdate({ x: Number(e.target.value) })}
-                            className="w-full border border-zinc-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                            className="w-full border border-zinc-200 rounded bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-black"
                         />
                     </div>
                     <div>
@@ -53,7 +53,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                             type="number"
                             value={Math.round(selectedNode.y)}
                             onChange={e => onUpdate({ y: Number(e.target.value) })}
-                            className="w-full border border-zinc-200 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-black"
+                            className="w-full border border-zinc-200 rounded bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-black"
                         />
                     </div>
                 </div>
@@ -80,7 +80,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                         <textarea
                             value={selectedNode.text}
                             onChange={e => onUpdate({ text: e.target.value })}
-                            className="w-full border border-zinc-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-shadow resize-none"
+                            className="w-full border border-zinc-200 rounded-md bg-white px-3 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900 transition-shadow resize-none"
                             rows={3}
                         />
                     </div>
@@ -91,7 +91,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                             <select
                                 value={selectedNode.fontFamily || 'Inter'}
                                 onChange={e => onUpdate({ fontFamily: e.target.value })}
-                                className="w-full border border-zinc-200 rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900 bg-white"
+                                className="w-full border border-zinc-200 rounded-md bg-white px-2 py-2 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                             >
                                 {EDITOR_FONTS.map(font => (
                                     <option key={font.name} value={font.value} style={{ fontFamily: font.value }}>
@@ -109,7 +109,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                         type="number"
                                         value={Math.round(selectedNode.fontSize || 0)}
                                         onChange={e => onUpdate({ fontSize: Number(e.target.value) })}
-                                        className="w-full border border-zinc-200 rounded-md pl-3 pr-8 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                        className="w-full border border-zinc-200 rounded-md bg-white pl-3 pr-8 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                                     />
                                     <span className="absolute right-2 top-1.5 text-xs text-zinc-400">px</span>
                                 </div>
@@ -194,7 +194,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                     step="0.1"
                                     value={selectedNode.lineHeight || 1}
                                     onChange={e => onUpdate({ lineHeight: Number(e.target.value) })}
-                                    className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                    className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                                 />
                             </div>
                             <div>
@@ -203,7 +203,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                     type="number"
                                     value={selectedNode.letterSpacing || 0}
                                     onChange={e => onUpdate({ letterSpacing: Number(e.target.value) })}
-                                    className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                    className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                                 />
                             </div>
                         </div>
@@ -248,7 +248,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                             type="number"
                             value={selectedNode.strokeWidth || 0}
                             onChange={e => onUpdate({ strokeWidth: Number(e.target.value) })}
-                            className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                            className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                         />
                     </div>
                     {selectedNode.type === 'rect' && (
@@ -259,7 +259,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                     type="number"
                                     value={Math.round(selectedNode.width || 0)}
                                     onChange={e => onUpdate({ width: Number(e.target.value) })}
-                                    className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                    className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                                 />
                             </div>
                             <div>
@@ -268,7 +268,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                     type="number"
                                     value={Math.round(selectedNode.height || 0)}
                                     onChange={e => onUpdate({ height: Number(e.target.value) })}
-                                    className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                    className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                                 />
                             </div>
                         </div>
@@ -280,7 +280,7 @@ export function PropertiesPanel({ selectedNode, onUpdate, canvasWidth, canvasHei
                                 type="number"
                                 value={Math.round(selectedNode.radius || 0)}
                                 onChange={e => onUpdate({ radius: Number(e.target.value) })}
-                                className="w-full border border-zinc-200 rounded-md px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-zinc-900"
+                                className="w-full border border-zinc-200 rounded-md bg-white px-2 py-1.5 text-sm text-zinc-900 focus:outline-none focus:ring-1 focus:ring-zinc-900"
                             />
                         </div>
                     )}

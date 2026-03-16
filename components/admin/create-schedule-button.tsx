@@ -56,7 +56,7 @@ export function CreateScheduleButton({ stores }: { stores: { id: string, name: s
                                 <select
                                     value={selectedStore}
                                     onChange={(e) => setSelectedStore(e.target.value)}
-                                    className="w-full border-zinc-300 rounded-md shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                     required
                                 >
                                     <option value="">Select a Store</option>
@@ -72,7 +72,7 @@ export function CreateScheduleButton({ stores }: { stores: { id: string, name: s
                                     name="name"
                                     type="text"
                                     placeholder="e.g. Breakfast Menu"
-                                    className="w-full border-zinc-300 rounded-md shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                     required
                                 />
                             </div>
@@ -96,7 +96,7 @@ export function CreateScheduleButton({ stores }: { stores: { id: string, name: s
                                         name="startTime"
                                         type="time"
                                         defaultValue="09:00"
-                                        className="w-full border-zinc-300 rounded-md shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                         required
                                     />
                                 </div>
@@ -106,7 +106,7 @@ export function CreateScheduleButton({ stores }: { stores: { id: string, name: s
                                         name="endTime"
                                         type="time"
                                         defaultValue="17:00"
-                                        className="w-full border-zinc-300 rounded-md shadow-sm focus:border-black focus:ring-black sm:text-sm"
+                                        className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                         required
                                     />
                                 </div>

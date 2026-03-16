@@ -24,7 +24,7 @@ export function ProspectNotesEditor({ prospectId, initialNotes }: { prospectId: 
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add notes about this prospect (follow-up dates, call notes, etc.)..."
                 rows={4}
-                className="w-full px-4 py-3 border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent resize-none text-sm"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black resize-none"
             />
             <div className="flex items-center gap-3">
                 <button

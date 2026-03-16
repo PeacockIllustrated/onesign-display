@@ -135,18 +135,18 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                             }} className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                                    <input name="name" type="text" defaultValue={screen.name} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm" />
+                                    <input name="name" type="text" defaultValue={screen.name} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Orientation</label>
-                                    <select name="orientation" defaultValue={screen.orientation} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm">
+                                    <select name="orientation" defaultValue={screen.orientation} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black">
                                         <option value="landscape">Landscape</option>
                                         <option value="portrait">Portrait</option>
                                     </select>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Display Type</label>
-                                    <select name="display_type" defaultValue={screen.display_type} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-black focus:ring-black sm:text-sm">
+                                    <select name="display_type" defaultValue={screen.display_type} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black">
                                         <option value="pc">PC / Web</option>
                                         <option value="android">Android</option>
                                         <option value="firestick">Amazon Fire Stick</option>
@@ -163,7 +163,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                                 <p className="text-sm text-gray-500 italic">Only super admins can edit settings.</p>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                                    <input type="text" defaultValue={screen.name} readOnly className="mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm" />
+                                    <input type="text" defaultValue={screen.name} readOnly className="mt-1 block w-full rounded-md border border-zinc-300 bg-zinc-50 px-3 py-2 text-sm text-zinc-500 shadow-sm" />
                                 </div>
                             </div>
                         )}

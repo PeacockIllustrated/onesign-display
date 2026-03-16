@@ -98,7 +98,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                                     required
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
+                                    className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
                                     placeholder="John Smith"
                                 />
                             </div>
@@ -111,7 +111,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                                     required
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
+                                    className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
                                     placeholder="john@restaurant.com"
                                 />
                             </div>
@@ -123,7 +123,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                                     type="text"
                                     value={formData.company}
                                     onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                                    className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
+                                    className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
                                     placeholder="The Coffee House"
                                 />
                             </div>
@@ -173,7 +173,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                             <select
                                 value={formData.screens}
                                 onChange={(e) => setFormData({ ...formData, screens: e.target.value })}
-                                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent bg-white"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent"
                             >
                                 <option value="">Select...</option>
                                 <option value="1-5">1-5 screens</option>
@@ -193,7 +193,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                                 value={formData.message}
                                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                                 rows={3}
-                                className="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent resize-none"
+                                className="w-full rounded-lg border border-neutral-300 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-950 focus:border-transparent resize-none"
                                 placeholder="Tell us about your venue, current setup, or specific needs..."
                             />
                         </div>
