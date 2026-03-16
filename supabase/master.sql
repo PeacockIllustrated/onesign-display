@@ -414,22 +414,35 @@ security definer
 as $$
 declare
   v_media_id uuid;
+  v_tz text;
+  v_local timestamptz;
   v_time time;
   v_date date;
   v_dow int;
 begin
-  v_time := p_now::time;
-  v_date := p_now::date;
-  v_dow := extract(dow from p_now)::int;
+  -- Resolve the store's timezone from the screen
+  select st.timezone into v_tz
+  from display_screens sc
+  join display_stores st on sc.store_id = st.id
+  where sc.id = p_screen_id;
+
+  v_tz := coalesce(v_tz, 'Europe/London');
+
+  -- Convert p_now (UTC) to the store's local time for schedule comparison
+  v_time := (p_now at time zone v_tz)::time;
+  v_date := (p_now at time zone v_tz)::date;
+  v_dow  := extract(dow from (p_now at time zone v_tz))::int;
 
   -- 1. Check Schedules (highest priority first)
+  -- Use >= start_time AND < end_time so the schedule ends exactly at end_time
   select ssc.media_asset_id
   into v_media_id
   from display_scheduled_screen_content ssc
   join display_schedules s on ssc.schedule_id = s.id
   where ssc.screen_id = p_screen_id
     and v_dow = any(s.days_of_week)
-    and v_time between s.start_time and s.end_time
+    and v_time >= s.start_time
+    and v_time < s.end_time
     and (s.date_start is null or s.date_start <= v_date)
     and (s.date_end is null or s.date_end >= v_date)
   order by s.priority asc, s.created_at desc

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, use } from 'react'
+import { useEffect, useState, useRef, useCallback, use } from 'react'
 import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
 
 type Manifest = {
@@ -20,28 +20,36 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const [error, setError] = useState<string | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
 
+    // Refs to avoid stale closures in intervals/timeouts
+    const manifestRef = useRef<Manifest | null>(null)
+    const refreshVersionRef = useRef<number>(-1)
+
+    // Keep refs in sync with state
+    useEffect(() => {
+        manifestRef.current = manifest
+        if (manifest) refreshVersionRef.current = manifest.refresh_version
+    }, [manifest])
+
     // Polling Config
-    const POLL_INTERVAL_MS = 60000 // Reduced strain (1 min)
+    const POLL_INTERVAL_MS = 30000 // 30s for schedule transitions
     const HEARTBEAT_INTERVAL_MS = 60000
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const res = await fetch(`/api/player/manifest?token=${token}`)
             if (!res.ok) throw new Error('Failed to fetch manifest')
             const data = await res.json()
             setManifest(data)
-            // Cache in localStorage
-            localStorage.setItem(`slate_manifest_${token}`, JSON.stringify(data))
+            localStorage.setItem(`onesign_manifest_${token}`, JSON.stringify(data))
         } catch (err) {
             console.error(err)
             setError('Offline')
-            // Try to load from cache
-            const cached = localStorage.getItem(`slate_manifest_${token}`)
+            const cached = localStorage.getItem(`onesign_manifest_${token}`)
             if (cached) {
                 setManifest(JSON.parse(cached))
             }
         }
-    }
+    }, [token])
 
     // Schedule-based Precision Refresh
     useEffect(() => {
@@ -49,38 +57,41 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
         const targetTime = new Date(manifest.next_check).getTime()
         const now = Date.now()
-        // Add 1s buffer to ensure server side time has crossed the threshold
-        const delay = (targetTime - now) + 1500
+        // Add 2s buffer to ensure server-side time has crossed the threshold
+        const delay = (targetTime - now) + 2000
 
-        if (delay > 0) {
-            console.log(`Scheduling precise refresh for ${manifest.next_check} (in ${Math.round(delay / 1000)}s)`)
+        if (delay > 0 && delay < 86400000) { // Sanity: max 24h
+            console.log(`[Player] Precision refresh scheduled for ${manifest.next_check} (in ${Math.round(delay / 1000)}s)`)
             const timer = setTimeout(() => {
-                console.log('Precise refresh triggered')
+                console.log('[Player] Precision refresh triggered')
                 fetchData()
             }, delay)
 
             return () => clearTimeout(timer)
         }
-    }, [manifest?.next_check])
+    }, [manifest?.next_check, fetchData])
 
+    // Initial fetch + polling + heartbeat
     useEffect(() => {
-        // Initial Fetch
         fetchData()
 
-        // Poll for Refresh (Manual Overrides)
+        // Poll for refresh using REFS to avoid stale closure
         const pollTimer = setInterval(async () => {
-            if (!manifest) return
+            const current = manifestRef.current
+            if (!current) return
             try {
-                const res = await fetch(`/api/player/refresh?token=${token}&knownVersion=${manifest.refresh_version}&knownMediaId=${manifest.media.id || ''}`)
+                const res = await fetch(
+                    `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}`
+                )
                 if (res.ok) {
                     const data = await res.json()
                     if (data.should_refresh) {
-                        console.log('Refreshing content...')
+                        console.log('[Player] Poll detected change, refreshing...')
                         fetchData()
                     }
                 }
             } catch (e) {
-                console.warn('Poll failed', e)
+                console.warn('[Player] Poll failed', e)
             }
         }, POLL_INTERVAL_MS)
 
@@ -92,7 +103,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 body: JSON.stringify({
                     token,
                     viewport: `${window.innerWidth}x${window.innerHeight}`,
-                    display_type: 'unknown' // Could detect
+                    display_type: 'unknown'
                 })
             }).catch(console.warn)
         }, HEARTBEAT_INTERVAL_MS)
@@ -101,7 +112,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             clearInterval(pollTimer)
             clearInterval(heartbeatTimer)
         }
-    }, [token, manifest?.refresh_version])
+    }, [token, fetchData])
 
 
     // Fullscreen Logic
