@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback, use } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo, use } from 'react'
 import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
 
 type PlaylistItem = {
@@ -34,6 +34,62 @@ type Manifest = {
 
 const URL_REFRESH_MS = 45 * 60 * 1000
 
+// ── VideoSlide: imperative play/pause via ref ────────────────
+// Fixes BUG 1: autoPlay attribute has no effect on already-mounted elements.
+// This component uses useEffect to call .play()/.pause() programmatically
+// when visibility changes, which works reliably across all devices.
+
+function VideoSlide({
+    src,
+    isVisible,
+    fitClass,
+    onEnded,
+    onError,
+}: {
+    src: string
+    isVisible: boolean
+    fitClass: string
+    onEnded?: () => void
+    onError?: () => void
+}) {
+    const videoRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        const video = videoRef.current
+        if (!video) return
+
+        if (isVisible) {
+            video.currentTime = 0
+            const playPromise = video.play()
+            if (playPromise) {
+                playPromise.catch((err) => {
+                    console.warn('[Player] Video play() rejected:', err.name)
+                    if (err.name === 'AbortError') {
+                        setTimeout(() => { video.play().catch(() => {}) }, 100)
+                    }
+                })
+            }
+        } else {
+            video.pause()
+        }
+    }, [isVisible])
+
+    return (
+        <video
+            ref={videoRef}
+            src={src}
+            className={`w-full h-full ${fitClass}`}
+            muted
+            playsInline
+            preload="auto"
+            onEnded={onEnded}
+            onError={onError}
+        />
+    )
+}
+
+// ── Main Player ──────────────────────────────────────────────
+
 export default function PlayerPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params)
     const [manifest, setManifest] = useState<Manifest | null>(null)
@@ -61,6 +117,15 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const HEARTBEAT_INTERVAL_MS = 60000
     const MAX_RETRY_DELAY_MS = 120000
 
+    // ── Clean playlist: filter out null-URL items (BUG 7 defense-in-depth) ──
+    const cleanPlaylist = useMemo(() => {
+        const pl = manifest?.playlist
+        if (!pl) return null
+        const validItems = pl.items.filter(item => item.url !== null)
+        if (validItems.length === 0) return null
+        return { ...pl, items: validItems }
+    }, [manifest?.playlist])
+
     // Reset when playlist changes
     useEffect(() => {
         setActiveLayer('A')
@@ -73,35 +138,65 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
     }, [manifest?.playlist?.id])
 
-    // Preload all playlist media on mount / playlist change
+    // ── Preload all playlist media (BUG 3+4 fix) ─────────────
+    // Depends on playlist ID only — not the full object reference.
+    // Tracks created elements and aborts them on cleanup.
     useEffect(() => {
-        const playlist = manifest?.playlist
+        const playlist = cleanPlaylist
         if (!playlist || playlist.items.length === 0) return
 
+        let cancelled = false
         let loaded = 0
         const total = playlist.items.length
+        const elements: (HTMLVideoElement | HTMLImageElement)[] = []
+
+        const checkDone = () => {
+            if (!cancelled && loaded >= total) setPreloaded(true)
+        }
 
         playlist.items.forEach(item => {
-            if (!item.url) { loaded++; return }
+            if (!item.url) { loaded++; checkDone(); return }
 
             if (item.type?.startsWith('video/')) {
                 const vid = document.createElement('video')
                 vid.preload = 'auto'
                 vid.src = item.url
-                vid.oncanplaythrough = () => { loaded++; if (loaded >= total) setPreloaded(true) }
-                vid.onerror = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+                vid.oncanplaythrough = () => { loaded++; checkDone() }
+                vid.onerror = () => { loaded++; checkDone() }
+                elements.push(vid)
             } else {
                 const img = new Image()
                 img.src = item.url
-                img.onload = () => { loaded++; if (loaded >= total) setPreloaded(true) }
-                img.onerror = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+                img.onload = () => { loaded++; checkDone() }
+                img.onerror = () => { loaded++; checkDone() }
+                elements.push(img)
             }
         })
 
-        // Fallback: mark preloaded after 5s even if some fail
-        const fallback = setTimeout(() => setPreloaded(true), 5000)
-        return () => clearTimeout(fallback)
-    }, [manifest?.playlist])
+        // Fallback: mark preloaded after 8s even if some fail
+        const fallback = setTimeout(() => {
+            if (!cancelled) setPreloaded(true)
+        }, 8000)
+
+        return () => {
+            cancelled = true
+            clearTimeout(fallback)
+            // Abort all in-flight downloads
+            elements.forEach(el => {
+                if ('oncanplaythrough' in el) {
+                    (el as HTMLVideoElement).oncanplaythrough = null
+                }
+                el.onload = null
+                el.onerror = null
+                if (el instanceof HTMLVideoElement) {
+                    el.removeAttribute('src')
+                    el.load() // Abort network fetch
+                } else {
+                    el.removeAttribute('src')
+                }
+            })
+        }
+    }, [manifest?.playlist?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
     const fetchData = useCallback(async () => {
         try {
@@ -142,15 +237,48 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [manifest?.next_check, fetchData])
 
-    // Signed URL refresh
+    // ── Signed URL refresh with retry (BUG 8 fix) ────────────
+    // Separate from fetchData — retries independently on failure
+    // so URLs don't all expire if one refresh attempt fails.
     useEffect(() => {
         if (!manifest?.fetched_at) return
+
         const delay = new Date(manifest.fetched_at).getTime() + URL_REFRESH_MS - Date.now()
-        if (delay > 0) {
-            const timer = setTimeout(() => fetchData(), delay)
-            return () => clearTimeout(timer)
-        } else { fetchData() }
-    }, [manifest?.fetched_at, fetchData])
+
+        let retryTimer: ReturnType<typeof setTimeout> | null = null
+        let attempts = 0
+        const MAX_REFRESH_RETRIES = 3
+
+        const attemptRefresh = async () => {
+            attempts++
+            try {
+                const res = await fetch(`/api/player/manifest?token=${token}`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setManifest(data)
+                    setError(null)
+                    setMediaError(false)
+                    localStorage.setItem(`onesign_manifest_${token}`, JSON.stringify(data))
+                    return
+                }
+                throw new Error(`HTTP ${res.status}`)
+            } catch (err) {
+                console.warn(`[Player] URL refresh attempt ${attempts} failed:`, err)
+                if (attempts < MAX_REFRESH_RETRIES) {
+                    retryTimer = setTimeout(attemptRefresh, attempts * 30_000)
+                }
+            }
+        }
+
+        const timer = delay > 0
+            ? setTimeout(attemptRefresh, delay)
+            : setTimeout(attemptRefresh, 0)
+
+        return () => {
+            clearTimeout(timer)
+            if (retryTimer) clearTimeout(retryTimer)
+        }
+    }, [manifest?.fetched_at, token])
 
     // Polling + heartbeat
     useEffect(() => {
@@ -183,14 +311,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     }, [token, fetchData])
 
     // ── Slideshow: A/B layer crossfade ─────────────────────
-    // Two layers are always rendered. The "active" layer is visible.
-    // To advance: load next slide into the inactive layer, then
-    // simultaneously fade active out + inactive in (same duration).
 
     const currentSlideIndex = activeLayer === 'A' ? layerAIndex : layerBIndex
 
     const advanceSlide = useCallback(() => {
-        const playlist = manifestRef.current?.playlist
+        const playlist = cleanPlaylist
         if (!playlist || playlist.items.length === 0 || transitioningRef.current) return
 
         const nextIndex = currentSlideIndex + 1 >= playlist.items.length
@@ -203,7 +328,6 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         transitioningRef.current = true
 
         if (playlist.transition === 'cut') {
-            // Instant swap
             if (activeLayer === 'A') {
                 setLayerBIndex(nextIndex)
                 setLayerAVisible(false)
@@ -222,10 +346,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         // Load next slide into inactive layer, then crossfade
         if (activeLayer === 'A') {
             setLayerBIndex(nextIndex)
-            // Small delay to ensure the inactive layer has rendered before transitioning
             requestAnimationFrame(() => {
-                setLayerAVisible(false) // Fade out A
-                setLayerBVisible(true)  // Fade in B simultaneously
+                setLayerAVisible(false)
+                setLayerBVisible(true)
                 setTimeout(() => {
                     setActiveLayer('B')
                     transitioningRef.current = false
@@ -242,11 +365,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 }, dur)
             })
         }
-    }, [currentSlideIndex, activeLayer])
+    }, [currentSlideIndex, activeLayer, cleanPlaylist])
 
     // Slideshow: timer for image slides
     useEffect(() => {
-        const playlist = manifest?.playlist
+        const playlist = cleanPlaylist
         if (!playlist || playlist.items.length === 0 || !isPlaying || !preloaded) return
 
         const currentItem = playlist.items[currentSlideIndex]
@@ -258,7 +381,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             slideTimerRef.current = setTimeout(() => advanceSlide(), currentItem.duration_seconds * 1000)
             return () => { if (slideTimerRef.current) clearTimeout(slideTimerRef.current) }
         }
-    }, [currentSlideIndex, manifest?.playlist, isPlaying, advanceSlide, preloaded])
+    }, [currentSlideIndex, cleanPlaylist, isPlaying, advanceSlide, preloaded])
 
     const handleVideoEnded = useCallback(() => advanceSlide(), [advanceSlide])
 
@@ -303,25 +426,30 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return () => { clearTimeout(hideTimer); window.removeEventListener('mousemove', showCursor); window.removeEventListener('touchstart', showCursor); window.removeEventListener('pointermove', showCursor) }
     }, [isPlaying])
 
-    // Video health watchdog — detects stuck/failed videos that don't fire onerror
-    // (e.g. ERR_QUIC_PROTOCOL_ERROR, network drops mid-stream)
+    // ── Video health watchdog (BUG 5 fix) ────────────────────
+    // Only runs when playlist or single media actually contains videos.
+    // Resets lastProgress when currently showing an image slide.
     useEffect(() => {
         if (!isPlaying || !manifest) return
 
-        const STUCK_THRESHOLD = 15_000 // 15s with no progress → re-fetch
+        const playlist = cleanPlaylist
+        const hasVideos = playlist?.items.some(i => i.type?.startsWith('video/'))
+        const singleIsVideo = !playlist && manifest.media?.type?.startsWith('video/')
+
+        if (!hasVideos && !singleIsVideo) return
+
+        const STUCK_THRESHOLD = 15_000
         let lastProgress = Date.now()
         let watchdogTimer: ReturnType<typeof setInterval>
 
         const markProgress = () => { lastProgress = Date.now() }
 
-        // Attach to all video elements in the player
         const attachListeners = () => {
             const videos = document.querySelectorAll('video:not([data-guard])')
             videos.forEach(v => {
                 v.addEventListener('timeupdate', markProgress)
                 v.addEventListener('loadeddata', markProgress)
                 v.addEventListener('playing', markProgress)
-                // Stalled/waiting events that onerror might miss
                 v.addEventListener('stalled', () => {
                     console.warn('[Player] Video stalled, will re-fetch if stuck')
                 })
@@ -329,22 +457,26 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             return videos
         }
 
-        // Check periodically if any content video has progressed
         let refetchPending = false
         watchdogTimer = setInterval(() => {
+            // If no content video elements in DOM right now (image slide), reset timer
+            const contentVideos = document.querySelectorAll('video:not([data-guard])')
+            if (contentVideos.length === 0) {
+                lastProgress = Date.now()
+                return
+            }
+
             const elapsed = Date.now() - lastProgress
             if (elapsed > STUCK_THRESHOLD && !refetchPending) {
                 console.warn(`[Player] No video progress for ${Math.round(elapsed / 1000)}s — re-fetching manifest`)
                 refetchPending = true
                 fetchData().finally(() => {
-                    // Reset after re-fetch, give new URLs time to load
                     setTimeout(() => { lastProgress = Date.now(); refetchPending = false }, 5000)
                 })
             }
         }, 5000)
 
         const videos = attachListeners()
-        // Re-attach when DOM changes (slide transitions add new video elements)
         const observer = new MutationObserver(() => attachListeners())
         observer.observe(document.body, { childList: true, subtree: true })
 
@@ -357,11 +489,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 v.removeEventListener('playing', markProgress)
             })
         }
-    }, [isPlaying, manifest, fetchData])
+    }, [isPlaying, manifest, fetchData, cleanPlaylist])
 
     const handleStart = () => { setIsPlaying(true); toggleFullscreen() }
 
-    // Content fit mode from manifest (never stretch, always aspect-ratio safe)
+    // Content fit mode from manifest
     const fitClass = manifest?.fit_mode === 'cover' ? 'object-cover' : 'object-contain'
 
     // ── Loading / Start screens ──────────────────────────────
@@ -384,13 +516,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Transition helpers ────────────────────────────────────
 
-    const playlist = manifest?.playlist
-
     function getSlideStyle(isVisible: boolean): React.CSSProperties {
-        if (!playlist) return {}
-        const dur = `${playlist.transition_duration_ms}ms`
+        if (!cleanPlaylist) return {}
+        const dur = `${cleanPlaylist.transition_duration_ms}ms`
 
-        switch (playlist.transition) {
+        switch (cleanPlaylist.transition) {
             case 'fade':
                 return { transition: `opacity ${dur} ease`, opacity: isVisible ? 1 : 0 }
             case 'slide_left':
@@ -415,15 +545,13 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform', zIndex: isVisible ? 2 : 1 }}
             >
                 {item.type?.startsWith('video/') ? (
-                    <video
+                    <VideoSlide
                         key={`video-${layerKey}-${item.id}`}
                         src={item.url}
-                        className={`w-full h-full ${fitClass}`}
-                        autoPlay={isVisible}
-                        muted
-                        playsInline
-                        onEnded={isVisible ? handleVideoEnded : undefined}
-                        onError={isVisible ? handleMediaError : undefined}
+                        isVisible={isVisible}
+                        fitClass={fitClass}
+                        onEnded={handleVideoEnded}
+                        onError={handleMediaError}
                     />
                 ) : (
                     <img
@@ -440,9 +568,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Render: Playlist mode ────────────────────────────────
 
-    if (playlist && playlist.items.length > 0) {
-        const layerAItem = playlist.items[layerAIndex]
-        const layerBItem = playlist.items[layerBIndex]
+    if (cleanPlaylist && cleanPlaylist.items.length > 0) {
+        const layerAItem = cleanPlaylist.items[layerAIndex]
+        const layerBItem = cleanPlaylist.items[layerBIndex]
 
         return (
             <div

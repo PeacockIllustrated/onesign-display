@@ -2,6 +2,36 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 
+const SIGN_TTL_BASE = 3600 // 1 hour
+const SIGN_TTL_STAGGER = 60 // stagger per item so URLs don't all expire at once
+const MAX_SIGN_RETRIES = 2
+
+async function signUrlWithRetry(
+    supabase: any,
+    storagePath: string,
+    ttl: number
+): Promise<string | null> {
+    for (let attempt = 0; attempt <= MAX_SIGN_RETRIES; attempt++) {
+        const { data: signed, error } = await supabase
+            .storage
+            .from('onesign-display')
+            .createSignedUrl(storagePath, ttl)
+
+        if (signed?.signedUrl) return signed.signedUrl
+
+        console.error(
+            `[Manifest] createSignedUrl failed for "${storagePath}" ` +
+            `(attempt ${attempt + 1}/${MAX_SIGN_RETRIES + 1}):`,
+            error?.message || 'unknown error'
+        )
+
+        if (attempt < MAX_SIGN_RETRIES) {
+            await new Promise(r => setTimeout(r, 50 * (attempt + 1)))
+        }
+    }
+    return null
+}
+
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const token = searchParams.get('token')
@@ -17,10 +47,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createAdminClient()
 
-    // 1. Find Screen by Token
+    // 1. Find Screen by Token (includes fit_mode in single query)
     const { data: screen } = await supabase
         .from('display_screens')
-        .select('id, store_id, refresh_version, store:display_stores(client_id, timezone)')
+        .select('id, store_id, refresh_version, fit_mode, store:display_stores(client_id, timezone)')
         .eq('player_token', token)
         .single()
 
@@ -28,15 +58,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // fit_mode may not exist if migration hasn't been applied yet
-    let fitMode = 'contain'
-    const { data: fitData } = await supabase
-        .from('display_screens')
-        .select('fit_mode')
-        .eq('id', screen.id)
-        .single()
-    if (fitData?.fit_mode) fitMode = fitData.fit_mode
-
+    const fitMode = screen.fit_mode || 'contain'
     const store = screen.store as unknown as { client_id: string; timezone: string } | null
     const clientId = store?.client_id
     const storeTimezone = store?.timezone || 'Europe/London'
@@ -101,6 +123,7 @@ export async function GET(request: NextRequest) {
 
         if (playlist && items && items.length > 0) {
             const signedItems = []
+            let itemIndex = 0
 
             for (const item of items) {
                 const media = item.media as unknown as { storage_path: string; mime: string } | null
@@ -109,17 +132,22 @@ export async function GET(request: NextRequest) {
                 const isVideo = media.mime.startsWith('video/')
                 if (isVideo && !plan.video_enabled) continue
 
-                const { data: signed } = await supabase
-                    .storage
-                    .from('onesign-display')
-                    .createSignedUrl(media.storage_path, 3600)
+                const itemTtl = SIGN_TTL_BASE + (itemIndex * SIGN_TTL_STAGGER)
+                const signedUrl = await signUrlWithRetry(supabase, media.storage_path, itemTtl)
+
+                // Drop items with failed URLs entirely — no black frames
+                if (!signedUrl) {
+                    console.error(`[Manifest] Dropping playlist item ${item.id} — URL signing failed permanently`)
+                    continue
+                }
 
                 signedItems.push({
                     id: item.id,
-                    url: signed?.signedUrl || null,
+                    url: signedUrl,
                     type: media.mime,
                     duration_seconds: isVideo ? null : item.duration_seconds,
                 })
+                itemIndex++
             }
 
             if (signedItems.length > 0) {
@@ -144,13 +172,10 @@ export async function GET(request: NextRequest) {
             const isVideo = media.mime.startsWith('video/')
 
             if (!(isVideo && !plan.video_enabled)) {
-                const { data: signed } = await supabase
-                    .storage
-                    .from('onesign-display')
-                    .createSignedUrl(media.storage_path, 3600)
+                const signedUrl = await signUrlWithRetry(supabase, media.storage_path, SIGN_TTL_BASE)
 
-                if (signed) {
-                    mediaResponse = { id: resolvedMediaId, url: signed.signedUrl, type: media.mime }
+                if (signedUrl) {
+                    mediaResponse = { id: resolvedMediaId, url: signedUrl, type: media.mime }
                 }
             }
         }
