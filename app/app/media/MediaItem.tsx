@@ -11,7 +11,8 @@ interface MediaItemProps {
         storage_path: string;
         filename: string;
         bytes?: number;
-        mime?: string; // Add mime type
+        mime?: string;
+        inUse?: boolean;
     };
 }
 
@@ -85,12 +86,19 @@ export function MediaItem({ asset }: MediaItemProps) {
                 <SignedImage path={asset.storage_path} alt={asset.filename} className="w-full h-full object-cover" />
             )}
 
-            {/* Video Indicator Icon (if video) */}
-            {isVideo && (
-                <div className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full text-white pointer-events-none z-10">
-                    <Play size={10} fill="currentColor" />
-                </div>
-            )}
+            {/* Badges */}
+            <div className="absolute top-2 right-2 flex gap-1 z-10 pointer-events-none">
+                {asset.inUse && (
+                    <div className="bg-green-600/80 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide">
+                        In Use
+                    </div>
+                )}
+                {isVideo && (
+                    <div className="bg-black/50 p-1.5 rounded-full text-white">
+                        <Play size={10} fill="currentColor" />
+                    </div>
+                )}
+            </div>
 
             {/* Hover Overlay */}
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center text-white gap-2 z-20 pointer-events-none group-hover:pointer-events-auto">

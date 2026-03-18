@@ -1,10 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { X } from 'lucide-react'
+import { X, Upload } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { registerMediaAsset } from '@/app/app/media/actions'
 import { assignMedia } from '@/app/actions/assign-media'
 import { assignPlaylist } from '@/app/actions/playlist-actions'
 import { MediaPickerItem } from './media-picker-item'
+import { v4 as uuidv4 } from 'uuid'
 
 type Asset = {
     id: string
@@ -19,14 +23,17 @@ type Playlist = {
     item_count: number
 }
 
-export function MediaPicker({ screenId, assets, playlists = [] }: {
+export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
     screenId: string
     assets: Asset[]
     playlists?: Playlist[]
+    clientId?: string
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [saving, setSaving] = useState(false)
-    const [tab, setTab] = useState<'media' | 'playlists'>('media')
+    const [uploading, setUploading] = useState(false)
+    const [tab, setTab] = useState<'media' | 'playlists' | 'upload'>('media')
+    const router = useRouter()
 
     const handleSelectMedia = async (assetId: string) => {
         setSaving(true)
@@ -54,6 +61,48 @@ export function MediaPicker({ screenId, assets, playlists = [] }: {
         }
     }
 
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!e.target.files || e.target.files.length === 0 || !clientId) return
+
+        setUploading(true)
+        const supabase = createClient()
+        const files = Array.from(e.target.files)
+        const errors: string[] = []
+
+        for (const file of files) {
+            try {
+                const ext = file.name.split('.').pop()
+                const storagePath = `${clientId}/${uuidv4()}.${ext}`
+
+                const { error: uploadError } = await supabase.storage
+                    .from('onesign-display')
+                    .upload(storagePath, file)
+
+                if (uploadError) throw new Error(uploadError.message)
+
+                const { data: { user } } = await supabase.auth.getUser()
+                if (!user) throw new Error('Not authenticated')
+
+                const result = await registerMediaAsset(clientId, file.name, storagePath, file.type, file.size, user.id, null)
+                if (!result.success) throw new Error(result.error)
+            } catch (err: any) {
+                errors.push(`${file.name}: ${err.message}`)
+            }
+        }
+
+        setUploading(false)
+        e.target.value = ''
+
+        if (errors.length > 0) {
+            alert(`Some uploads failed:\n${errors.join('\n')}`)
+        }
+
+        // Refresh page to show newly uploaded media in the picker
+        router.refresh()
+        // Switch back to media tab so user can select the new upload
+        setTab('media')
+    }
+
     if (!isOpen) {
         return (
             <button
@@ -79,32 +128,40 @@ export function MediaPicker({ screenId, assets, playlists = [] }: {
             </div>
 
             {/* Tab switcher */}
-            {playlists.length > 0 && (
-                <div className="flex gap-1 mb-3">
-                    <button
-                        onClick={() => setTab('media')}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                            tab === 'media'
-                                ? 'bg-black text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                        }`}
-                    >
-                        Media
-                    </button>
+            <div className="flex gap-1 mb-3">
+                <button
+                    onClick={() => setTab('media')}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                        tab === 'media' ? 'bg-black text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                >
+                    Media
+                </button>
+                {playlists.length > 0 && (
                     <button
                         onClick={() => setTab('playlists')}
                         className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                            tab === 'playlists'
-                                ? 'bg-black text-white'
-                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                            tab === 'playlists' ? 'bg-black text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
                     >
                         Playlists
                     </button>
-                </div>
-            )}
+                )}
+                {clientId && (
+                    <button
+                        onClick={() => setTab('upload')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+                            tab === 'upload' ? 'bg-black text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        <Upload className="w-3 h-3" />
+                        Upload
+                    </button>
+                )}
+            </div>
 
-            {tab === 'media' ? (
+            {/* Media tab */}
+            {tab === 'media' && (
                 <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto">
                     {assets.map(asset => (
                         <MediaPickerItem
@@ -115,10 +172,20 @@ export function MediaPicker({ screenId, assets, playlists = [] }: {
                         />
                     ))}
                     {assets.length === 0 && (
-                        <div className="col-span-3 text-center text-xs text-gray-500 py-4">No assets found. Upload some first!</div>
+                        <div className="col-span-3 text-center text-xs text-gray-500 py-4">
+                            No assets found.
+                            {clientId && (
+                                <button onClick={() => setTab('upload')} className="text-indigo-600 hover:text-indigo-800 ml-1">
+                                    Upload some
+                                </button>
+                            )}
+                        </div>
                     )}
                 </div>
-            ) : (
+            )}
+
+            {/* Playlists tab */}
+            {tab === 'playlists' && (
                 <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
                     {playlists.map(pl => (
                         <button
@@ -133,6 +200,29 @@ export function MediaPicker({ screenId, assets, playlists = [] }: {
                             </p>
                         </button>
                     ))}
+                </div>
+            )}
+
+            {/* Upload tab */}
+            {tab === 'upload' && clientId && (
+                <div className="text-center py-6">
+                    <div className="relative inline-block">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg px-8 py-6 hover:border-gray-400 transition-colors">
+                            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <p className="text-sm font-medium text-gray-700">
+                                {uploading ? 'Uploading...' : 'Drop files or click to browse'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">Images & videos (JPG, PNG, WebP, GIF, MP4)</p>
+                        </div>
+                        <input
+                            type="file"
+                            multiple
+                            accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/quicktime"
+                            onChange={handleUpload}
+                            disabled={uploading}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                        />
+                    </div>
                 </div>
             )}
         </div>

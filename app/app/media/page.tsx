@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { MediaUploader } from '@/components/portal/media-uploader'
 import { ClientSelector } from '@/components/portal/client-selector'
-import { MediaItem } from './MediaItem'
 import { HelpIcon } from '@/components/ui/help-icon'
+import { MediaLibrary } from './MediaLibrary'
 
 export default async function MediaPage({ searchParams }: { searchParams: Promise<{ clientId?: string }> }) {
     const { clientId: searchClientId } = await searchParams
@@ -11,40 +11,73 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
 
-    // Fetch Role
     const { data: role } = await supabase.from('display_profiles').select('client_id, role').eq('id', user.id).single()
 
-    // Determine Active Client ID
-    // 1. If Client Admin, use their ID (forcing it overrides searchParams)
-    // 2. If Super Admin, use searchParams OR default to first client
     let activeClientId = role?.client_id
     let availableClients: { id: string, name: string }[] = []
 
     if (role?.role === 'super_admin') {
         const { data: clients } = await supabase.from('display_clients').select('id, name').order('name')
         availableClients = clients || []
-
-        // Use search param or default to first
         activeClientId = searchClientId || availableClients[0]?.id
     }
 
+    // Fetch all assets for this client
     let query = supabase.from('display_media_assets').select('*').order('created_at', { ascending: false })
-
-    // Filter by Active Client
     if (activeClientId) {
         query = query.eq('client_id', activeClientId)
-    } else {
-        // If no active client (e.g. super admin with no clients), ideally return nothing or global
-        // But for now let's return nothing or handle gracefully
-        if (role?.role === 'super_admin') {
-            // Maybe show all? But user wants "relation to client". Let's show empty if no client selected.
-            // Actually, if activeClientId is null here, it means no clients exist.
-            // We can let query run (shows nothing if we want strict, or all if we want loose).
-            // Let's force filter to 'null' if we want to be safe, but realistically activeClientId is UUID.
-        }
+    }
+    const { data: assets } = await query
+
+    // Fetch which assets are actively in use (on screens or in playlists)
+    const assetIds = assets?.map(a => a.id) || []
+    const inUseIds = new Set<string>()
+
+    if (assetIds.length > 0) {
+        // Check screen_content (active assignments)
+        const { data: screenUsage } = await supabase
+            .from('display_screen_content')
+            .select('media_asset_id')
+            .in('media_asset_id', assetIds)
+            .eq('active', true)
+
+        screenUsage?.forEach(r => { if (r.media_asset_id) inUseIds.add(r.media_asset_id) })
+
+        // Check playlist items
+        const { data: playlistUsage } = await supabase
+            .from('display_playlist_items')
+            .select('media_asset_id')
+            .in('media_asset_id', assetIds)
+
+        playlistUsage?.forEach(r => { if (r.media_asset_id) inUseIds.add(r.media_asset_id) })
+
+        // Check scheduled content
+        const { data: scheduleUsage } = await supabase
+            .from('display_scheduled_screen_content')
+            .select('media_asset_id')
+            .in('media_asset_id', assetIds)
+
+        scheduleUsage?.forEach(r => { if (r.media_asset_id) inUseIds.add(r.media_asset_id) })
     }
 
-    const { data: assets } = await query
+    // Compute stats
+    const totalCount = assets?.length || 0
+    const imageCount = assets?.filter(a => a.mime?.startsWith('image/')).length || 0
+    const videoCount = assets?.filter(a => a.mime?.startsWith('video/')).length || 0
+    const totalSizeBytes = assets?.reduce((sum, a) => sum + (a.bytes || 0), 0) || 0
+    const inUseCount = inUseIds.size
+
+    const formatSize = (bytes: number) => {
+        if (bytes >= 1_000_000_000) return `${(bytes / 1_000_000_000).toFixed(1)} GB`
+        if (bytes >= 1_000_000) return `${(bytes / 1_000_000).toFixed(1)} MB`
+        return `${Math.round(bytes / 1024)} KB`
+    }
+
+    // Add inUse flag to each asset
+    const enrichedAssets = (assets || []).map(a => ({
+        ...a,
+        inUse: inUseIds.has(a.id),
+    }))
 
     return (
         <div className="space-y-6">
@@ -58,26 +91,33 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
                         <ClientSelector clients={availableClients} />
                     )}
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
-                    <MediaUploader
-                        clientId={activeClientId}
-                        btnClassName="w-full md:w-auto bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors"
-                    />
+                <MediaUploader
+                    clientId={activeClientId}
+                    btnClassName="bg-black text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-zinc-800 transition-colors"
+                />
+            </div>
+
+            {/* Stats bar */}
+            <div className="flex flex-wrap gap-3 text-xs">
+                <div className="bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-600">
+                    <span className="font-semibold text-gray-900">{totalCount}</span> total
+                </div>
+                <div className="bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-600">
+                    <span className="font-semibold text-gray-900">{imageCount}</span> images
+                </div>
+                <div className="bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-600">
+                    <span className="font-semibold text-gray-900">{videoCount}</span> videos
+                </div>
+                <div className="bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-600">
+                    <span className="font-semibold text-gray-900">{inUseCount}</span> in use
+                </div>
+                <div className="bg-white border border-gray-200 rounded-md px-3 py-1.5 text-gray-600">
+                    <span className="font-semibold text-gray-900">{formatSize(totalSizeBytes)}</span> storage
                 </div>
             </div>
 
-            {/* Simple Gallery Grid */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {assets?.map((asset) => (
-                    <MediaItem key={asset.id} asset={asset} />
-                ))}
-
-                {(!assets || assets.length === 0) && (
-                    <div className="col-span-full py-12 text-center text-gray-500">
-                        No media found for this client.
-                    </div>
-                )}
-            </div>
+            {/* Client-side filterable gallery */}
+            <MediaLibrary assets={enrichedAssets} />
         </div>
     )
 }

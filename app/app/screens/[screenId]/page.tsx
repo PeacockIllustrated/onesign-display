@@ -119,7 +119,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Content Assignment</h3>
 
                         <div className="mb-4">
-                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} />
+                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} clientId={clientId} />
                         </div>
 
                         {activeMedia && (
