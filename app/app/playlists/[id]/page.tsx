@@ -26,12 +26,20 @@ export default async function PlaylistDetailPage({ params }: { params: Promise<{
         .eq('playlist_id', id)
         .order('position', { ascending: true })
 
-    // Fetch available media for this client
-    const { data: mediaAssets } = await supabase
+    // Fetch available media — super admin sees all, client admin sees own
+    const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
+    const isSuperAdmin = profile?.role === 'super_admin'
+
+    let mediaQuery = supabase
         .from('display_media_assets')
         .select('id, filename, storage_path, mime')
-        .eq('client_id', playlist.client_id)
         .order('created_at', { ascending: false })
+
+    if (!isSuperAdmin) {
+        mediaQuery = mediaQuery.eq('client_id', playlist.client_id)
+    }
+
+    const { data: mediaAssets } = await mediaQuery
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
