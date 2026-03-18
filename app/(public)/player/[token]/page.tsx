@@ -518,37 +518,15 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     )
 
     // ── Transition helpers ────────────────────────────────────
+    // Uses CSS classes defined in globals.css for maximum compatibility
+    // with old smart TV browsers that don't animate inline style changes.
 
-    function getSlideStyle(isVisible: boolean): React.CSSProperties {
-        if (!cleanPlaylist) return {}
-        const dur = `${cleanPlaylist.transition_duration_ms}ms`
-
-        switch (cleanPlaylist.transition) {
-            case 'fade':
-                return {
-                    transition: `opacity ${dur} ease`,
-                    WebkitTransition: `opacity ${dur} ease`,
-                    opacity: isVisible ? 1 : 0,
-                }
-            case 'slide_left':
-                return {
-                    transition: `transform ${dur} ease`,
-                    WebkitTransition: `-webkit-transform ${dur} ease`,
-                    transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
-                    WebkitTransform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
-                }
-            case 'slide_right':
-                return {
-                    transition: `transform ${dur} ease`,
-                    WebkitTransition: `-webkit-transform ${dur} ease`,
-                    transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
-                    WebkitTransform: isVisible ? 'translateX(0)' : 'translateX(100%)',
-                }
-            case 'cut':
-            default:
-                return { opacity: isVisible ? 1 : 0 }
-        }
-    }
+    const transitionClass = cleanPlaylist ? {
+        fade: 'player-fade',
+        slide_left: 'player-slide-left',
+        slide_right: 'player-slide-right',
+        cut: 'player-cut',
+    }[cleanPlaylist.transition] || 'player-cut' : 'player-cut'
 
     // ── Render slide helper ──────────────────────────────────
 
@@ -558,8 +536,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return (
             <div
                 key={`layer-${layerKey}`}
-                className="absolute inset-0 flex items-center justify-center"
-                style={{ ...getSlideStyle(isVisible), zIndex: isVisible ? 2 : 1 }}
+                className={`player-layer ${transitionClass} ${isVisible ? 'layer-visible' : 'layer-hidden'}`}
+                style={{
+                    '--slide-dur': `${cleanPlaylist?.transition_duration_ms || 500}ms`,
+                    zIndex: isVisible ? 2 : 1,
+                } as React.CSSProperties}
             >
                 {item.type?.startsWith('video/') ? (
                     <VideoSlide
