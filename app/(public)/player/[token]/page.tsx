@@ -7,7 +7,7 @@ type PlaylistItem = {
     id: string
     url: string | null
     type: string
-    duration_seconds: number | null // null = video, play to end
+    duration_seconds: number | null
 }
 
 type PlaylistData = {
@@ -41,17 +41,17 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const [mediaError, setMediaError] = useState(false)
     const [cursorHidden, setCursorHidden] = useState(false)
 
-    // Slideshow state
+    // Slideshow state — dual-layer for smooth transitions
     const [slideIndex, setSlideIndex] = useState(0)
-    const [transitioning, setTransitioning] = useState(false)
+    const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
+    const [transitionPhase, setTransitionPhase] = useState<'idle' | 'out' | 'in'>('idle')
     const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const [preloaded, setPreloaded] = useState(false)
 
     const manifestRef = useRef<Manifest | null>(null)
     const retryCountRef = useRef(0)
 
-    useEffect(() => {
-        manifestRef.current = manifest
-    }, [manifest])
+    useEffect(() => { manifestRef.current = manifest }, [manifest])
 
     const POLL_INTERVAL_MS = 30000
     const HEARTBEAT_INTERVAL_MS = 60000
@@ -60,9 +60,41 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     // Reset slide index when playlist changes
     useEffect(() => {
         setSlideIndex(0)
-        setTransitioning(false)
+        setPrevSlideIndex(null)
+        setTransitionPhase('idle')
+        setPreloaded(false)
         if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
     }, [manifest?.playlist?.id])
+
+    // Preload all playlist media on mount / playlist change
+    useEffect(() => {
+        const playlist = manifest?.playlist
+        if (!playlist || playlist.items.length === 0) return
+
+        let loaded = 0
+        const total = playlist.items.length
+
+        playlist.items.forEach(item => {
+            if (!item.url) { loaded++; return }
+
+            if (item.type?.startsWith('video/')) {
+                const vid = document.createElement('video')
+                vid.preload = 'auto'
+                vid.src = item.url
+                vid.oncanplaythrough = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+                vid.onerror = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+            } else {
+                const img = new Image()
+                img.src = item.url
+                img.onload = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+                img.onerror = () => { loaded++; if (loaded >= total) setPreloaded(true) }
+            }
+        })
+
+        // Fallback: mark preloaded after 5s even if some fail
+        const fallback = setTimeout(() => setPreloaded(true), 5000)
+        return () => clearTimeout(fallback)
+    }, [manifest?.playlist])
 
     const fetchData = useCallback(async () => {
         try {
@@ -84,9 +116,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             if (!manifestRef.current) {
                 setError('Offline')
                 const cached = localStorage.getItem(`onesign_manifest_${token}`)
-                if (cached) {
-                    try { setManifest(JSON.parse(cached)) } catch { }
-                }
+                if (cached) { try { setManifest(JSON.parse(cached)) } catch { } }
             }
             if (!manifestRef.current) {
                 const delay = Math.min((2 ** retryCountRef.current) * 1000, MAX_RETRY_DELAY_MS)
@@ -112,15 +142,12 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         if (delay > 0) {
             const timer = setTimeout(() => fetchData(), delay)
             return () => clearTimeout(timer)
-        } else {
-            fetchData()
-        }
+        } else { fetchData() }
     }, [manifest?.fetched_at, fetchData])
 
     // Polling + heartbeat
     useEffect(() => {
         fetchData()
-
         const pollTimer = setInterval(async () => {
             const current = manifestRef.current
             if (!current) return
@@ -148,30 +175,47 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return () => { clearInterval(pollTimer); clearInterval(heartbeatTimer) }
     }, [token, fetchData])
 
-    // ── Slideshow: advance to next slide ──────────────────────
+    // ── Slideshow: advance with symmetric transition ─────────
 
     const advanceSlide = useCallback(() => {
         const playlist = manifestRef.current?.playlist
-        if (!playlist || playlist.items.length === 0) return
+        if (!playlist || playlist.items.length === 0 || transitionPhase !== 'idle') return
 
-        setTransitioning(true)
+        const dur = playlist.transition_duration_ms
 
-        setTimeout(() => {
+        if (playlist.transition === 'cut') {
+            // Instant swap, no animation
             setSlideIndex(prev => {
                 const next = prev + 1
-                if (next >= playlist.items.length) {
-                    return playlist.loop ? 0 : prev // Stay on last if not looping
-                }
-                return next
+                return next >= playlist.items.length ? (playlist.loop ? 0 : prev) : next
             })
-            setTransitioning(false)
-        }, playlist.transition_duration_ms)
-    }, [])
+            return
+        }
+
+        // Phase 1: Transition OUT current slide
+        setTransitionPhase('out')
+
+        setTimeout(() => {
+            // Phase 2: Swap slide (hidden), then transition IN
+            setPrevSlideIndex(slideIndex)
+            setSlideIndex(prev => {
+                const next = prev + 1
+                return next >= playlist.items.length ? (playlist.loop ? 0 : prev) : next
+            })
+            setTransitionPhase('in')
+
+            setTimeout(() => {
+                // Phase 3: Done
+                setTransitionPhase('idle')
+                setPrevSlideIndex(null)
+            }, dur)
+        }, dur)
+    }, [slideIndex, transitionPhase])
 
     // Slideshow: timer for image slides
     useEffect(() => {
         const playlist = manifest?.playlist
-        if (!playlist || playlist.items.length === 0 || !isPlaying) return
+        if (!playlist || playlist.items.length === 0 || !isPlaying || !preloaded) return
 
         const currentItem = playlist.items[slideIndex]
         if (!currentItem) return
@@ -179,20 +223,12 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         const isVideo = currentItem.type?.startsWith('video/')
 
         if (!isVideo && currentItem.duration_seconds) {
-            // Image: advance after duration
-            slideTimerRef.current = setTimeout(() => {
-                advanceSlide()
-            }, currentItem.duration_seconds * 1000)
-
-            return () => {
-                if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
-            }
+            slideTimerRef.current = setTimeout(() => advanceSlide(), currentItem.duration_seconds * 1000)
+            return () => { if (slideTimerRef.current) clearTimeout(slideTimerRef.current) }
         }
-    }, [slideIndex, manifest?.playlist, isPlaying, advanceSlide])
+    }, [slideIndex, manifest?.playlist, isPlaying, advanceSlide, preloaded])
 
-    const handleVideoEnded = useCallback(() => {
-        advanceSlide()
-    }, [advanceSlide])
+    const handleVideoEnded = useCallback(() => advanceSlide(), [advanceSlide])
 
     const handleMediaError = useCallback(() => {
         setMediaError(true)
@@ -201,9 +237,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // Fullscreen
     useEffect(() => {
-        if (manifest) {
-            try { if (!document.fullscreenElement) document.documentElement.requestFullscreen() } catch { }
-        }
+        if (manifest) { try { if (!document.fullscreenElement) document.documentElement.requestFullscreen() } catch { } }
     }, [manifest])
 
     const toggleFullscreen = () => {
@@ -257,30 +291,69 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         </div>
     )
 
-    // ── Transition CSS ───────────────────────────────────────
+    // ── Transition helpers ────────────────────────────────────
 
     const playlist = manifest?.playlist
-    const transitionStyle = (active: boolean): React.CSSProperties => {
+
+    function getSlideStyle(isVisible: boolean): React.CSSProperties {
         if (!playlist) return {}
         const dur = `${playlist.transition_duration_ms}ms`
 
         switch (playlist.transition) {
             case 'fade':
-                return { transition: `opacity ${dur} ease`, opacity: active && !transitioning ? 1 : 0 }
+                return { transition: `opacity ${dur} ease`, opacity: isVisible ? 1 : 0 }
             case 'slide_left':
-                return { transition: `transform ${dur} ease`, transform: active && !transitioning ? 'translateX(0)' : 'translateX(-100%)' }
+                return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(-100%)' }
             case 'slide_right':
-                return { transition: `transform ${dur} ease`, transform: active && !transitioning ? 'translateX(0)' : 'translateX(100%)' }
+                return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(100%)' }
             case 'cut':
             default:
-                return { opacity: active ? 1 : 0 }
+                return { opacity: isVisible ? 1 : 0 }
         }
+    }
+
+    // ── Render slide helper ──────────────────────────────────
+
+    function renderSlide(item: PlaylistItem, index: number, isVisible: boolean) {
+        if (!item?.url) return null
+
+        return (
+            <div
+                key={`slide-${index}`}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform' }}
+            >
+                {item.type?.startsWith('video/') ? (
+                    <video
+                        src={item.url}
+                        className="w-full h-full object-contain"
+                        autoPlay={isVisible}
+                        muted
+                        playsInline
+                        onEnded={isVisible ? handleVideoEnded : undefined}
+                        onError={isVisible ? handleMediaError : undefined}
+                    />
+                ) : (
+                    <img
+                        src={item.url}
+                        className="w-full h-full object-contain"
+                        alt="Slide content"
+                        onError={isVisible ? handleMediaError : undefined}
+                    />
+                )}
+            </div>
+        )
     }
 
     // ── Render: Playlist mode ────────────────────────────────
 
     if (playlist && playlist.items.length > 0) {
         const currentItem = playlist.items[slideIndex]
+        const prevItem = prevSlideIndex !== null ? playlist.items[prevSlideIndex] : null
+
+        // Determine visibility based on transition phase
+        const currentVisible = transitionPhase !== 'out'
+        const prevVisible = transitionPhase === 'out'
 
         return (
             <div
@@ -290,34 +363,18 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             >
                 <NeverSleepGuard active={isPlaying} />
 
-                <div className="absolute inset-0 flex items-center justify-center" style={transitionStyle(true)}>
-                    {currentItem?.url ? (
-                        currentItem.type?.startsWith('video/') ? (
-                            <video
-                                key={`${currentItem.id}-${slideIndex}`}
-                                src={currentItem.url}
-                                className="w-full h-full object-contain"
-                                autoPlay
-                                muted
-                                playsInline
-                                onEnded={handleVideoEnded}
-                                onError={handleMediaError}
-                            />
-                        ) : (
-                            <img
-                                key={`${currentItem.id}-${slideIndex}`}
-                                src={currentItem.url}
-                                className="w-full h-full object-contain"
-                                alt="Slide content"
-                                onError={handleMediaError}
-                            />
-                        )
-                    ) : (
-                        <div className="text-gray-500 font-mono text-center">
-                            <p className="text-sm">Slide unavailable</p>
-                        </div>
-                    )}
-                </div>
+                {/* Previous slide (fading out) */}
+                {prevItem && transitionPhase !== 'idle' && renderSlide(prevItem, prevSlideIndex!, prevVisible)}
+
+                {/* Current slide */}
+                {currentItem && renderSlide(currentItem, slideIndex, currentVisible)}
+
+                {/* Loading indicator while preloading */}
+                {!preloaded && (
+                    <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+                        <div className="text-gray-500 text-sm">Loading slides...</div>
+                    </div>
+                )}
 
                 {error && (
                     <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>
@@ -326,7 +383,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         )
     }
 
-    // ── Render: Single media mode (existing behavior) ────────
+    // ── Render: Single media mode ────────────────────────────
 
     return (
         <div
@@ -338,21 +395,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
             {manifest?.media?.url && !mediaError ? (
                 manifest.media.type?.startsWith('video/') ? (
-                    <video
-                        key={manifest.media.url}
-                        src={manifest.media.url}
-                        className="w-full h-full object-contain"
-                        autoPlay muted playsInline loop
-                        onError={handleMediaError}
-                    />
+                    <video key={manifest.media.url} src={manifest.media.url} className="w-full h-full object-contain" autoPlay muted playsInline loop onError={handleMediaError} />
                 ) : (
-                    <img
-                        key={manifest.media.url}
-                        src={manifest.media.url}
-                        className="w-full h-full object-contain"
-                        alt="Digital Signage content"
-                        onError={handleMediaError}
-                    />
+                    <img key={manifest.media.url} src={manifest.media.url} className="w-full h-full object-contain" alt="Digital Signage content" onError={handleMediaError} />
                 )
             ) : (
                 <div className="text-gray-500 font-mono">

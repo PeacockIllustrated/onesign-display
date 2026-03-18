@@ -48,6 +48,12 @@ export function PlaylistEditor({
     const [savingSettings, setSavingSettings] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
 
+    // Controlled form state so values don't revert after save
+    const [formName, setFormName] = useState(playlist.name)
+    const [formTransition, setFormTransition] = useState(playlist.transition)
+    const [formDuration, setFormDuration] = useState(playlist.transition_duration_ms)
+    const [formLoop, setFormLoop] = useState(playlist.loop)
+
     const isVideo = (mime: string) => mime?.startsWith('video/')
 
     const handleDragStart = (index: number) => {
@@ -239,7 +245,8 @@ export function PlaylistEditor({
                             <input
                                 name="name"
                                 type="text"
-                                defaultValue={playlist.name}
+                                value={formName}
+                                onChange={(e) => setFormName(e.target.value)}
                                 className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                             />
                         </div>
@@ -248,7 +255,8 @@ export function PlaylistEditor({
                             <label className="block text-sm font-medium text-gray-700 mb-1">Transition</label>
                             <select
                                 name="transition"
-                                defaultValue={playlist.transition}
+                                value={formTransition}
+                                onChange={(e) => setFormTransition(e.target.value)}
                                 className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                             >
                                 <option value="fade">Fade</option>
@@ -266,7 +274,8 @@ export function PlaylistEditor({
                                     type="number"
                                     min={0}
                                     max={5000}
-                                    defaultValue={playlist.transition_duration_ms}
+                                    value={formDuration}
+                                    onChange={(e) => setFormDuration(parseInt(e.target.value) || 0)}
                                     className="w-24 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                 />
                                 <span className="text-xs text-gray-500">ms</span>
@@ -278,7 +287,8 @@ export function PlaylistEditor({
                                 <input
                                     name="loop"
                                     type="checkbox"
-                                    defaultChecked={playlist.loop}
+                                    checked={formLoop}
+                                    onChange={(e) => setFormLoop(e.target.checked)}
                                     className="rounded border-gray-300"
                                     style={{ accentColor: '#4e7e8c' }}
                                 />
