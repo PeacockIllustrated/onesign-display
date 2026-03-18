@@ -20,13 +20,22 @@ export async function GET(request: NextRequest) {
     // 1. Find Screen by Token
     const { data: screen } = await supabase
         .from('display_screens')
-        .select('id, store_id, refresh_version, fit_mode, store:display_stores(client_id, timezone)')
+        .select('id, store_id, refresh_version, store:display_stores(client_id, timezone)')
         .eq('player_token', token)
         .single()
 
     if (!screen) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
+
+    // fit_mode may not exist if migration hasn't been applied yet
+    let fitMode = 'contain'
+    const { data: fitData } = await supabase
+        .from('display_screens')
+        .select('fit_mode')
+        .eq('id', screen.id)
+        .single()
+    if (fitData?.fit_mode) fitMode = fitData.fit_mode
 
     const store = screen.store as unknown as { client_id: string; timezone: string } | null
     const clientId = store?.client_id
@@ -41,7 +50,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
             screen_id: screen.id,
             refresh_version: screen.refresh_version,
-            fit_mode: screen.fit_mode || 'contain',
+            fit_mode: fitMode,
             media: { id: null, url: null, type: null },
             playlist: null,
             next_check: new Date(Date.now() + 60000).toISOString(),
@@ -188,7 +197,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
         screen_id: screen.id,
         refresh_version: screen.refresh_version,
-        fit_mode: screen.fit_mode || 'contain',
+        fit_mode: fitMode,
         media: mediaResponse,
         playlist: playlistResponse,
         next_check: nextChange ? nextChange.toISOString() : null,
