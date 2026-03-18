@@ -75,8 +75,11 @@ export function PlaylistEditor({
         try {
             await addPlaylistItem(playlist.id, mediaAssetId)
             setShowMediaPicker(false)
+            // Force page refresh to pick up new item from server
+            window.location.reload()
         } catch (e: any) {
-            alert(e.message || 'Failed to add item')
+            console.error('[PlaylistEditor] Add item error:', e)
+            alert(e?.message || String(e) || 'Failed to add item')
         } finally {
             setSaving(false)
         }

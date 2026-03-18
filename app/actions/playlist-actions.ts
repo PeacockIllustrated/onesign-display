@@ -186,7 +186,10 @@ export async function addPlaylistItem(playlistId: string, mediaAssetId: string, 
             duration_seconds: durationSeconds,
         })
 
-    if (error) throw new Error('Failed to add item to playlist')
+    if (error) {
+        console.error('[Playlist] Failed to add item:', error)
+        throw new Error('Failed to add item to playlist')
+    }
 
     await cascadeRefreshForPlaylist(supabase, playlistId)
 
