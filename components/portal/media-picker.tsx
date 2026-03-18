@@ -186,20 +186,33 @@ export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
 
             {/* Playlists tab */}
             {tab === 'playlists' && (
-                <div className="grid grid-cols-2 gap-2 max-h-60 overflow-y-auto">
-                    {playlists.map(pl => (
-                        <button
-                            key={pl.id}
-                            onClick={() => handleSelectPlaylist(pl.id)}
-                            disabled={saving}
-                            className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-400 transition-colors text-left"
-                        >
-                            <p className="text-sm font-medium text-gray-900">{pl.name}</p>
-                            <p className="text-xs text-gray-500">
-                                {pl.item_count} {pl.item_count === 1 ? 'slide' : 'slides'} · {transitionLabels[pl.transition] || pl.transition}
-                            </p>
-                        </button>
-                    ))}
+                <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto">
+                        {playlists.map(pl => (
+                            <button
+                                key={pl.id}
+                                onClick={() => handleSelectPlaylist(pl.id)}
+                                disabled={saving}
+                                className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-400 transition-colors text-left"
+                            >
+                                <p className="text-sm font-medium text-gray-900">{pl.name}</p>
+                                <p className="text-xs text-gray-500">
+                                    {pl.item_count} {pl.item_count === 1 ? 'slide' : 'slides'} · {transitionLabels[pl.transition] || pl.transition}
+                                </p>
+                            </button>
+                        ))}
+                        {playlists.length === 0 && (
+                            <div className="col-span-2 text-center text-xs text-gray-500 py-4">
+                                No playlists yet.
+                            </div>
+                        )}
+                    </div>
+                    <a
+                        href="/app/playlists"
+                        className="block w-full text-center py-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-dashed border-gray-300 rounded-md hover:border-gray-400 transition-colors"
+                    >
+                        + Create / Manage Playlists
+                    </a>
                 </div>
             )}
 
