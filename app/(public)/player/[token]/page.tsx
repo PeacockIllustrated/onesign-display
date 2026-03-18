@@ -3,6 +3,21 @@
 import { useEffect, useState, useRef, useCallback, use } from 'react'
 import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
 
+type PlaylistItem = {
+    id: string
+    url: string | null
+    type: string
+    duration_seconds: number | null // null = video, play to end
+}
+
+type PlaylistData = {
+    id: string
+    transition: 'fade' | 'cut' | 'slide_left' | 'slide_right'
+    transition_duration_ms: number
+    loop: boolean
+    items: PlaylistItem[]
+}
+
 type Manifest = {
     screen_id: string
     refresh_version: number
@@ -11,12 +26,12 @@ type Manifest = {
         url: string | null
         type: string | null
     }
+    playlist: PlaylistData | null
     next_check: string | null
     fetched_at: string
 }
 
-// Signed URLs expire after 1 hour — refresh before that
-const URL_REFRESH_MS = 45 * 60 * 1000 // 45 minutes
+const URL_REFRESH_MS = 45 * 60 * 1000
 
 export default function PlayerPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params)
@@ -26,34 +41,38 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const [mediaError, setMediaError] = useState(false)
     const [cursorHidden, setCursorHidden] = useState(false)
 
-    // Refs to avoid stale closures in intervals/timeouts
+    // Slideshow state
+    const [slideIndex, setSlideIndex] = useState(0)
+    const [transitioning, setTransitioning] = useState(false)
+    const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
     const manifestRef = useRef<Manifest | null>(null)
-    const refreshVersionRef = useRef<number>(-1)
     const retryCountRef = useRef(0)
 
-    // Keep refs in sync with state
     useEffect(() => {
         manifestRef.current = manifest
-        if (manifest) refreshVersionRef.current = manifest.refresh_version
     }, [manifest])
 
-    // Polling Config
-    const POLL_INTERVAL_MS = 30000 // 30s for schedule transitions
+    const POLL_INTERVAL_MS = 30000
     const HEARTBEAT_INTERVAL_MS = 60000
-    const MAX_RETRY_DELAY_MS = 120000 // Cap backoff at 2 minutes
+    const MAX_RETRY_DELAY_MS = 120000
+
+    // Reset slide index when playlist changes
+    useEffect(() => {
+        setSlideIndex(0)
+        setTransitioning(false)
+        if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
+    }, [manifest?.playlist?.id])
 
     const fetchData = useCallback(async () => {
         try {
             const res = await fetch(`/api/player/manifest?token=${token}`)
-            if (res.status === 429) return // Rate limited — back off silently
+            if (res.status === 429) return
             if (res.status >= 400 && res.status < 500) {
-                // Client error (401, 403, etc.) — won't resolve with retries
-                if (!manifestRef.current) {
-                    setError('Invalid token')
-                }
+                if (!manifestRef.current) setError('Invalid token')
                 return
             }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`) // 5xx → retry
+            if (!res.ok) throw new Error(`HTTP ${res.status}`)
             const data = await res.json()
             setManifest(data)
             setError(null)
@@ -61,213 +80,253 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             retryCountRef.current = 0
             localStorage.setItem(`onesign_manifest_${token}`, JSON.stringify(data))
         } catch (err) {
-            // Network error or 5xx — retry with backoff
             retryCountRef.current++
-
             if (!manifestRef.current) {
                 setError('Offline')
                 const cached = localStorage.getItem(`onesign_manifest_${token}`)
                 if (cached) {
-                    try {
-                        setManifest(JSON.parse(cached))
-                    } catch { /* corrupt cache, ignore */ }
+                    try { setManifest(JSON.parse(cached)) } catch { }
                 }
             }
-
-            // Exponential backoff retry (only when no manifest loaded yet)
             if (!manifestRef.current) {
-                const delay = Math.min(
-                    (2 ** retryCountRef.current) * 1000,
-                    MAX_RETRY_DELAY_MS
-                )
+                const delay = Math.min((2 ** retryCountRef.current) * 1000, MAX_RETRY_DELAY_MS)
                 setTimeout(() => fetchData(), delay)
             }
         }
     }, [token])
 
-    // Schedule-based Precision Refresh
+    // Schedule precision refresh
     useEffect(() => {
         if (!manifest?.next_check) return
-
-        const targetTime = new Date(manifest.next_check).getTime()
-        const now = Date.now()
-        // Add 2s buffer to ensure server-side time has crossed the threshold
-        const delay = (targetTime - now) + 2000
-
-        if (delay > 0 && delay < 86400000) { // Sanity: max 24h
+        const delay = (new Date(manifest.next_check).getTime() - Date.now()) + 2000
+        if (delay > 0 && delay < 86400000) {
             const timer = setTimeout(() => fetchData(), delay)
             return () => clearTimeout(timer)
         }
     }, [manifest?.next_check, fetchData])
 
-    // Signed URL refresh — re-fetch manifest before URLs expire
+    // Signed URL refresh
     useEffect(() => {
         if (!manifest?.fetched_at) return
-
-        const fetchedAt = new Date(manifest.fetched_at).getTime()
-        const expiresAt = fetchedAt + URL_REFRESH_MS
-        const delay = expiresAt - Date.now()
-
+        const delay = new Date(manifest.fetched_at).getTime() + URL_REFRESH_MS - Date.now()
         if (delay > 0) {
             const timer = setTimeout(() => fetchData(), delay)
             return () => clearTimeout(timer)
         } else {
-            // Already expired, refresh now
             fetchData()
         }
     }, [manifest?.fetched_at, fetchData])
 
-    // Initial fetch + polling + heartbeat
+    // Polling + heartbeat
     useEffect(() => {
         fetchData()
 
-        // Poll for refresh using REFS to avoid stale closure
         const pollTimer = setInterval(async () => {
             const current = manifestRef.current
             if (!current) return
             try {
+                const playlistId = current.playlist?.id || ''
                 const res = await fetch(
-                    `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}`
+                    `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}&knownPlaylistId=${playlistId}`
                 )
-                if (res.status === 429) return // Rate limited, skip
+                if (res.status === 429) return
                 if (res.ok) {
                     const data = await res.json()
-                    if (data.should_refresh) {
-                        fetchData()
-                    }
+                    if (data.should_refresh) fetchData()
                 }
-            } catch (e) {
-                // Network error — silently continue, next poll will retry
-            }
+            } catch { }
         }, POLL_INTERVAL_MS)
 
-        // Heartbeat
         const heartbeatTimer = setInterval(() => {
-            fetch(`/api/player/ping`, {
+            fetch('/api/player/ping', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    token,
-                    viewport: `${window.innerWidth}x${window.innerHeight}`,
-                    display_type: 'unknown'
-                })
+                body: JSON.stringify({ token, viewport: `${window.innerWidth}x${window.innerHeight}`, display_type: 'unknown' })
             }).catch(() => {})
         }, HEARTBEAT_INTERVAL_MS)
 
-        return () => {
-            clearInterval(pollTimer)
-            clearInterval(heartbeatTimer)
-        }
+        return () => { clearInterval(pollTimer); clearInterval(heartbeatTimer) }
     }, [token, fetchData])
 
-    // Media error handler — retry fetch on 403/corrupt media
+    // ── Slideshow: advance to next slide ──────────────────────
+
+    const advanceSlide = useCallback(() => {
+        const playlist = manifestRef.current?.playlist
+        if (!playlist || playlist.items.length === 0) return
+
+        setTransitioning(true)
+
+        setTimeout(() => {
+            setSlideIndex(prev => {
+                const next = prev + 1
+                if (next >= playlist.items.length) {
+                    return playlist.loop ? 0 : prev // Stay on last if not looping
+                }
+                return next
+            })
+            setTransitioning(false)
+        }, playlist.transition_duration_ms)
+    }, [])
+
+    // Slideshow: timer for image slides
+    useEffect(() => {
+        const playlist = manifest?.playlist
+        if (!playlist || playlist.items.length === 0 || !isPlaying) return
+
+        const currentItem = playlist.items[slideIndex]
+        if (!currentItem) return
+
+        const isVideo = currentItem.type?.startsWith('video/')
+
+        if (!isVideo && currentItem.duration_seconds) {
+            // Image: advance after duration
+            slideTimerRef.current = setTimeout(() => {
+                advanceSlide()
+            }, currentItem.duration_seconds * 1000)
+
+            return () => {
+                if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
+            }
+        }
+    }, [slideIndex, manifest?.playlist, isPlaying, advanceSlide])
+
+    const handleVideoEnded = useCallback(() => {
+        advanceSlide()
+    }, [advanceSlide])
+
     const handleMediaError = useCallback(() => {
         setMediaError(true)
-        // Signed URL likely expired or file corrupt — re-fetch manifest for new URL
         setTimeout(() => fetchData(), 2000)
     }, [fetchData])
 
-    // Fullscreen Logic
+    // Fullscreen
     useEffect(() => {
-        const attemptFullscreen = async () => {
-            try {
-                if (!document.fullscreenElement) {
-                    await document.documentElement.requestFullscreen()
-                }
-            } catch (e) {
-                // Auto-fullscreen blocked, waiting for interaction
-            }
+        if (manifest) {
+            try { if (!document.fullscreenElement) document.documentElement.requestFullscreen() } catch { }
         }
-        if (manifest) attemptFullscreen()
     }, [manifest])
 
     const toggleFullscreen = () => {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(() => {})
-        } else {
-            document.exitFullscreen().catch(() => {})
-        }
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {})
+        else document.exitFullscreen().catch(() => {})
     }
 
-    // Wake Lock for TV Devices
+    // Wake Lock
     useEffect(() => {
         let wakeLock: any = null
         const requestWakeLock = async () => {
             if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
-                try {
-                    wakeLock = await (navigator as any).wakeLock.request('screen')
-                } catch { /* Wake Lock not available */ }
+                try { wakeLock = await (navigator as any).wakeLock.request('screen') } catch { }
             }
         }
-
-        if (isPlaying) {
-            requestWakeLock()
-        }
-
-        const handleVisibilityChange = () => {
-            if (document.visibilityState === 'visible' && isPlaying) requestWakeLock()
-        }
-        document.addEventListener('visibilitychange', handleVisibilityChange)
-        return () => {
-            if (wakeLock) wakeLock.release()
-            document.removeEventListener('visibilitychange', handleVisibilityChange)
-        }
+        if (isPlaying) requestWakeLock()
+        const handleVisibility = () => { if (document.visibilityState === 'visible' && isPlaying) requestWakeLock() }
+        document.addEventListener('visibilitychange', handleVisibility)
+        return () => { if (wakeLock) wakeLock.release(); document.removeEventListener('visibilitychange', handleVisibility) }
     }, [isPlaying])
 
-    // Auto-hide cursor after 3s of inactivity during playback
+    // Cursor hide
     useEffect(() => {
         if (!isPlaying) return
-
         let hideTimer: ReturnType<typeof setTimeout>
-
-        const showCursor = () => {
-            setCursorHidden(false)
-            clearTimeout(hideTimer)
-            hideTimer = setTimeout(() => setCursorHidden(true), 3000)
-        }
-
-        // Hide immediately after starting
+        const showCursor = () => { setCursorHidden(false); clearTimeout(hideTimer); hideTimer = setTimeout(() => setCursorHidden(true), 3000) }
         hideTimer = setTimeout(() => setCursorHidden(true), 3000)
-
         window.addEventListener('mousemove', showCursor)
         window.addEventListener('touchstart', showCursor)
         window.addEventListener('pointermove', showCursor)
-
-        return () => {
-            clearTimeout(hideTimer)
-            window.removeEventListener('mousemove', showCursor)
-            window.removeEventListener('touchstart', showCursor)
-            window.removeEventListener('pointermove', showCursor)
-        }
+        return () => { clearTimeout(hideTimer); window.removeEventListener('mousemove', showCursor); window.removeEventListener('touchstart', showCursor); window.removeEventListener('pointermove', showCursor) }
     }, [isPlaying])
 
-    const handleStart = () => {
-        setIsPlaying(true)
-        toggleFullscreen()
-    }
+    const handleStart = () => { setIsPlaying(true); toggleFullscreen() }
+
+    // ── Loading / Start screens ──────────────────────────────
 
     if (!manifest && !error) return (
-        <div className="bg-black text-white h-screen flex items-center justify-center">
-            Loading Onesign...
+        <div className="bg-black text-white h-screen flex items-center justify-center">Loading Onesign...</div>
+    )
+
+    if (!isPlaying) return (
+        <div className="bg-black h-screen w-screen flex flex-col items-center justify-center text-white cursor-pointer z-50" onClick={handleStart}>
+            <div className="w-24 h-24 mb-6 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 ml-1">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+            </div>
+            <h1 className="text-2xl font-bold tracking-widest uppercase mb-2">Onesign Display</h1>
+            <p className="text-gray-400 text-sm">Tap screen to initialize display</p>
         </div>
     )
 
-    if (!isPlaying) {
+    // ── Transition CSS ───────────────────────────────────────
+
+    const playlist = manifest?.playlist
+    const transitionStyle = (active: boolean): React.CSSProperties => {
+        if (!playlist) return {}
+        const dur = `${playlist.transition_duration_ms}ms`
+
+        switch (playlist.transition) {
+            case 'fade':
+                return { transition: `opacity ${dur} ease`, opacity: active && !transitioning ? 1 : 0 }
+            case 'slide_left':
+                return { transition: `transform ${dur} ease`, transform: active && !transitioning ? 'translateX(0)' : 'translateX(-100%)' }
+            case 'slide_right':
+                return { transition: `transform ${dur} ease`, transform: active && !transitioning ? 'translateX(0)' : 'translateX(100%)' }
+            case 'cut':
+            default:
+                return { opacity: active ? 1 : 0 }
+        }
+    }
+
+    // ── Render: Playlist mode ────────────────────────────────
+
+    if (playlist && playlist.items.length > 0) {
+        const currentItem = playlist.items[slideIndex]
+
         return (
             <div
-                className="bg-black h-screen w-screen flex flex-col items-center justify-center text-white cursor-pointer z-50"
-                onClick={handleStart}
+                onClick={toggleFullscreen}
+                className="bg-black h-screen w-screen overflow-hidden relative"
+                style={{ cursor: cursorHidden ? 'none' : 'pointer' }}
             >
-                <div className="w-24 h-24 mb-6 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 ml-1">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                    </svg>
+                <NeverSleepGuard active={isPlaying} />
+
+                <div className="absolute inset-0 flex items-center justify-center" style={transitionStyle(true)}>
+                    {currentItem?.url ? (
+                        currentItem.type?.startsWith('video/') ? (
+                            <video
+                                key={`${currentItem.id}-${slideIndex}`}
+                                src={currentItem.url}
+                                className="w-full h-full object-contain"
+                                autoPlay
+                                muted
+                                playsInline
+                                onEnded={handleVideoEnded}
+                                onError={handleMediaError}
+                            />
+                        ) : (
+                            <img
+                                key={`${currentItem.id}-${slideIndex}`}
+                                src={currentItem.url}
+                                className="w-full h-full object-contain"
+                                alt="Slide content"
+                                onError={handleMediaError}
+                            />
+                        )
+                    ) : (
+                        <div className="text-gray-500 font-mono text-center">
+                            <p className="text-sm">Slide unavailable</p>
+                        </div>
+                    )}
                 </div>
-                <h1 className="text-2xl font-bold tracking-widest uppercase mb-2">Onesign Display</h1>
-                <p className="text-gray-400 text-sm">Tap screen to initialize display</p>
+
+                {error && (
+                    <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>
+                )}
             </div>
         )
     }
+
+    // ── Render: Single media mode (existing behavior) ────────
 
     return (
         <div
@@ -283,10 +342,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         key={manifest.media.url}
                         src={manifest.media.url}
                         className="w-full h-full object-contain"
-                        autoPlay
-                        muted
-                        playsInline
-                        loop
+                        autoPlay muted playsInline loop
                         onError={handleMediaError}
                     />
                 ) : (
@@ -306,11 +362,8 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 </div>
             )}
 
-            {/* Offline Indicator */}
             {error && (
-                <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">
-                    Offline
-                </div>
+                <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>
             )}
         </div>
     )

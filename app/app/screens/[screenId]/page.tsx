@@ -41,12 +41,25 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
     const { data: store } = await supabase.from('display_stores').select('client_id').eq('id', screen.store_id).single()
     const clientId = store?.client_id
 
-    // Explicitly type or cast if needed, but select usually infers enough
     const { data: mediaAssets } = await supabase
         .from('display_media_assets')
         .select('id, filename, storage_path')
-        .eq('client_id', clientId) // Filter by client
+        .eq('client_id', clientId)
         .order('created_at', { ascending: false })
+
+    // Fetch playlists for this client
+    const { data: playlistsRaw } = await supabase
+        .from('display_playlists')
+        .select('id, name, transition, display_playlist_items(count)')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+
+    const playlists = (playlistsRaw || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        transition: p.transition,
+        item_count: Array.isArray(p.display_playlist_items) ? p.display_playlist_items[0]?.count || 0 : 0,
+    }))
 
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -106,7 +119,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Content Assignment</h3>
 
                         <div className="mb-4">
-                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} />
+                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} />
                         </div>
 
                         {activeMedia && (

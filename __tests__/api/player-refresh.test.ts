@@ -48,7 +48,12 @@ function buildMockClient(opts: {
 
     const client: any = {
         from: vi.fn().mockReturnValue(screenChain),
-        rpc: vi.fn().mockResolvedValue({ data: resolvedMediaId, error: null }),
+        rpc: vi.fn().mockResolvedValue({
+            data: resolvedMediaId
+                ? [{ resolved_media_id: resolvedMediaId, resolved_playlist_id: null }]
+                : [{ resolved_media_id: null, resolved_playlist_id: null }],
+            error: null,
+        }),
     }
 
     return client
