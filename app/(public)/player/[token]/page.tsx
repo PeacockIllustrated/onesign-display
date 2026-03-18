@@ -41,11 +41,14 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const [mediaError, setMediaError] = useState(false)
     const [cursorHidden, setCursorHidden] = useState(false)
 
-    // Slideshow state — dual-layer for smooth transitions
-    const [slideIndex, setSlideIndex] = useState(0)
-    const [prevSlideIndex, setPrevSlideIndex] = useState<number | null>(null)
-    const [transitionPhase, setTransitionPhase] = useState<'idle' | 'out' | 'in'>('idle')
+    // Slideshow state — A/B layer crossfade (no unmount/remount)
+    const [activeLayer, setActiveLayer] = useState<'A' | 'B'>('A')
+    const [layerAIndex, setLayerAIndex] = useState(0)
+    const [layerBIndex, setLayerBIndex] = useState(0)
+    const [layerAVisible, setLayerAVisible] = useState(true)
+    const [layerBVisible, setLayerBVisible] = useState(false)
     const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    const transitioningRef = useRef(false)
     const [preloaded, setPreloaded] = useState(false)
 
     const manifestRef = useRef<Manifest | null>(null)
@@ -57,11 +60,14 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const HEARTBEAT_INTERVAL_MS = 60000
     const MAX_RETRY_DELAY_MS = 120000
 
-    // Reset slide index when playlist changes
+    // Reset when playlist changes
     useEffect(() => {
-        setSlideIndex(0)
-        setPrevSlideIndex(null)
-        setTransitionPhase('idle')
+        setActiveLayer('A')
+        setLayerAIndex(0)
+        setLayerBIndex(0)
+        setLayerAVisible(true)
+        setLayerBVisible(false)
+        transitioningRef.current = false
         setPreloaded(false)
         if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
     }, [manifest?.playlist?.id])
@@ -175,49 +181,74 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return () => { clearInterval(pollTimer); clearInterval(heartbeatTimer) }
     }, [token, fetchData])
 
-    // ── Slideshow: advance with symmetric transition ─────────
+    // ── Slideshow: A/B layer crossfade ─────────────────────
+    // Two layers are always rendered. The "active" layer is visible.
+    // To advance: load next slide into the inactive layer, then
+    // simultaneously fade active out + inactive in (same duration).
+
+    const currentSlideIndex = activeLayer === 'A' ? layerAIndex : layerBIndex
 
     const advanceSlide = useCallback(() => {
         const playlist = manifestRef.current?.playlist
-        if (!playlist || playlist.items.length === 0 || transitionPhase !== 'idle') return
+        if (!playlist || playlist.items.length === 0 || transitioningRef.current) return
+
+        const nextIndex = currentSlideIndex + 1 >= playlist.items.length
+            ? (playlist.loop ? 0 : currentSlideIndex)
+            : currentSlideIndex + 1
+
+        if (nextIndex === currentSlideIndex) return // End of non-looping playlist
 
         const dur = playlist.transition_duration_ms
+        transitioningRef.current = true
 
         if (playlist.transition === 'cut') {
-            // Instant swap, no animation
-            setSlideIndex(prev => {
-                const next = prev + 1
-                return next >= playlist.items.length ? (playlist.loop ? 0 : prev) : next
-            })
+            // Instant swap
+            if (activeLayer === 'A') {
+                setLayerBIndex(nextIndex)
+                setLayerAVisible(false)
+                setLayerBVisible(true)
+                setActiveLayer('B')
+            } else {
+                setLayerAIndex(nextIndex)
+                setLayerBVisible(false)
+                setLayerAVisible(true)
+                setActiveLayer('A')
+            }
+            transitioningRef.current = false
             return
         }
 
-        // Phase 1: Transition OUT current slide
-        setTransitionPhase('out')
-
-        setTimeout(() => {
-            // Phase 2: Swap slide (hidden), then transition IN
-            setPrevSlideIndex(slideIndex)
-            setSlideIndex(prev => {
-                const next = prev + 1
-                return next >= playlist.items.length ? (playlist.loop ? 0 : prev) : next
+        // Load next slide into inactive layer, then crossfade
+        if (activeLayer === 'A') {
+            setLayerBIndex(nextIndex)
+            // Small delay to ensure the inactive layer has rendered before transitioning
+            requestAnimationFrame(() => {
+                setLayerAVisible(false) // Fade out A
+                setLayerBVisible(true)  // Fade in B simultaneously
+                setTimeout(() => {
+                    setActiveLayer('B')
+                    transitioningRef.current = false
+                }, dur)
             })
-            setTransitionPhase('in')
-
-            setTimeout(() => {
-                // Phase 3: Done
-                setTransitionPhase('idle')
-                setPrevSlideIndex(null)
-            }, dur)
-        }, dur)
-    }, [slideIndex, transitionPhase])
+        } else {
+            setLayerAIndex(nextIndex)
+            requestAnimationFrame(() => {
+                setLayerBVisible(false)
+                setLayerAVisible(true)
+                setTimeout(() => {
+                    setActiveLayer('A')
+                    transitioningRef.current = false
+                }, dur)
+            })
+        }
+    }, [currentSlideIndex, activeLayer])
 
     // Slideshow: timer for image slides
     useEffect(() => {
         const playlist = manifest?.playlist
         if (!playlist || playlist.items.length === 0 || !isPlaying || !preloaded) return
 
-        const currentItem = playlist.items[slideIndex]
+        const currentItem = playlist.items[currentSlideIndex]
         if (!currentItem) return
 
         const isVideo = currentItem.type?.startsWith('video/')
@@ -226,7 +257,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             slideTimerRef.current = setTimeout(() => advanceSlide(), currentItem.duration_seconds * 1000)
             return () => { if (slideTimerRef.current) clearTimeout(slideTimerRef.current) }
         }
-    }, [slideIndex, manifest?.playlist, isPlaying, advanceSlide, preloaded])
+    }, [currentSlideIndex, manifest?.playlist, isPlaying, advanceSlide, preloaded])
 
     const handleVideoEnded = useCallback(() => advanceSlide(), [advanceSlide])
 
@@ -314,17 +345,18 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Render slide helper ──────────────────────────────────
 
-    function renderSlide(item: PlaylistItem, index: number, isVisible: boolean) {
+    function renderSlide(item: PlaylistItem, layerKey: string, isVisible: boolean) {
         if (!item?.url) return null
 
         return (
             <div
-                key={`slide-${index}`}
+                key={`layer-${layerKey}`}
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform' }}
+                style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform', zIndex: isVisible ? 2 : 1 }}
             >
                 {item.type?.startsWith('video/') ? (
                     <video
+                        key={`video-${layerKey}-${item.id}`}
                         src={item.url}
                         className="w-full h-full object-contain"
                         autoPlay={isVisible}
@@ -335,6 +367,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     />
                 ) : (
                     <img
+                        key={`img-${layerKey}-${item.id}`}
                         src={item.url}
                         className="w-full h-full object-contain"
                         alt="Slide content"
@@ -348,12 +381,8 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     // ── Render: Playlist mode ────────────────────────────────
 
     if (playlist && playlist.items.length > 0) {
-        const currentItem = playlist.items[slideIndex]
-        const prevItem = prevSlideIndex !== null ? playlist.items[prevSlideIndex] : null
-
-        // Determine visibility based on transition phase
-        const currentVisible = transitionPhase !== 'out'
-        const prevVisible = transitionPhase === 'out'
+        const layerAItem = playlist.items[layerAIndex]
+        const layerBItem = playlist.items[layerBIndex]
 
         return (
             <div
@@ -363,11 +392,11 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             >
                 <NeverSleepGuard active={isPlaying} />
 
-                {/* Previous slide (fading out) */}
-                {prevItem && transitionPhase !== 'idle' && renderSlide(prevItem, prevSlideIndex!, prevVisible)}
+                {/* Layer A — always mounted */}
+                {layerAItem && renderSlide(layerAItem, 'A', layerAVisible)}
 
-                {/* Current slide */}
-                {currentItem && renderSlide(currentItem, slideIndex, currentVisible)}
+                {/* Layer B — always mounted */}
+                {layerBItem && renderSlide(layerBItem, 'B', layerBVisible)}
 
                 {/* Loading indicator while preloading */}
                 {!preloaded && (
