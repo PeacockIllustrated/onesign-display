@@ -303,6 +303,62 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return () => { clearTimeout(hideTimer); window.removeEventListener('mousemove', showCursor); window.removeEventListener('touchstart', showCursor); window.removeEventListener('pointermove', showCursor) }
     }, [isPlaying])
 
+    // Video health watchdog — detects stuck/failed videos that don't fire onerror
+    // (e.g. ERR_QUIC_PROTOCOL_ERROR, network drops mid-stream)
+    useEffect(() => {
+        if (!isPlaying || !manifest) return
+
+        const STUCK_THRESHOLD = 15_000 // 15s with no progress → re-fetch
+        let lastProgress = Date.now()
+        let watchdogTimer: ReturnType<typeof setInterval>
+
+        const markProgress = () => { lastProgress = Date.now() }
+
+        // Attach to all video elements in the player
+        const attachListeners = () => {
+            const videos = document.querySelectorAll('video:not([data-guard])')
+            videos.forEach(v => {
+                v.addEventListener('timeupdate', markProgress)
+                v.addEventListener('loadeddata', markProgress)
+                v.addEventListener('playing', markProgress)
+                // Stalled/waiting events that onerror might miss
+                v.addEventListener('stalled', () => {
+                    console.warn('[Player] Video stalled, will re-fetch if stuck')
+                })
+            })
+            return videos
+        }
+
+        // Check periodically if any content video has progressed
+        let refetchPending = false
+        watchdogTimer = setInterval(() => {
+            const elapsed = Date.now() - lastProgress
+            if (elapsed > STUCK_THRESHOLD && !refetchPending) {
+                console.warn(`[Player] No video progress for ${Math.round(elapsed / 1000)}s — re-fetching manifest`)
+                refetchPending = true
+                fetchData().finally(() => {
+                    // Reset after re-fetch, give new URLs time to load
+                    setTimeout(() => { lastProgress = Date.now(); refetchPending = false }, 5000)
+                })
+            }
+        }, 5000)
+
+        const videos = attachListeners()
+        // Re-attach when DOM changes (slide transitions add new video elements)
+        const observer = new MutationObserver(() => attachListeners())
+        observer.observe(document.body, { childList: true, subtree: true })
+
+        return () => {
+            clearInterval(watchdogTimer)
+            observer.disconnect()
+            videos.forEach(v => {
+                v.removeEventListener('timeupdate', markProgress)
+                v.removeEventListener('loadeddata', markProgress)
+                v.removeEventListener('playing', markProgress)
+            })
+        }
+    }, [isPlaying, manifest, fetchData])
+
     const handleStart = () => { setIsPlaying(true); toggleFullscreen() }
 
     // Content fit mode from manifest (never stretch, always aspect-ratio safe)

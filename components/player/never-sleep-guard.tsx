@@ -118,10 +118,12 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
             console.error('[Guard] Video play failed', err)
         })
 
-        // 3. Self-Healing Loop
-        // Monitor if the video actually progresses
+        // 3. Self-Healing Loop with backoff
         let lastTime = 0
         let stuckCount = 0
+        let restartAttempts = 0
+        const MAX_RESTART_ATTEMPTS = 5
+        let checkInterval = 1000
 
         const monitorInterval = setInterval(() => {
             if (!video) return
@@ -129,18 +131,22 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
             const currentTime = video.currentTime
             if (currentTime === lastTime) {
                 stuckCount++
-                console.warn(`[Guard] Video stuck for ${stuckCount} checks`)
 
-                if (stuckCount > 3) {
-                    console.log('[Guard] Attempting restart...')
-                    video.play().catch(console.warn)
+                if (stuckCount > 3 && restartAttempts < MAX_RESTART_ATTEMPTS) {
+                    restartAttempts++
+                    console.log(`[Guard] Attempting restart (${restartAttempts}/${MAX_RESTART_ATTEMPTS})...`)
+                    video.play().catch(() => {})
                     stuckCount = 0
+                } else if (restartAttempts >= MAX_RESTART_ATTEMPTS && stuckCount === 4) {
+                    // Log once then go silent
+                    console.warn('[Guard] Max restarts reached, backing off')
                 }
             } else {
                 stuckCount = 0
+                restartAttempts = 0
                 lastTime = currentTime
             }
-        }, 1000)
+        }, checkInterval)
 
         return () => {
             cancelAnimationFrame(frameId)
@@ -172,8 +178,8 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
                 playsInline
                 muted
                 loop
-                // Important attributes for some internal browsers to allow autoplay
                 autoPlay
+                data-guard="true"
             />
         </div>
     )

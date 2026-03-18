@@ -1,0 +1,1915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onesign Display — Product Overview</title>
+  <link href="https://fonts.cdnfonts.com/css/gilroy-bold" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       ONESIGN DISPLAY — PRODUCT OVERVIEW BROCHURE
+       Design system based on Onesign brand guidelines
+       ============================================================ */
+
+    :root {
+      --navy:       #2C5F6B;
+      --navy-deep:  #1B3F48;
+      --teal:       #4E7E8C;
+      --teal-light: #6A9BAA;
+      --cream:      #F8F6F2;
+      --white:      #FFFFFF;
+      --dark:       #1A1D21;
+      --mid:        #4A5568;
+      --light:      #94A3B8;
+      --border:     #E2E8F0;
+      --sidebar-bg: #111318;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dark);
+      font-size: 10pt;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Gilroy-Bold', 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    /* ---- Page Layout ---- */
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    .content {
+      padding: 28mm 22mm 20mm 22mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bg-white  { background: var(--white); }
+    .bg-cream  { background: var(--cream); }
+
+    /* ---- Page Header ---- */
+
+    .pg-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2mm;
+      padding-bottom: 3mm;
+    }
+
+    .pg-header .logo-sm {
+      height: 7mm;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .pg-header .meta {
+      margin-left: auto;
+      font-size: 7.5pt;
+      color: var(--light);
+      letter-spacing: 0.04em;
+    }
+
+    .accent-line {
+      height: 2px;
+      background: linear-gradient(90deg, #4E7E8C, rgba(78, 126, 140, 0));
+      margin-bottom: 6mm;
+    }
+
+    /* ---- Page Footer ---- */
+
+    .pg-footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 22mm;
+      right: 22mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 3mm;
+      font-size: 7pt;
+      color: var(--light);
+    }
+
+    /* ---- Section Number Watermark ---- */
+
+    .section-num {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 54pt;
+      color: var(--teal);
+      opacity: 0.12;
+      position: absolute;
+      top: 24mm;
+      right: 22mm;
+      line-height: 1;
+    }
+
+    /* ---- Typography ---- */
+
+    .page-title {
+      font-size: 26pt;
+      color: var(--navy);
+      margin-bottom: 4mm;
+      line-height: 1.1;
+    }
+
+    .page-subtitle {
+      font-size: 14pt;
+      color: var(--navy);
+      margin-bottom: 4mm;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-weight: 400;
+    }
+
+    .body-text {
+      font-size: 9.5pt;
+      line-height: 1.65;
+      color: var(--mid);
+      max-width: 145mm;
+    }
+
+    .body-text + .body-text { margin-top: 3mm; }
+
+    /* ---- Bullets ---- */
+
+    .bullets {
+      list-style: none;
+      padding: 0;
+      margin: 4mm 0;
+    }
+
+    .bullets li {
+      position: relative;
+      padding-left: 5mm;
+      margin-bottom: 2.5mm;
+      font-size: 9pt;
+      line-height: 1.5;
+      color: var(--mid);
+    }
+
+    .bullets li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 2.2mm;
+      width: 2mm;
+      height: 2mm;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    /* ---- Callout Box ---- */
+
+    .callout {
+      background: var(--cream);
+      border-left: 3px solid var(--teal);
+      padding: 5mm 6mm;
+      border-radius: 0 6px 6px 0;
+      margin: 5mm 0;
+      font-size: 9.5pt;
+      font-weight: 500;
+      color: var(--dark);
+      line-height: 1.55;
+    }
+
+    .bg-cream .callout { background: var(--white); }
+
+    /* ---- Banner ---- */
+
+    .banner {
+      background: var(--navy);
+      color: white;
+      padding: 4mm 6mm;
+      border-radius: 5px;
+      margin: 5mm 0;
+    }
+
+    .banner h3 {
+      font-size: 13pt;
+      color: white;
+    }
+
+    /* ---- Challenge Sidebar ---- */
+
+    .challenge-layout {
+      display: flex;
+      gap: 6mm;
+      flex: 1;
+    }
+
+    .challenge-sidebar {
+      width: 48mm;
+      background: var(--navy);
+      border-radius: 6px;
+      padding: 7mm 6mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .challenge-sidebar h2 {
+      font-size: 22pt;
+      color: white;
+      line-height: 1.1;
+    }
+
+    .challenge-sidebar p {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.6);
+      margin-top: 3mm;
+      line-height: 1.5;
+    }
+
+    .challenge-main {
+      flex: 1;
+    }
+
+    /* ---- Benefits Grid ---- */
+
+    .benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm;
+    }
+
+    .benefit-card {
+      padding: 2.5mm 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .benefit-card h4 {
+      font-size: 10pt;
+      color: var(--navy);
+      margin-bottom: 1.5mm;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-weight: 400;
+    }
+
+    .benefit-card p {
+      font-size: 8.5pt;
+      color: var(--mid);
+      line-height: 1.5;
+    }
+
+    /* ---- CTA Section ---- */
+
+    .cta-section {
+      background: var(--navy);
+      border-radius: 8px;
+      padding: 10mm 12mm;
+      text-align: center;
+      color: white;
+      margin-top: 5mm;
+    }
+
+    .cta-section h3 {
+      font-size: 16pt;
+      color: white;
+      margin-bottom: 3mm;
+    }
+
+    .cta-section p {
+      font-size: 9pt;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      margin-bottom: 4mm;
+    }
+
+    .cta-email {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 13pt;
+      color: var(--teal-light);
+      margin: 3mm 0 2mm;
+    }
+
+    .cta-details {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ---- Two-Up Layout ---- */
+
+    .two-up {
+      display: flex;
+      gap: 8mm;
+      justify-content: center;
+      align-items: flex-start;
+      margin-top: 5mm;
+    }
+
+    .two-up .col {
+      flex: 1;
+      text-align: center;
+    }
+
+    .caption {
+      display: block;
+      font-size: 7.5pt;
+      color: var(--light);
+      font-style: italic;
+      margin-top: 3mm;
+      text-align: center;
+    }
+
+    /* ---- Sidebar Layout ---- */
+
+    .sidebar-layout {
+      display: flex;
+      gap: 6mm;
+      flex: 1;
+      margin-top: 4mm;
+    }
+
+    .sidebar-text-col {
+      flex: 1;
+      padding-right: 4mm;
+    }
+
+    .sidebar-img-col {
+      width: 50%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      border-left: 2px solid var(--teal);
+      padding-left: 5mm;
+    }
+
+    /* ---- Feature Tags ---- */
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2mm;
+      margin: 4mm 0;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      background: rgba(78, 126, 140, 0.1);
+      color: var(--navy);
+      font-size: 7.5pt;
+      font-weight: 600;
+      padding: 1.5mm 3mm;
+      border-radius: 3px;
+      border: 1px solid rgba(78, 126, 140, 0.25);
+    }
+
+    /* ============================================================
+       DEVICE MOCKUPS — Laptop & TV
+       ============================================================ */
+
+    /* ---- Laptop Frame ---- */
+
+    .laptop {
+      display: inline-block;
+      position: relative;
+    }
+
+    .laptop-body {
+      background: #2d2d2d;
+      border-radius: 5mm 5mm 0 0;
+      padding: 2mm 2mm 0 2mm;
+      position: relative;
+    }
+
+    .laptop-camera {
+      width: 1.5mm;
+      height: 1.5mm;
+      background: #555;
+      border-radius: 50%;
+      margin: 0 auto 1.5mm;
+    }
+
+    .laptop-screen {
+      background: #f9fafb;
+      border-radius: 1px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .laptop-base {
+      height: 2.5mm;
+      background: linear-gradient(to bottom, #4a4a4a, #6a6a6a);
+      border-radius: 0 0 1mm 1mm;
+      margin: 0;
+    }
+
+    .laptop-foot {
+      height: 1.5mm;
+      background: #888;
+      border-radius: 0 0 2mm 2mm;
+      margin: 0 -3mm;
+    }
+
+    .laptop.small .laptop-body { padding: 1.5mm 1.5mm 0; border-radius: 3mm 3mm 0 0; }
+    .laptop.small .laptop-camera { width: 1mm; height: 1mm; margin-bottom: 1mm; }
+    .laptop.small .laptop-base { height: 2mm; }
+    .laptop.small .laptop-foot { height: 1mm; margin: 0 -2mm; }
+
+    /* ---- Phone Frame ---- */
+
+    .phone {
+      display: inline-block;
+      position: relative;
+    }
+
+    .phone-body {
+      background: #1a1a1a;
+      border-radius: 8mm;
+      padding: 3mm 2mm;
+      position: relative;
+      box-shadow: 0 2mm 10mm rgba(0,0,0,0.15), 0 0.5mm 3mm rgba(0,0,0,0.08);
+    }
+
+    .phone-notch {
+      width: 12mm;
+      height: 1.5mm;
+      background: #1a1a1a;
+      border-radius: 0 0 2mm 2mm;
+      margin: -1mm auto 1.5mm;
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone-screen {
+      background: #f9fafb;
+      border-radius: 4mm;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-home {
+      width: 10mm;
+      height: 1mm;
+      background: #444;
+      border-radius: 1mm;
+      margin: 2mm auto 0;
+    }
+
+    /* ---- TV Frame ---- */
+
+    .tv {
+      display: inline-block;
+      position: relative;
+    }
+
+    .tv-bezel {
+      background: #1a1a1a;
+      border-radius: 2mm;
+      padding: 1.5mm;
+      box-shadow: 0 4mm 15mm rgba(0,0,0,0.12), 0 1mm 4mm rgba(0,0,0,0.06);
+    }
+
+    .tv-screen {
+      background: #0d0d0d;
+      border-radius: 0.5mm;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tv-stand-neck {
+      width: 4mm;
+      height: 3mm;
+      background: #333;
+      margin: 0 auto;
+    }
+
+    .tv-stand-base {
+      width: 18mm;
+      height: 1.5mm;
+      background: linear-gradient(to bottom, #444, #555);
+      margin: 0 auto;
+      border-radius: 0 0 1mm 1mm;
+    }
+
+    /* ============================================================
+       MOCK UI COMPONENTS — Miniature App Representations
+       ============================================================ */
+
+    .mock-app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* -- Sidebar -- */
+    .mock-sidebar {
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 2mm 1.5mm;
+      flex-shrink: 0;
+    }
+
+    .mock-sidebar .mock-logo {
+      width: 70%;
+      height: 2mm;
+      background: rgba(255,255,255,0.8);
+      border-radius: 0.5mm;
+      margin: 0 auto 2.5mm;
+    }
+
+    .mock-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      padding: 1mm 1.5mm;
+      border-radius: 1mm;
+      margin-bottom: 0.5mm;
+      font-size: 3.5pt;
+      color: rgba(255,255,255,0.4);
+      white-space: nowrap;
+    }
+
+    .mock-nav-item.active {
+      background: rgba(61, 178, 140, 0.15);
+      color: var(--teal);
+    }
+
+    .mock-nav-dot {
+      width: 1.2mm;
+      height: 1.2mm;
+      border-radius: 0.3mm;
+      flex-shrink: 0;
+    }
+
+    .mock-nav-item.active .mock-nav-dot { background: var(--teal); }
+    .mock-nav-item .mock-nav-dot { background: rgba(255,255,255,0.3); }
+
+    .mock-sidebar-footer {
+      margin-top: auto;
+      padding: 1mm;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mock-avatar {
+      width: 2.5mm;
+      height: 2.5mm;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    /* -- Main Content Area -- */
+    .mock-main {
+      flex: 1;
+      background: #f3f4f6;
+      padding: 2.5mm 3mm;
+      overflow: hidden;
+    }
+
+    .mock-heading {
+      font-size: 4.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 1mm;
+    }
+
+    .mock-subheading {
+      font-size: 3pt;
+      color: var(--light);
+      margin-bottom: 2mm;
+    }
+
+    /* -- Cards -- */
+    .mock-card-grid {
+      display: grid;
+      gap: 1.5mm;
+    }
+
+    .mock-card {
+      background: white;
+      border-radius: 1.5mm;
+      padding: 2mm;
+      box-shadow: 0 0.3mm 1mm rgba(0,0,0,0.06);
+    }
+
+    .mock-card-title {
+      font-size: 3.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5mm;
+    }
+
+    .mock-card-meta {
+      font-size: 2.5pt;
+      color: var(--light);
+    }
+
+    .mock-card-badge {
+      display: inline-block;
+      font-size: 2pt;
+      padding: 0.3mm 1mm;
+      border-radius: 0.5mm;
+      background: rgba(61, 178, 140, 0.12);
+      color: var(--teal);
+      font-weight: 600;
+      margin-top: 0.5mm;
+    }
+
+    /* -- Media Grid -- */
+    .mock-media-grid {
+      display: grid;
+      gap: 1.2mm;
+    }
+
+    .mock-media-thumb {
+      border-radius: 1mm;
+      aspect-ratio: 16/10;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mock-media-thumb .mock-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2.5mm;
+      height: 2.5mm;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mock-media-thumb .mock-play::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 1mm solid white;
+      border-top: 0.6mm solid transparent;
+      border-bottom: 0.6mm solid transparent;
+      margin-left: 0.3mm;
+    }
+
+    .mock-media-name {
+      font-size: 2.5pt;
+      color: var(--mid);
+      margin-top: 0.5mm;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* -- Upload Button -- */
+    .mock-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5mm;
+      background: var(--teal);
+      color: white;
+      font-size: 3pt;
+      font-weight: 600;
+      padding: 0.8mm 2mm;
+      border-radius: 1mm;
+    }
+
+    .mock-btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5mm;
+      background: white;
+      color: var(--dark);
+      font-size: 3pt;
+      font-weight: 500;
+      padding: 0.8mm 2mm;
+      border-radius: 1mm;
+      border: 0.5px solid var(--border);
+    }
+
+    /* -- Schedule Timeline -- */
+    .mock-schedule-row {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      margin-bottom: 1mm;
+    }
+
+    .mock-schedule-label {
+      font-size: 2.5pt;
+      color: var(--mid);
+      width: 5mm;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .mock-schedule-bar {
+      height: 3mm;
+      border-radius: 0.8mm;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 1mm;
+      font-size: 2.5pt;
+      color: white;
+      font-weight: 600;
+    }
+
+    /* -- Day Selector -- */
+    .mock-days {
+      display: flex;
+      gap: 0.8mm;
+      margin-bottom: 2mm;
+    }
+
+    .mock-day {
+      width: 3mm;
+      height: 3mm;
+      border-radius: 50%;
+      font-size: 2pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .mock-day.on  { background: var(--teal); color: white; }
+    .mock-day.off { background: #e5e7eb; color: var(--light); }
+
+    /* -- Screen Preview -- */
+    .mock-preview {
+      background: #111;
+      border-radius: 1mm;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .mock-preview-badge {
+      position: absolute;
+      top: 1mm;
+      right: 1mm;
+      font-size: 2pt;
+      padding: 0.3mm 1mm;
+      border-radius: 0.5mm;
+      background: rgba(61, 178, 140, 0.9);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* -- Specials Editor -- */
+    .mock-editor-split {
+      display: flex;
+      gap: 1.5mm;
+      flex: 1;
+    }
+
+    .mock-editor-form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
+    }
+
+    .mock-field-label {
+      font-size: 2.5pt;
+      font-weight: 600;
+      color: var(--mid);
+    }
+
+    .mock-field-input {
+      background: white;
+      border: 0.5px solid var(--border);
+      border-radius: 0.8mm;
+      padding: 0.8mm 1.2mm;
+      font-size: 3pt;
+      color: var(--dark);
+    }
+
+    .mock-editor-canvas {
+      flex: 1.2;
+      background: #111;
+      border-radius: 1.5mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2mm;
+    }
+
+    /* -- TV Menu Content -- */
+    .mock-menu {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a3a2a 0%, #0d2318 100%);
+      padding: 3mm;
+      display: flex;
+      flex-direction: column;
+      color: white;
+    }
+
+    .mock-menu-header {
+      text-align: center;
+      margin-bottom: 2mm;
+      padding-bottom: 1.5mm;
+      border-bottom: 0.5px solid rgba(255,255,255,0.15);
+    }
+
+    .mock-menu-title {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 5pt;
+      letter-spacing: 0.08em;
+      color: var(--teal-light);
+    }
+
+    .mock-menu-subtitle {
+      font-size: 2.5pt;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.5mm;
+    }
+
+    .mock-menu-section {
+      margin-bottom: 2mm;
+    }
+
+    .mock-menu-section-title {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 3.5pt;
+      color: var(--teal-light);
+      margin-bottom: 1mm;
+      letter-spacing: 0.05em;
+    }
+
+    .mock-menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.5mm 0;
+      font-size: 2.8pt;
+    }
+
+    .mock-menu-item-name {
+      color: rgba(255,255,255,0.85);
+    }
+
+    .mock-menu-item-dots {
+      flex: 1;
+      border-bottom: 0.5px dotted rgba(255,255,255,0.15);
+      margin: 0 1mm;
+      min-width: 3mm;
+    }
+
+    .mock-menu-item-price {
+      color: var(--teal-light);
+      font-weight: 600;
+    }
+
+    .mock-menu-footer {
+      margin-top: auto;
+      text-align: center;
+      font-size: 2pt;
+      color: rgba(255,255,255,0.3);
+      padding-top: 1mm;
+      border-top: 0.5px solid rgba(255,255,255,0.08);
+    }
+
+    /* ============================================================
+       PRICING CARDS
+       ============================================================ */
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3mm;
+      margin: 2mm 0;
+    }
+
+    .price-card {
+      border: 1px solid var(--border);
+      border-radius: 2mm;
+      padding: 3.5mm;
+      background: white;
+      position: relative;
+    }
+
+    .price-card.featured {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 1px var(--teal);
+    }
+
+    .price-card.featured::after {
+      content: 'POPULAR';
+      position: absolute;
+      top: -1.5mm;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2pt;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: var(--teal);
+      color: white;
+      padding: 0.3mm 2mm;
+      border-radius: 1mm;
+    }
+
+    .price-plan-name {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 9pt;
+      color: var(--navy);
+      margin-bottom: 0.5mm;
+    }
+
+    .price-amount {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 16pt;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+
+    .price-amount span {
+      font-size: 7pt;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--light);
+      font-weight: 400;
+    }
+
+    .price-desc {
+      font-size: 6.5pt;
+      color: var(--light);
+      margin: 1.5mm 0 2.5mm;
+      line-height: 1.4;
+    }
+
+    .price-features {
+      list-style: none;
+      padding: 0;
+    }
+
+    .price-features li {
+      font-size: 6.5pt;
+      color: var(--mid);
+      padding: 0.8mm 0;
+      padding-left: 3.5mm;
+      position: relative;
+      line-height: 1.3;
+    }
+
+    .price-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 6pt;
+    }
+
+    .price-features li.no::before {
+      content: '—';
+      color: var(--light);
+    }
+
+    .price-amount.blank {
+      border-bottom: 1.5px dashed var(--light);
+      display: inline-block;
+      min-width: 18mm;
+      height: 5mm;
+      margin-bottom: 1mm;
+    }
+
+    .price-features li.blank {
+      border-bottom: 1px dashed #ddd;
+      min-height: 3.5mm;
+      padding-left: 0;
+    }
+
+    .price-features li.blank::before {
+      content: '';
+    }
+
+    .capabilities-card {
+      grid-column: 1 / -1;
+      border: 1.5px solid var(--navy);
+      border-radius: 2mm;
+      padding: 3.5mm 5mm;
+      background: #f8fafb;
+      margin-top: 1mm;
+    }
+
+    .capabilities-card h4 {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 9pt;
+      color: var(--navy);
+      margin-bottom: 2mm;
+    }
+
+    .capabilities-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1mm 4mm;
+      list-style: none;
+      padding: 0;
+    }
+
+    .capabilities-list li {
+      font-size: 6.5pt;
+      color: var(--mid);
+      padding: 0.5mm 0;
+      padding-left: 3.5mm;
+      position: relative;
+      line-height: 1.3;
+    }
+
+    .capabilities-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 6pt;
+    }
+
+    .chris-note {
+      margin-top: 2mm;
+      padding: 2mm 3mm;
+      background: #fffbe6;
+      border: 1px dashed #d4a017;
+      border-radius: 1.5mm;
+      font-size: 6.5pt;
+      color: #5a4a00;
+      line-height: 1.5;
+    }
+
+    /* ============================================================
+       COVER PAGE
+       ============================================================ */
+
+    .cover {
+      background: linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 55%, #0F2A30 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover-content {
+      padding: 18mm 22mm 0 22mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover .logo-main {
+      height: 12mm;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 16mm;
+    }
+
+    .cover-label {
+      font-size: 8pt;
+      letter-spacing: 0.15em;
+      color: var(--teal);
+      font-weight: 600;
+      margin-bottom: 5mm;
+      display: flex;
+      align-items: center;
+      gap: 3mm;
+    }
+
+    .cover-label::before {
+      content: '';
+      display: block;
+      width: 8mm;
+      height: 1.5px;
+      background: var(--teal);
+    }
+
+    .cover h1 {
+      font-size: 42pt;
+      line-height: 1.05;
+      margin-bottom: 8mm;
+      max-width: 130mm;
+    }
+
+    .cover .lead {
+      font-size: 10.5pt;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 120mm;
+    }
+
+    .cover-visual {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 0 22mm 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-decoration {
+      position: absolute;
+      right: -20mm;
+      bottom: -30mm;
+      width: 120mm;
+      height: 120mm;
+      border: 2px solid rgba(61, 178, 140, 0.08);
+      border-radius: 50%;
+    }
+
+    .cover-decoration-2 {
+      position: absolute;
+      right: -5mm;
+      bottom: -15mm;
+      width: 80mm;
+      height: 80mm;
+      border: 2px solid rgba(61, 178, 140, 0.05);
+      border-radius: 50%;
+    }
+
+    .cover-footer {
+      padding: 6mm 22mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .cover-footer .client-label {
+      font-size: 7pt;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .cover-footer-contact {
+      text-align: right;
+    }
+
+    .cover-footer-contact .company {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .cover-footer-contact .details {
+      font-size: 7pt;
+      color: rgba(255,255,255,0.35);
+      margin-top: 1mm;
+    }
+
+    /* ---- Specials card on cover ---- */
+    .cover-mini-tv {
+      position: absolute;
+      right: 22mm;
+      bottom: 15mm;
+    }
+
+    /* ---- Stat row ---- */
+    .stat-row {
+      display: flex;
+      gap: 6mm;
+      margin: 4mm 0;
+    }
+
+    .stat-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-value {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 22pt;
+      color: var(--teal);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 7.5pt;
+      color: var(--mid);
+      margin-top: 1mm;
+    }
+
+    /* ---- How It Works Steps ---- */
+    .steps {
+      display: flex;
+      gap: 3mm;
+      margin: 4mm 0;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 3mm 2mm;
+    }
+
+    .step-num {
+      width: 6mm;
+      height: 6mm;
+      border-radius: 50%;
+      background: var(--teal);
+      color: white;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 8pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2mm;
+    }
+
+    .step h4 {
+      font-size: 8pt;
+      color: var(--navy);
+      margin-bottom: 1mm;
+    }
+
+    .step p {
+      font-size: 7pt;
+      color: var(--mid);
+      line-height: 1.4;
+    }
+
+    .step-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--border);
+      font-size: 12pt;
+      flex-shrink: 0;
+      padding-top: 4mm;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ================================================================
+     PAGE 1 — COVER
+     ================================================================ -->
+<div class="page cover">
+  <div class="cover-content">
+    <img class="logo-main" src="screenshots/onesign-logo-white.png" alt="Onesign">
+
+    <div class="cover-label">PRODUCT OVERVIEW</div>
+
+    <h1>Digital Menus That Run Themselves</h1>
+
+    <p class="lead">
+      Stream content to every screen. Schedule dayparts automatically.
+      Update prices in seconds. All from one dashboard.
+    </p>
+  </div>
+
+  <div class="cover-visual">
+    <div class="cover-decoration"></div>
+    <div class="cover-decoration-2"></div>
+  </div>
+
+  <div class="cover-footer">
+    <span class="client-label">ONESIGN DISPLAY</span>
+    <div class="cover-footer-contact">
+      <div class="company">Onesign and Digital</div>
+      <div class="details">D86 Princesway, Gateshead NE11 0TU<br>display.onesignanddigital.com &bull; 0191 487 6767</div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 2 — THE CHALLENGE / THE SOLUTION
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">01</div>
+
+    <div class="challenge-layout">
+      <div class="challenge-sidebar">
+        <h2>The<br>Challenge</h2>
+        <p>Digital menus should be the easiest part of running a venue. For most teams, they're a headache.</p>
+      </div>
+
+      <div class="challenge-main">
+        <p class="body-text">
+          For hospitality businesses managing digital menu boards, the daily reality is far more manual than it should be. Content lives on USB sticks. Schedules are managed by someone who &ldquo;knows how to use the TV.&rdquo; Updating a single price means a phone call, a design request, and a wait.
+        </p>
+
+        <ul class="bullets" style="margin-top: 5mm;">
+          <li>USB sticks and manual content swaps for every price change</li>
+          <li>No way to schedule breakfast, lunch and evening boards automatically</li>
+          <li>Zero visibility of what&rsquo;s actually playing on each screen</li>
+          <li>Inconsistent branding across multiple locations</li>
+          <li>Staff who don&rsquo;t know how to operate the display hardware</li>
+          <li>Hours lost coordinating design updates with external agencies</li>
+        </ul>
+
+        <div class="banner">
+          <h3>The Solution</h3>
+        </div>
+
+        <p class="body-text">
+          Onesign Display replaces the friction between your kitchen and your screens. Upload menus to a central dashboard, assign them to screens, set your schedule &mdash; and walk away. Content plays automatically, updates instantly, and you can see every screen from anywhere.
+        </p>
+
+        <div class="callout" style="margin-top: 5mm;">
+          One dashboard. Every screen. Every location.<br>
+          Updated in seconds, not hours.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>2</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 3 — THE DASHBOARD
+     ================================================================ -->
+<div class="page bg-cream">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">02</div>
+
+    <h2 class="page-title">The Dashboard</h2>
+
+    <p class="body-text">
+      Onesign Display gives your team a single control centre for every screen across every location.
+      The admin portal organises content by client, store, and screen &mdash; so you always know exactly
+      what&rsquo;s playing and where.
+    </p>
+
+    <!-- Laptop mockup: Admin Dashboard (real screenshot) -->
+    <div style="margin: 6mm auto 0; max-width: 145mm;">
+      <div class="laptop" style="width: 100%;">
+        <div class="laptop-body">
+          <div class="laptop-camera"></div>
+          <div class="laptop-screen" style="height: auto;">
+            <img src="screenshots/admin-dashboard-desktop.png" alt="Onesign Display admin dashboard" style="display: block; width: 100%; height: auto;">
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+        <div class="laptop-foot"></div>
+      </div>
+      <span class="caption">Admin dashboard &mdash; clients, stores, and screens at a glance</span>
+    </div>
+
+    <div style="margin-top: 5mm;">
+      <div class="feature-tags">
+        <span class="feature-tag">Multi-location hierarchy</span>
+        <span class="feature-tag">Role-based access</span>
+        <span class="feature-tag">Screen status monitoring</span>
+        <span class="feature-tag">One-click media assignment</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>3</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 4 — CONTENT & MEDIA
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">03</div>
+
+    <h2 class="page-title">Upload. Assign. Done.</h2>
+
+    <p class="body-text">
+      Upload menus as images or videos. Drag and drop into your media library, then assign directly
+      to screens. Onesign supports batch upload with smart filename matching &mdash; upload
+      <code style="font-size: 8.5pt; background: #f1f5f9; padding: 0.5mm 1.5mm; border-radius: 2px;">screen_1_lunch.png</code>
+      and it assigns itself automatically.
+    </p>
+
+    <!-- Two-up: Media Library + Screen Detail (real screenshots) -->
+    <div class="two-up" style="margin-top: 5mm;">
+      <!-- Left: Media Library -->
+      <div class="col">
+        <div class="laptop small" style="width: 100%;">
+          <div class="laptop-body">
+            <div class="laptop-camera"></div>
+            <div class="laptop-screen" style="height: auto;">
+              <img src="screenshots/admin-media-desktop.png" alt="Media Library" style="display: block; width: 100%; height: auto;">
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+          <div class="laptop-foot"></div>
+        </div>
+        <span class="caption">Media library with drag-and-drop upload</span>
+      </div>
+
+      <!-- Right: Screen Assignment -->
+      <div class="col">
+        <div class="laptop small" style="width: 100%;">
+          <div class="laptop-body">
+            <div class="laptop-camera"></div>
+            <div class="laptop-screen" style="height: auto;">
+              <img src="screenshots/admin-screen-desktop.png" alt="Screen detail" style="display: block; width: 100%; height: auto;">
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+          <div class="laptop-foot"></div>
+        </div>
+        <span class="caption">Screen detail with live preview and one-click assignment</span>
+      </div>
+    </div>
+
+    <div style="margin-top: 5mm;">
+      <div class="callout">
+        Supports images (PNG, JPG) and videos (MP4, WebM). Batch upload with smart filename matching
+        auto-assigns content to the right screens. No manual mapping required.
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>4</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 5 — SMART SCHEDULING
+     ================================================================ -->
+<div class="page bg-cream">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">04</div>
+
+    <h2 class="page-title">Schedule Once,<br>Play Forever</h2>
+
+    <div class="sidebar-layout">
+      <div class="sidebar-text-col">
+        <p class="body-text">
+          Set your schedule once and let it run. Breakfast boards at 6am, lunch menus at 11:30, evening specials from 5pm.
+          Onesign Display handles timezone-aware daypart transitions with precision &mdash; refreshing screens exactly
+          when content should change.
+        </p>
+
+        <ul class="bullets">
+          <li>Day-of-week scheduling with visual day selectors</li>
+          <li>Optional date ranges for seasonal menus and promotions</li>
+          <li>Priority system for overlapping schedules</li>
+          <li>Automatic fallback to default content when no schedule is active</li>
+          <li>30-second precision on every schedule transition</li>
+          <li>Timezone-aware &mdash; each store uses its own local time</li>
+        </ul>
+
+        <div class="callout">
+          Your breakfast board appears at 6am. Your lunch menu swaps in at 11:30.
+          Evening specials go live at 5pm. You set it once. Onesign runs it every day.
+        </div>
+
+        <div class="feature-tags" style="margin-top: 3mm;">
+          <span class="feature-tag">Daypart automation</span>
+          <span class="feature-tag">Multi-timezone</span>
+          <span class="feature-tag">Priority rules</span>
+        </div>
+      </div>
+
+      <div class="sidebar-img-col" style="display: flex; flex-direction: column; align-items: center;">
+        <div class="phone" style="width: 55mm;">
+          <div class="phone-body">
+            <div class="phone-notch"></div>
+            <div class="phone-screen">
+              <img src="screenshots/admin-schedules-mobile.png" alt="Schedule editor — mobile view" style="display: block; width: 100%; height: auto;">
+            </div>
+            <div class="phone-home"></div>
+          </div>
+        </div>
+        <span class="caption">Schedule editor with daypart blocks and day-of-week selectors</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>5</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 6 — SPECIALS STUDIO
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">05</div>
+
+    <h2 class="page-title">Today&rsquo;s Special?<br>Done in 30 Seconds</h2>
+
+    <p class="body-text" style="margin-bottom: 2mm;">
+      Pick a designer-approved template. Enter your dish name, price, and an optional photo.
+      Onesign Display handles the typography, layout, and styling automatically.
+      Publish directly to your media library and assign to any screen.
+    </p>
+
+    <p class="body-text" style="font-weight: 600; color: var(--navy); margin-bottom: 4mm;">
+      No design skills required. No blank canvas. No agency wait. Just fill in the blanks and hit publish.
+    </p>
+
+    <!-- Laptop: Specials Editor (real screenshot) -->
+    <div style="margin: 2mm auto 0; max-width: 145mm;">
+      <div class="laptop" style="width: 100%;">
+        <div class="laptop-body">
+          <div class="laptop-camera"></div>
+          <div class="laptop-screen" style="height: auto;">
+            <img src="screenshots/admin-specials-editor-desktop.png" alt="Specials Studio editor" style="display: block; width: 100%; height: auto;">
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+        <div class="laptop-foot"></div>
+      </div>
+      <span class="caption">Specials Studio &mdash; layers, live canvas preview, and one-click publish</span>
+    </div>
+
+    <!-- How it works steps -->
+    <div class="steps" style="margin-top: 5mm;">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Pick a Template</h4>
+        <p>Choose from professionally designed layouts</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Fill in Details</h4>
+        <p>Dish name, price, photo, description</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Preview Live</h4>
+        <p>See exactly how it looks on screen</p>
+      </div>
+      <div class="step-arrow">&rarr;</div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <h4>Publish</h4>
+        <p>One click to your media library and screens</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>6</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 7 — THE DISPLAY EXPERIENCE
+     ================================================================ -->
+<div class="page bg-cream">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">06</div>
+
+    <h2 class="page-title">Every Screen. Always On.</h2>
+
+    <p class="body-text" style="margin-bottom: 4mm;">
+      The Onesign Display player is a fullscreen, always-on web application designed for TVs, PCs, and Fire Sticks.
+      Pair a screen with a token, and content starts streaming immediately. No apps to install. No software to maintain.
+    </p>
+
+    <!-- Large TV Mockup (real player screenshot) -->
+    <div style="margin: 0 auto; max-width: 140mm;">
+      <div class="tv" style="width: 100%;">
+        <div class="tv-bezel">
+          <div class="tv-screen" style="height: auto;">
+            <img src="screenshots/onesign-banner.png" alt="Onesign Display player showing branded content" style="display: block; width: 100%; height: auto;">
+          </div>
+        </div>
+        <div class="tv-stand-neck"></div>
+        <div class="tv-stand-base"></div>
+      </div>
+      <span class="caption">Fullscreen player display &mdash; auto-refreshing, always on, zero maintenance</span>
+    </div>
+
+    <div style="display: flex; gap: 4mm; margin-top: 4mm;">
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Auto-Refresh</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">Content updates within 30 seconds of any change. No manual intervention.</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Offline Safe</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">WiFi drops? Screens keep playing their last known content automatically.</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Always Awake</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">Built-in wake lock prevents Fire Sticks and PCs from sleeping.</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Any Device</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">Works on Smart TVs, Fire Sticks, PCs, Android boxes &mdash; any browser.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>7</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 8 — PLAYLISTS & SLIDESHOWS
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">07</div>
+
+    <h2 class="page-title">Playlists &amp;<br>Slideshows</h2>
+
+    <div class="sidebar-layout">
+      <div class="sidebar-text-col">
+        <p class="body-text">
+          Rotate multiple images and videos on a single screen. Create reusable playlists with
+          configurable transitions &mdash; assign to any screen or schedule slot.
+        </p>
+
+        <ul class="bullets">
+          <li>Create named playlists from the admin portal</li>
+          <li>Add images and videos &mdash; drag to reorder slides</li>
+          <li>Set display duration per image (videos play their full length automatically)</li>
+          <li>Choose transition type: Fade, Cut (instant), or Slide</li>
+          <li>Assign playlists to screens or schedule time slots (same as single media)</li>
+          <li>Edit a playlist once &mdash; every screen using it updates automatically</li>
+        </ul>
+
+        <div class="callout">
+          Reusable across screens &mdash; change a playlist once and every screen using it updates instantly.
+          No need to reassign.
+        </div>
+
+        <div class="feature-tags" style="margin-top: 3mm;">
+          <span class="feature-tag">Drag &amp; drop reorder</span>
+          <span class="feature-tag">Transition effects</span>
+          <span class="feature-tag">Reusable playlists</span>
+        </div>
+      </div>
+
+      <div class="sidebar-img-col" style="display: flex; flex-direction: column; align-items: center;">
+        <div class="laptop small" style="width: 100%;">
+          <div class="laptop-body">
+            <div class="laptop-camera"></div>
+            <div class="laptop-screen" style="height: auto;">
+              <img src="screenshots/admin-playlist-editor-desktop.png" alt="Playlist editor with slide list, duration inputs, and transition settings" style="display: block; width: 100%; height: auto;">
+            </div>
+          </div>
+          <div class="laptop-base"></div>
+          <div class="laptop-foot"></div>
+        </div>
+        <span class="caption">Playlist editor &mdash; slide list with drag handles, duration inputs, and transition settings</span>
+      </div>
+    </div>
+
+    <!-- Bottom feature strip -->
+    <div style="display: flex; gap: 4mm; margin-top: 4mm;">
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Preloaded</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">All slides cached before playback starts. No jitter between transitions.</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Smart Timing</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">Images show for their set duration. Videos play to completion. Loop continuously.</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Smooth Transitions</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">CSS-driven fade, cut, and slide with configurable timing (ms).</div>
+      </div>
+      <div style="flex: 1;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--navy); margin-bottom: 1mm;">Always Fresh</div>
+        <div style="font-size: 8pt; color: var(--mid); line-height: 1.5;">Signed URLs auto-refresh. Playlists run indefinitely without interruption.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>8</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 9 — SMARTER MEDIA MANAGEMENT
+     ================================================================ -->
+<div class="page bg-cream">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">08</div>
+
+    <h2 class="page-title">Smarter Media<br>Management</h2>
+
+    <p class="body-text" style="margin-bottom: 4mm;">
+      Your media library now shows you what you have, where it&rsquo;s used, and lets you upload
+      without leaving the screen you&rsquo;re working on.
+    </p>
+
+    <!-- Laptop: Media Library (real screenshot) -->
+    <div style="margin: 0 auto 4mm; max-width: 145mm;">
+      <div class="laptop" style="width: 100%;">
+        <div class="laptop-body">
+          <div class="laptop-camera"></div>
+          <div class="laptop-screen" style="height: auto;">
+            <img src="screenshots/admin-media-desktop.png" alt="Media library with search, filters, and usage badges" style="display: block; width: 100%; height: auto;">
+          </div>
+        </div>
+        <div class="laptop-base"></div>
+        <div class="laptop-foot"></div>
+      </div>
+      <span class="caption">Media library &mdash; stats bar, search, filter tabs, and &ldquo;In Use&rdquo; badges</span>
+    </div>
+
+    <!-- Feature grid 2x3 -->
+    <div class="benefits" style="gap: 3mm;">
+      <div class="benefit-card">
+        <h4>Search &amp; Filter</h4>
+        <p>Find assets instantly by filename. Filter by type: Images, Videos, In Use, or Unused.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Usage Tracking</h4>
+        <p>Green &ldquo;In Use&rdquo; badges show which assets are actively assigned to screens, playlists, or schedules.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Storage Overview</h4>
+        <p>Stats bar showing total assets, image/video count, in-use count, and total storage consumed.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Upload From Anywhere</h4>
+        <p>Upload media directly from the screen management page &mdash; no need to navigate away to the media library.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Video Preview</h4>
+        <p>Videos play on hover in the library. Inline video preview on the screen management page.</p>
+      </div>
+      <div class="benefit-card">
+        <h4>Smart Assignment</h4>
+        <p>Media picker with tabbed interface: Media, Playlists, and Upload &mdash; assign or upload in one flow.</p>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 3mm;">
+      Streamlined workflow &mdash; upload, assign, and preview all from the screen management page. No extra navigation steps.
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>9</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 10 — PRICING + CTA
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <span class="meta">Product Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">09</div>
+
+    <h2 class="page-title" style="margin-bottom: 1mm; font-size: 24pt;">Simple, Monthly Pricing</h2>
+
+    <p class="body-text" style="margin-bottom: 2mm;">
+      Every plan includes scheduling, unlimited content updates, and Onesign design support. No setup fees. No contracts. Cancel anytime.
+    </p>
+
+    <div class="pricing-grid">
+      <!-- Static -->
+      <div class="price-card">
+        <div class="price-plan-name">Onesign Static</div>
+        <div class="price-amount">&pound;39<span>/mo per screen</span></div>
+        <div class="price-desc">Single-location caf&eacute;s and static image menus</div>
+        <ul class="price-features">
+          <li>Up to 5 screens</li>
+          <li>Static image menus</li>
+          <li>Daypart scheduling</li>
+          <li>Dashboard access</li>
+          <li class="no">Video playback</li>
+          <li class="no">Specials Studio</li>
+        </ul>
+      </div>
+
+      <!-- Video -->
+      <div class="price-card featured">
+        <div class="price-plan-name">Onesign Video</div>
+        <div class="price-amount">&pound;59<span>/mo per screen</span></div>
+        <div class="price-desc">Daily specials, rotating menus, and video content</div>
+        <ul class="price-features">
+          <li>Up to 5 screens</li>
+          <li>Image + video support</li>
+          <li>Daypart scheduling</li>
+          <li>Specials Studio</li>
+          <li>Design package included</li>
+          <li class="no">4K asset support</li>
+        </ul>
+      </div>
+
+      <!-- Pro -->
+      <div class="price-card">
+        <div class="price-plan-name">Onesign Pro</div>
+        <div class="price-amount">&pound;89<span>/mo per screen</span></div>
+        <div class="price-desc">Multi-location businesses with premium needs</div>
+        <ul class="price-features">
+          <li>Unlimited screens</li>
+          <li>4K asset support</li>
+          <li>Specials Studio</li>
+          <li>Managed design support</li>
+          <li>Priority onboarding</li>
+          <li>Multi-location dashboards</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout" style="margin-top: 1mm; padding: 3mm 5mm; margin-bottom: 2mm;">
+      Your brand on every screen. Managed by Onesign.
+    </div>
+
+    <!-- CTA -->
+    <div class="cta-section" style="margin-top: 2mm; padding: 6mm 10mm;">
+      <h3 style="margin-bottom: 2mm;">Ready to See It in Action?</h3>
+      <p style="margin-bottom: 2mm;">
+        Book a live demo with the Onesign team. We&rsquo;ll walk you through the dashboard,
+        show you how scheduling works, and set up a screen in under five minutes.
+      </p>
+      <div class="cta-email">sales@onesignanddigital.com</div>
+      <div class="cta-details">0191 487 6767 &bull; display.onesignanddigital.com</div>
+      <div class="cta-details" style="margin-top: 1mm;">Onesign and Digital &mdash; D86 Princesway, Gateshead NE11 0TU</div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>10</span>
+  </div>
+</div>
+
+</body>
+</html>
