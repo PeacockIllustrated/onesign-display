@@ -158,11 +158,13 @@ export async function updateScreen(screenId: string, formData: FormData) {
     const name = formData.get('name') as string
     const orientation = formData.get('orientation') as string
     const displayType = formData.get('display_type') as string
+    const fitMode = formData.get('fit_mode') as string || 'contain'
 
     const { error } = await supabase.from('display_screens').update({
         name,
         orientation,
-        display_type: displayType
+        display_type: displayType,
+        fit_mode: fitMode,
     }).eq('id', screenId)
 
     if (error) {

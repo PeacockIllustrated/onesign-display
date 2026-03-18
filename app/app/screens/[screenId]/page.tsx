@@ -204,7 +204,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         {role?.role === 'super_admin' ? (
                             <ScreenSettingsForm
                                 screenId={screenId}
-                                screen={{ name: screen.name, orientation: screen.orientation, display_type: screen.display_type }}
+                                screen={{ name: screen.name, orientation: screen.orientation, display_type: screen.display_type, fit_mode: screen.fit_mode }}
                             />
                         ) : (
                             <div className="space-y-4 opacity-50 pointer-events-none">

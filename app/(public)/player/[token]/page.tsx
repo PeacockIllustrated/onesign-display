@@ -26,6 +26,7 @@ type Manifest = {
         url: string | null
         type: string | null
     }
+    fit_mode: 'contain' | 'cover'
     playlist: PlaylistData | null
     next_check: string | null
     fetched_at: string
@@ -304,6 +305,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     const handleStart = () => { setIsPlaying(true); toggleFullscreen() }
 
+    // Content fit mode from manifest (never stretch, always aspect-ratio safe)
+    const fitClass = manifest?.fit_mode === 'cover' ? 'object-cover' : 'object-contain'
+
     // ── Loading / Start screens ──────────────────────────────
 
     if (!manifest && !error) return (
@@ -358,7 +362,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     <video
                         key={`video-${layerKey}-${item.id}`}
                         src={item.url}
-                        className="w-full h-full object-contain"
+                        className={`w-full h-full ${fitClass}`}
                         autoPlay={isVisible}
                         muted
                         playsInline
@@ -369,7 +373,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     <img
                         key={`img-${layerKey}-${item.id}`}
                         src={item.url}
-                        className="w-full h-full object-contain"
+                        className={`w-full h-full ${fitClass}`}
                         alt="Slide content"
                         onError={isVisible ? handleMediaError : undefined}
                     />
@@ -424,9 +428,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
             {manifest?.media?.url && !mediaError ? (
                 manifest.media.type?.startsWith('video/') ? (
-                    <video key={manifest.media.url} src={manifest.media.url} className="w-full h-full object-contain" autoPlay muted playsInline loop onError={handleMediaError} />
+                    <video key={manifest.media.url} src={manifest.media.url} className={`w-full h-full ${fitClass}`} autoPlay muted playsInline loop onError={handleMediaError} />
                 ) : (
-                    <img key={manifest.media.url} src={manifest.media.url} className="w-full h-full object-contain" alt="Digital Signage content" onError={handleMediaError} />
+                    <img key={manifest.media.url} src={manifest.media.url} className={`w-full h-full ${fitClass}`} alt="Digital Signage content" onError={handleMediaError} />
                 )
             ) : (
                 <div className="text-gray-500 font-mono">

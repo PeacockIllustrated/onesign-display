@@ -6,7 +6,7 @@ import { updateScreen } from '@/app/actions/manage-screens'
 
 export function ScreenSettingsForm({ screenId, screen }: {
     screenId: string
-    screen: { name: string; orientation: string; display_type: string }
+    screen: { name: string; orientation: string; display_type: string; fit_mode?: string }
 }) {
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
@@ -45,6 +45,14 @@ export function ScreenSettingsForm({ screenId, screen }: {
                     <option value="android">Android</option>
                     <option value="firestick">Amazon Fire Stick</option>
                 </select>
+            </div>
+            <div>
+                <label className="block text-sm font-medium text-gray-700">Content Fit</label>
+                <select name="fit_mode" defaultValue={screen.fit_mode || 'contain'} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black">
+                    <option value="contain">Contain (fit within screen, may show black bars)</option>
+                    <option value="cover">Cover (fill screen, may crop edges)</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">Aspect ratio is always preserved. Content is never stretched.</p>
             </div>
             <div className="pt-4">
                 <button
