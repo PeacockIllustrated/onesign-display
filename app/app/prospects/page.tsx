@@ -38,7 +38,7 @@ export default async function ProspectsPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Prospects</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">Prospects</h1>
                     <HelpIcon section="prospects" />
                 </div>
                 <div className="text-sm text-zinc-500">

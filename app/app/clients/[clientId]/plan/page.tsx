@@ -40,19 +40,19 @@ export default async function ClientPlanPage({ params }: { params: Promise<{ cli
 
     return (
         <div className="p-8 space-y-8">
-            <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Plan & Entitlements</h1>
+            <h1 className="text-2xl font-bold text-zinc-900">Plan & Entitlements</h1>
 
             {isSuperAdmin ? (
                 <div>
                     <div className="mb-10 p-6 bg-gray-50 rounded-lg border border-zinc-200">
-                        <h2 className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-4">Current Client View</h2>
+                        <h2 className="text-xs font-medium text-zinc-500 mb-4">Current Client View</h2>
                         <div className="max-w-xl bg-white p-4 rounded shadow-sm border border-zinc-200">
                             {/* @ts-ignore - types likely match effectively */}
                             <PlanReadout entitlements={effectivePlan} screenCount={screenCount} />
                         </div>
                     </div>
 
-                    <h2 className="text-xl font-extrabold uppercase tracking-wide text-zinc-900 mb-6">Edit Configuration</h2>
+                    <h2 className="text-xl font-bold text-zinc-900 mb-6">Edit Configuration</h2>
                     <PlanSettingsForm
                         clientId={clientId}
                         initialPlan={effectivePlan}

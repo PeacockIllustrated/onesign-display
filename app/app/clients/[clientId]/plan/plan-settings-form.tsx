@@ -92,7 +92,7 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
 
             <div className="grid grid-cols-2 gap-6">
                 <div>
-                    <label className="block text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Plan</label>
+                    <label className="block text-xs font-bold text-zinc-500 mb-2">Plan</label>
                     <div className="relative">
                         <select
                             name="planCode"
@@ -112,7 +112,7 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
                 </div>
 
                 <div>
-                    <label className="block text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Status</label>
+                    <label className="block text-xs font-bold text-zinc-500 mb-2">Status</label>
                     <div className="relative">
                         <select
                             name="status"
@@ -135,17 +135,17 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
                 <button
                     type="button"
                     onClick={applyDefaults}
-                    className="text-xs font-bold uppercase tracking-wide text-zinc-900 border-b-2 border-zinc-200 hover:border-black transition-colors pb-0.5"
+                    className="text-xs font-medium text-zinc-900 border-b-2 border-zinc-200 hover:border-black transition-colors pb-0.5"
                 >
                     Reset Overrides to {currentPlanCode} Defaults
                 </button>
             </div>
 
             <div className="space-y-4 border-t-2 border-zinc-100 pt-6">
-                <h3 className="text-sm font-extrabold uppercase tracking-wide text-zinc-900">Entitlements</h3>
+                <h3 className="text-sm font-bold text-zinc-900">Entitlements</h3>
 
                 <div>
-                    <label className="block text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Max Screens</label>
+                    <label className="block text-xs font-bold text-zinc-500 mb-2">Max Screens</label>
                     <div className="flex items-center gap-4">
                         <input
                             type="number"
@@ -160,7 +160,7 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
                         <span className="text-sm text-zinc-500 whitespace-nowrap font-medium">Currently Using: <span className="text-zinc-900 font-bold">{screenCount}</span></span>
                     </div>
                     {isReducingLimit && (
-                        <p className="text-xs font-bold text-red-600 mt-2 uppercase tracking-wide">
+                        <p className="text-xs font-bold text-red-600 mt-2">
                             Warning: Limit is below current usage.
                         </p>
                     )}
@@ -177,7 +177,7 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
             </div>
 
             <div>
-                <label className="block text-xs font-bold uppercase tracking-wide text-zinc-500 mb-2">Internal Notes</label>
+                <label className="block text-xs font-bold text-zinc-500 mb-2">Internal Notes</label>
                 <textarea
                     name="notes"
                     defaultValue={initialPlan.notes}
@@ -190,7 +190,7 @@ export function PlanSettingsForm({ clientId, initialPlan, screenCount }: PlanSet
                 <button
                     type="submit"
                     disabled={loading}
-                    className="bg-black text-white px-8 py-3 rounded-lg hover:bg-zinc-800 font-bold uppercase tracking-wider text-sm transition-all disabled:opacity-50 flex items-center gap-2 shadow-sm"
+                    className="bg-black text-white px-8 py-3 rounded-lg hover:bg-zinc-800 font-semibold text-sm transition-all disabled:opacity-50 flex items-center gap-2 shadow-sm"
                 >
                     {loading && <Loader2 className="animate-spin h-4 w-4" />}
                     Save Configuration

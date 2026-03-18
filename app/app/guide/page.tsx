@@ -15,7 +15,7 @@ export default function UserGuidePage() {
 
             {/* Quick Navigation */}
             <div className="bg-zinc-50 rounded-lg p-6 border border-zinc-200">
-                <h2 className="text-lg font-bold mb-4 uppercase tracking-wide">Quick Links</h2>
+                <h2 className="text-lg font-bold mb-4">Quick Links</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4 font-medium text-sm">
                     <a href="#concepts" className="text-zinc-600 hover:text-black hover:underline flex items-center gap-2"><Layers size={16} /> Core Concepts</a>
                     <a href="#schedules" className="text-zinc-600 hover:text-black hover:underline flex items-center gap-2"><Calendar size={16} /> Scheduling</a>

@@ -51,7 +51,7 @@ export default async function SchedulesPage({ searchParams }: { searchParams: Pr
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Schedules</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900">Schedules</h1>
                         <HelpIcon section="schedules" />
                     </div>
                     {role?.role === 'super_admin' && (
@@ -68,10 +68,10 @@ export default async function SchedulesPage({ searchParams }: { searchParams: Pr
                     <Link href={`/app/schedules/${schedule.id}`} key={schedule.id} className="block p-6 bg-white rounded-lg border border-zinc-200 hover:border-black transition-colors shadow-sm group">
                         <div className="flex justify-between items-start">
                             <div>
-                                <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900 group-hover:text-black">{schedule.name}</h3>
+                                <h3 className="text-lg font-semibold text-zinc-900 group-hover:text-black">{schedule.name}</h3>
                                 <p className="text-sm text-zinc-500">{schedule.store?.name}</p>
                             </div>
-                            <span className="bg-zinc-100 text-zinc-600 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">
+                            <span className="bg-zinc-100 text-zinc-600 px-2 py-1 rounded text-xs font-medium">
                                 {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
                             </span>
                         </div>

@@ -71,7 +71,7 @@ export function Sidebar({ userRole, userEmail, clientName }: {
                     <p className="text-xs font-semibold text-zinc-900 truncate" title={userEmail}>
                         {userEmail}
                     </p>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mt-0.5">
+                    <p className="text-[10px] text-zinc-500 font-bold mt-0.5">
                         {userRole === 'super_admin' ? 'Super Admin' : clientName || 'Client Admin'}
                     </p>
                     {userRole !== 'super_admin' && clientName && (

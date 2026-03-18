@@ -414,7 +414,7 @@ export default function EditSpecialPage() {
                         <h3 className="text-lg font-bold mb-4">Save as Template</h3>
                         <p className="text-sm text-gray-500 mb-4">Create a reusable template from your current design.</p>
                         <div className="mb-4">
-                            <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Template Name</label>
+                            <label className="block text-xs font-bold text-gray-500 mb-1">Template Name</label>
                             <input
                                 type="text"
                                 value={templateName}
@@ -482,7 +482,7 @@ export default function EditSpecialPage() {
                         onClick={() => setShowTemplateModal(true)}
                         disabled={saving}
                         title="Save as Template"
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase text-zinc-600 bg-white border hover:bg-zinc-50 rounded shadow-sm transition-colors disabled:opacity-50 mr-2"
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-zinc-600 bg-white border hover:bg-zinc-50 rounded shadow-sm transition-colors disabled:opacity-50 mr-2"
                     >
                         <Copy size={14} />
                         <span className="hidden md:inline">Save as Template</span>
@@ -491,7 +491,7 @@ export default function EditSpecialPage() {
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase text-zinc-600 bg-white border hover:bg-zinc-50 rounded shadow-sm transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-zinc-600 bg-white border hover:bg-zinc-50 rounded shadow-sm transition-colors disabled:opacity-50"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                         <span className="hidden md:inline">Save Draft</span>
@@ -499,7 +499,7 @@ export default function EditSpecialPage() {
                     <button
                         onClick={() => setShowPublishModal(true)}
                         disabled={saving}
-                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase text-white bg-black hover:bg-zinc-800 rounded shadow-sm transition-colors disabled:opacity-50 ml-2"
+                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-black hover:bg-zinc-800 rounded shadow-sm transition-colors disabled:opacity-50 ml-2"
                     >
                         {saving ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
                         <span className="hidden md:inline">Publish to Screens</span>
@@ -511,7 +511,7 @@ export default function EditSpecialPage() {
                 {/* Left Sidebar */}
                 <div className="w-64 border-r bg-white hidden md:flex flex-col shrink-0 z-10">
                     <div className="p-3 border-b bg-zinc-50/50">
-                        <h3 className="font-bold text-xs uppercase tracking-wide text-zinc-500">Layers</h3>
+                        <h3 className="font-semibold text-xs text-zinc-500">Layers</h3>
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <LayersPanel
@@ -636,7 +636,7 @@ export default function EditSpecialPage() {
                 {/* Right Panel - Properties */}
                 <div className="w-80 border-l bg-white shrink-0 hidden md:flex flex-col z-10">
                     <div className="p-3 border-b bg-zinc-50/50">
-                        <h3 className="font-bold text-xs uppercase tracking-wide text-zinc-500">Properties</h3>
+                        <h3 className="font-semibold text-xs text-zinc-500">Properties</h3>
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         <PropertiesPanel

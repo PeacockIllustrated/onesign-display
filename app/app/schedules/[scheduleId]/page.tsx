@@ -25,7 +25,7 @@ export default async function ScheduleDetailPage({ params }: { params: Promise<{
             <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                 <div>
                     <Link href="/app/schedules" className="text-xs text-zinc-500 hover:text-zinc-900 mb-2 block transition-colors">&larr; Back to Schedules</Link>
-                    <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">{schedule.name}</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">{schedule.name}</h1>
                     <p className="text-zinc-500 text-sm font-medium mt-1">
                         {schedule.store.name} • {schedule.start_time.slice(0, 5)} - {schedule.end_time.slice(0, 5)}
                     </p>

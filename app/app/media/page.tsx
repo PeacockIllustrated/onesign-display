@@ -84,7 +84,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Media Library</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900">Media Library</h1>
                         <HelpIcon section="media" />
                     </div>
                     {role?.role === 'super_admin' && (

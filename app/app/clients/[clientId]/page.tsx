@@ -19,7 +19,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
             <div className="flex justify-between items-center">
                 <div>
                     <Link href="/app" className="text-sm text-zinc-500 hover:text-zinc-900 mb-1 block">&larr; Back to Dashboard</Link>
-                    <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">{client.name}</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">{client.name}</h1>
                     <p className="text-zinc-500">{client.slug}</p>
                 </div>
             </div>
@@ -27,7 +27,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
             {/* Stores Section */}
             <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900">Stores</h3>
+                    <h3 className="text-lg font-semibold text-zinc-900">Stores</h3>
                     <CreateStoreButton clientId={client.id} />
                 </div>
                 <div className="bg-white shadow overflow-hidden sm:rounded-md border border-zinc-200">
@@ -63,7 +63,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ c
             {/* Users Section */}
             <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900">Users</h3>
+                    <h3 className="text-lg font-semibold text-zinc-900">Users</h3>
                     <CreateUserButton clientId={client.id} />
                 </div>
                 <div className="bg-white shadow overflow-hidden sm:rounded-md">

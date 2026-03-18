@@ -52,7 +52,7 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
 
                 {portraitScreens.length > 0 && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Portrait Screens</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 mb-4">Portrait Screens</h3>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             {portraitScreens.map(screen => <ScreenCard key={screen.id} screen={screen} />)}
                         </div>
@@ -61,7 +61,7 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
 
                 {landscapeScreens.length > 0 && (
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">Landscape Screens</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 mb-4">Landscape Screens</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                             {landscapeScreens.map(screen => <ScreenCard key={screen.id} screen={screen} />)}
                         </div>

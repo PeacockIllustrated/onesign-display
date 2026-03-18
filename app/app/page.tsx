@@ -21,7 +21,7 @@ async function DashboardContent() {
             <div className="space-y-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
-                        <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Clients</h1>
+                        <h1 className="text-2xl font-bold text-zinc-900">Clients</h1>
                         <HelpIcon section="clients" />
                     </div>
                     <CreateClientButton />
@@ -36,11 +36,11 @@ async function DashboardContent() {
 
                             <div className="relative z-10 pointer-events-none">
                                 <div className="flex justify-between items-start">
-                                    <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900 pr-8">{client.name}</h3>
+                                    <h3 className="text-lg font-semibold text-zinc-900 pr-8">{client.name}</h3>
                                 </div>
                                 <p className="text-sm text-zinc-500 mt-1">{client.slug}</p>
                                 <div className="mt-4 flex items-center text-sm text-zinc-500">
-                                    <span className="bg-zinc-100 text-zinc-700 font-bold uppercase tracking-wider py-1 px-2 rounded-full text-xs">
+                                    <span className="bg-zinc-100 text-zinc-700 font-medium py-1 px-2 rounded-full text-xs">
                                         {client.display_stores?.[0]?.count ?? 0} Stores
                                     </span>
                                 </div>
@@ -67,16 +67,16 @@ async function DashboardContent() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Dashboard</h1>
+                    <h1 className="text-2xl font-bold text-zinc-900">Dashboard</h1>
                     <HelpIcon section="overview" />
                 </div>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {stores?.map((store) => (
                     <Link href={`/app/stores/${store.id}`} key={store.id} className="block p-6 bg-white rounded-lg border border-zinc-200 hover:border-black transition-colors shadow-sm">
-                        <h3 className="text-lg font-bold tracking-wide uppercase text-zinc-900">{store.name}</h3>
+                        <h3 className="text-lg font-semibold text-zinc-900">{store.name}</h3>
                         <div className="mt-4 flex items-center text-sm text-zinc-500">
-                            <span className="bg-zinc-100 text-zinc-700 font-bold uppercase tracking-wider py-1 px-2 rounded-full text-xs">
+                            <span className="bg-zinc-100 text-zinc-700 font-medium py-1 px-2 rounded-full text-xs">
                                 {store.display_screen_sets?.[0]?.count ?? 0} Screen Sets
                             </span>
                         </div>

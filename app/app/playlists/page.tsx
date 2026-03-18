@@ -49,9 +49,16 @@ export default async function PlaylistsPage() {
         }
     }
 
-    const activeClientId = isSuperAdmin
-        ? playlists?.[0]?.client_id || null
-        : profile?.client_id
+    // For super admin: use first playlist's client or fall back to first client in system
+    let activeClientId = profile?.client_id
+    if (isSuperAdmin) {
+        if (playlists && playlists.length > 0) {
+            activeClientId = playlists[0].client_id
+        } else {
+            const { data: firstClient } = await supabase.from('display_clients').select('id').order('created_at').limit(1).single()
+            activeClientId = firstClient?.id || null
+        }
+    }
 
     const transitionLabels: Record<string, string> = {
         fade: 'Fade',
@@ -63,7 +70,7 @@ export default async function PlaylistsPage() {
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-extrabold tracking-wide uppercase text-zinc-900">Playlists</h1>
+                <h1 className="text-2xl font-bold text-zinc-900">Playlists</h1>
                 {activeClientId && (
                     <form action={async () => {
                         'use server'
