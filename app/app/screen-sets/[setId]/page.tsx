@@ -18,18 +18,42 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
     const { data: { user } } = await supabase.auth.getUser()
     // We could fetch role here if we want to conditionally hide, but for now we show it.
 
-    // Fetch Screens with their active content
+    // Fetch Screens with their active content (media or playlist)
     const { data: screens } = await supabase
         .from('display_screens')
         .select(`
         *,
         display_screen_content(
-            media_asset:display_media_assets(*)
+            media_asset:display_media_assets(*),
+            playlist:display_playlists(id, name)
         )
     `)
         .eq('screen_set_id', setId)
         .eq('display_screen_content.active', true)
         .order('name', { ascending: true })
+
+    // For screens with playlists, fetch the first item's media for preview thumbnail
+    if (screens) {
+        for (const screen of screens) {
+            const content = Array.isArray(screen.display_screen_content)
+                ? screen.display_screen_content[0]
+                : screen.display_screen_content
+            if (content?.playlist && !content?.media_asset) {
+                const { data: firstItem } = await supabase
+                    .from('display_playlist_items')
+                    .select('media:display_media_assets(storage_path, mime, filename)')
+                    .eq('playlist_id', content.playlist.id)
+                    .order('position', { ascending: true })
+                    .limit(1)
+                    .single()
+                // Attach first item's media as a preview source on the content
+                if (firstItem?.media) {
+                    content._playlist_preview = firstItem.media
+                    content._playlist_name = content.playlist.name
+                }
+            }
+        }
+    }
 
     // Group screens
     const landscapeScreens = screens?.filter(s => s.orientation !== 'portrait') || []

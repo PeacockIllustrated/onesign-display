@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { SignedImage } from '@/components/ui/signed-image'
-import { Play, Loader2 } from 'lucide-react'
+import { Play, Loader2, ListVideo } from 'lucide-react'
 
 interface ScreenCardProps {
     screen: {
@@ -18,29 +18,36 @@ interface ScreenCardProps {
 }
 
 export function ScreenCard({ screen }: ScreenCardProps) {
-    const activeMedia = Array.isArray(screen.display_screen_content)
-        ? screen.display_screen_content[0]?.media_asset
-        : screen.display_screen_content?.media_asset
+    const content = Array.isArray(screen.display_screen_content)
+        ? screen.display_screen_content[0]
+        : screen.display_screen_content
+
+    const activeMedia = content?.media_asset
+    const playlistPreview = content?._playlist_preview
+    const playlistName = content?._playlist_name
+
+    // Use playlist first-item media as preview when no direct media
+    const previewMedia = activeMedia || playlistPreview
+    const isPlaylist = !activeMedia && !!playlistPreview
 
     const videoRef = useRef<HTMLVideoElement>(null)
     const [videoUrl, setVideoUrl] = useState<string | null>(null)
 
-    // Determine if video
-    const isVideo = activeMedia && (
-        activeMedia.mime?.startsWith('video/') ||
-        activeMedia.filename?.match(/\.(mp4|mov|webm)$/i)
+    const isVideo = previewMedia && (
+        previewMedia.mime?.startsWith('video/') ||
+        previewMedia.filename?.match(/\.(mp4|mov|webm)$/i)
     )
 
     useEffect(() => {
-        if (isVideo && !videoUrl && activeMedia?.storage_path) {
-            fetch(`/api/signed-url?path=${encodeURIComponent(activeMedia.storage_path)}`)
+        if (isVideo && !videoUrl && previewMedia?.storage_path) {
+            fetch(`/api/signed-url?path=${encodeURIComponent(previewMedia.storage_path)}`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.url) setVideoUrl(data.url)
                 })
                 .catch(console.error)
         }
-    }, [isVideo, videoUrl, activeMedia?.storage_path])
+    }, [isVideo, videoUrl, previewMedia?.storage_path])
 
     const handleMouseEnter = () => {
         if (videoRef.current && videoUrl) {
@@ -70,7 +77,7 @@ export function ScreenCard({ screen }: ScreenCardProps) {
             </div>
 
             <div className="flex-1 bg-gray-800 flex items-center justify-center relative">
-                {activeMedia ? (
+                {previewMedia ? (
                     isVideo ? (
                         videoUrl ? (
                             <video
@@ -87,14 +94,22 @@ export function ScreenCard({ screen }: ScreenCardProps) {
                             </div>
                         )
                     ) : (
-                        <SignedImage path={activeMedia.storage_path} alt="Screen Content" className="w-full h-full object-cover" />
+                        <SignedImage path={previewMedia.storage_path} alt="Screen Content" className="w-full h-full object-cover" />
                     )
                 ) : (
                     <div className="text-gray-500 text-sm">No Content</div>
                 )}
             </div>
 
-            {isVideo && activeMedia && (
+            {/* Playlist badge */}
+            {isPlaylist && playlistName && (
+                <div className="absolute bottom-10 left-2 z-10 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded flex items-center gap-1 pointer-events-none">
+                    <ListVideo size={10} />
+                    {playlistName}
+                </div>
+            )}
+
+            {isVideo && previewMedia && (
                 <div className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full text-white pointer-events-none z-10">
                     <Play size={10} fill="currentColor" />
                 </div>
