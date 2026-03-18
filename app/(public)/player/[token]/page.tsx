@@ -269,7 +269,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // Fullscreen
     useEffect(() => {
-        if (manifest) { try { if (!document.fullscreenElement) document.documentElement.requestFullscreen() } catch { } }
+        if (manifest && !document.fullscreenElement) { document.documentElement.requestFullscreen().catch(() => {}) }
     }, [manifest])
 
     const toggleFullscreen = () => {
