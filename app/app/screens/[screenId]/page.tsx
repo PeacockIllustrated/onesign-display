@@ -4,16 +4,17 @@ import Link from 'next/link'
 import { SignedImage } from '@/components/ui/signed-image'
 import { MediaPicker } from '@/components/portal/media-picker'
 import { EmptyScreenPreview } from '@/components/portal/empty-screen-preview'
+import { ScreenSettingsForm } from '@/components/admin/screen-settings-form'
+import { ListVideo } from 'lucide-react'
 
 export default async function ScreenDetailPage({ params }: { params: Promise<{ screenId: string }> }) {
     const { screenId } = await params
     const supabase = await createClient()
 
-    // 1. Fetch User Role
     const { data: { user } } = await supabase.auth.getUser()
     const { data: role } = user ? await supabase.from('display_profiles').select('role').eq('id', user.id).single() : { data: null }
 
-    // Fetch Screen
+    // Fetch Screen with content relations
     const { data: screen } = await supabase
         .from('display_screens')
         .select(`
@@ -21,7 +22,8 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         store:display_stores(id, name),
         display_screen_content(
             *,
-            media_asset:display_media_assets(*)
+            media_asset:display_media_assets(*),
+            playlist:display_playlists(id, name, transition, transition_duration_ms, loop)
         )
     `)
         .eq('id', screenId)
@@ -29,15 +31,30 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
 
     if (!screen) return notFound()
 
-    // Get active media
+    // Get active content (media or playlist)
     const activeContent = Array.isArray(screen.display_screen_content)
         ? screen.display_screen_content.find((sc: any) => sc.active)
         : (screen.display_screen_content as any)?.active ? screen.display_screen_content : null
 
     const activeMedia = activeContent?.media_asset
+    const activePlaylist = activeContent?.playlist
+
+    // If playlist is active, fetch its first item for preview thumbnail
+    let playlistFirstItem: any = null
+    let playlistItemCount = 0
+
+    if (activePlaylist) {
+        const { data: items } = await supabase
+            .from('display_playlist_items')
+            .select('*, media:display_media_assets(storage_path, mime, filename)')
+            .eq('playlist_id', activePlaylist.id)
+            .order('position', { ascending: true })
+
+        playlistItemCount = items?.length || 0
+        playlistFirstItem = items?.[0]?.media || null
+    }
 
     // Fetch available media for this client
-    // Get client_id via store relation
     const { data: store } = await supabase.from('display_stores').select('client_id').eq('id', screen.store_id).single()
     const clientId = store?.client_id
 
@@ -61,6 +78,10 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         item_count: Array.isArray(p.display_playlist_items) ? p.display_playlist_items[0]?.count || 0 : 0,
     }))
 
+    const transitionLabels: Record<string, string> = {
+        fade: 'Fade', cut: 'Cut', slide_left: 'Slide Left', slide_right: 'Slide Right',
+    }
+
     return (
         <div className="space-y-6 max-w-4xl mx-auto">
             <div className="flex items-center justify-between">
@@ -83,7 +104,6 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         Reboot Player
                     </button>
 
-                    {/* Delete Action - Super Admin Only */}
                     {role?.role === 'super_admin' && (
                         <form action={async () => {
                             'use server'
@@ -103,13 +123,32 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-gray-200 font-medium text-sm">Live Preview (Last Known)</div>
                         <div className="aspect-video bg-gray-900 flex items-center justify-center relative">
-                            {activeMedia ? (
+                            {activePlaylist ? (
+                                // Playlist preview: show first slide with playlist overlay
+                                <>
+                                    {playlistFirstItem ? (
+                                        <SignedImage
+                                            path={playlistFirstItem.storage_path}
+                                            alt="Playlist preview"
+                                            className="w-full h-full object-contain"
+                                            mime={playlistFirstItem.mime}
+                                        />
+                                    ) : (
+                                        <div className="text-gray-500 text-sm">Empty playlist</div>
+                                    )}
+                                    <div className="absolute top-3 left-3 bg-black/70 text-white px-2.5 py-1.5 rounded-md flex items-center gap-1.5">
+                                        <ListVideo className="w-3.5 h-3.5" />
+                                        <span className="text-xs font-medium">{activePlaylist.name}</span>
+                                        <span className="text-xs text-gray-400">· {playlistItemCount} slides · {transitionLabels[activePlaylist.transition] || activePlaylist.transition}</span>
+                                    </div>
+                                </>
+                            ) : activeMedia ? (
                                 <SignedImage path={activeMedia.storage_path} alt="Preview" className="w-full h-full object-contain" mime={activeMedia.mime} />
                             ) : (
                                 <EmptyScreenPreview />
                             )}
                             <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                                {screen.display_type} • {screen.orientation}
+                                {screen.display_type} · {screen.orientation}
                             </div>
                         </div>
                     </div>
@@ -122,9 +161,30 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                             <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} clientId={clientId} />
                         </div>
 
-                        {activeMedia && (
+                        {/* Active content info card */}
+                        {activePlaylist && (
                             <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
-                                <div className="h-10 w-10 bg-gray-200 rounded overflow-hidden mr-3">
+                                <div className="h-10 w-10 bg-gray-800 rounded overflow-hidden mr-3 flex items-center justify-center flex-shrink-0">
+                                    <ListVideo className="w-5 h-5 text-gray-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900">{activePlaylist.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                        Playlist · {playlistItemCount} {playlistItemCount === 1 ? 'slide' : 'slides'} · {transitionLabels[activePlaylist.transition] || activePlaylist.transition}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={`/app/playlists/${activePlaylist.id}`}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex-shrink-0"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
+                        )}
+
+                        {activeMedia && !activePlaylist && (
+                            <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
+                                <div className="h-10 w-10 bg-gray-200 rounded overflow-hidden mr-3 flex-shrink-0">
                                     <SignedImage path={activeMedia.storage_path} alt="Thumb" className="h-full w-full object-cover" mime={activeMedia.mime} />
                                 </div>
                                 <div>
@@ -142,35 +202,10 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
 
                         {role?.role === 'super_admin' ? (
-                            <form action={async (formData) => {
-                                'use server'
-                                await import('@/app/actions/manage-screens').then(m => m.updateScreen(screenId, formData))
-                            }} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                                    <input name="name" type="text" defaultValue={screen.name} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm placeholder:text-zinc-400 focus:border-black focus:outline-none focus:ring-1 focus:ring-black" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Orientation</label>
-                                    <select name="orientation" defaultValue={screen.orientation} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black">
-                                        <option value="landscape">Landscape</option>
-                                        <option value="portrait">Portrait</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Display Type</label>
-                                    <select name="display_type" defaultValue={screen.display_type} className="mt-1 block w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black">
-                                        <option value="pc">PC / Web</option>
-                                        <option value="android">Android</option>
-                                        <option value="firestick">Amazon Fire Stick</option>
-                                    </select>
-                                </div>
-                                <div className="pt-4">
-                                    <button type="submit" className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 text-sm">
-                                        Save Changes
-                                    </button>
-                                </div>
-                            </form>
+                            <ScreenSettingsForm
+                                screenId={screenId}
+                                screen={{ name: screen.name, orientation: screen.orientation, display_type: screen.display_type }}
+                            />
                         ) : (
                             <div className="space-y-4 opacity-50 pointer-events-none">
                                 <p className="text-sm text-gray-500 italic">Only super admins can edit settings.</p>
