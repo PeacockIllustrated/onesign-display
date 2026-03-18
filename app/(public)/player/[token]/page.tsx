@@ -272,8 +272,8 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     return (
         <div
             onClick={toggleFullscreen}
-            className={`bg-black h-screen w-screen overflow-hidden flex items-center justify-center relative ${cursorHidden ? 'cursor-none' : 'cursor-pointer'}`}
-            style={cursorHidden ? { cursor: 'none' } : undefined}
+            className="bg-black h-screen w-screen overflow-hidden flex items-center justify-center relative"
+            style={{ cursor: cursorHidden ? 'none' : 'pointer' }}
         >
             <NeverSleepGuard active={isPlaying} />
 

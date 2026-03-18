@@ -91,7 +91,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <div className="p-4 border-b border-gray-200 font-medium text-sm">Live Preview (Last Known)</div>
                         <div className="aspect-video bg-gray-900 flex items-center justify-center relative">
                             {activeMedia ? (
-                                <SignedImage path={activeMedia.storage_path} alt="Preview" className="w-full h-full object-contain" />
+                                <SignedImage path={activeMedia.storage_path} alt="Preview" className="w-full h-full object-contain" mime={activeMedia.mime} />
                             ) : (
                                 <EmptyScreenPreview />
                             )}
@@ -112,7 +112,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         {activeMedia && (
                             <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
                                 <div className="h-10 w-10 bg-gray-200 rounded overflow-hidden mr-3">
-                                    <SignedImage path={activeMedia.storage_path} alt="Thumb" className="h-full w-full object-cover" />
+                                    <SignedImage path={activeMedia.storage_path} alt="Thumb" className="h-full w-full object-cover" mime={activeMedia.mime} />
                                 </div>
                                 <div>
                                     <p className="text-sm font-medium text-gray-900">{activeMedia.filename}</p>
