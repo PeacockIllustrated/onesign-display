@@ -13,16 +13,14 @@ import Image from 'next/image'
  * Requires: public/onesign-logo-white.png
  */
 export default function SplashScreen() {
-  const [phase, setPhase] = useState<'entering' | 'visible' | 'exiting' | 'gone'>(() => {
-    // Only show splash once per browser session
-    if (typeof window !== 'undefined' && sessionStorage.getItem('onesign_splash_shown')) {
-      return 'gone'
-    }
-    return 'entering'
-  })
+  const [phase, setPhase] = useState<'entering' | 'visible' | 'exiting' | 'gone'>('entering')
 
   useEffect(() => {
-    if (phase === 'gone') return
+    // Only show splash once per browser session
+    if (sessionStorage.getItem('onesign_splash_shown')) {
+      setPhase('gone')
+      return
+    }
 
     sessionStorage.setItem('onesign_splash_shown', '1')
 
@@ -35,7 +33,7 @@ export default function SplashScreen() {
       clearTimeout(t2)
       clearTimeout(t3)
     }
-  }, [phase])
+  }, [])
 
   if (phase === 'gone') return null
 
