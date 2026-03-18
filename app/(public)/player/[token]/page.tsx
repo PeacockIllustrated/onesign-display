@@ -12,17 +12,24 @@ type Manifest = {
         type: string | null
     }
     next_check: string | null
+    fetched_at: string
 }
+
+// Signed URLs expire after 1 hour — refresh before that
+const URL_REFRESH_MS = 45 * 60 * 1000 // 45 minutes
 
 export default function PlayerPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params)
     const [manifest, setManifest] = useState<Manifest | null>(null)
     const [error, setError] = useState<string | null>(null)
     const [isPlaying, setIsPlaying] = useState(false)
+    const [mediaError, setMediaError] = useState(false)
+    const [cursorHidden, setCursorHidden] = useState(false)
 
     // Refs to avoid stale closures in intervals/timeouts
     const manifestRef = useRef<Manifest | null>(null)
     const refreshVersionRef = useRef<number>(-1)
+    const retryCountRef = useRef(0)
 
     // Keep refs in sync with state
     useEffect(() => {
@@ -33,20 +40,47 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     // Polling Config
     const POLL_INTERVAL_MS = 30000 // 30s for schedule transitions
     const HEARTBEAT_INTERVAL_MS = 60000
+    const MAX_RETRY_DELAY_MS = 120000 // Cap backoff at 2 minutes
 
     const fetchData = useCallback(async () => {
         try {
             const res = await fetch(`/api/player/manifest?token=${token}`)
-            if (!res.ok) throw new Error('Failed to fetch manifest')
+            if (res.status === 429) return // Rate limited — back off silently
+            if (res.status >= 400 && res.status < 500) {
+                // Client error (401, 403, etc.) — won't resolve with retries
+                if (!manifestRef.current) {
+                    setError('Invalid token')
+                }
+                return
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`) // 5xx → retry
             const data = await res.json()
             setManifest(data)
+            setError(null)
+            setMediaError(false)
+            retryCountRef.current = 0
             localStorage.setItem(`onesign_manifest_${token}`, JSON.stringify(data))
         } catch (err) {
-            console.error(err)
-            setError('Offline')
-            const cached = localStorage.getItem(`onesign_manifest_${token}`)
-            if (cached) {
-                setManifest(JSON.parse(cached))
+            // Network error or 5xx — retry with backoff
+            retryCountRef.current++
+
+            if (!manifestRef.current) {
+                setError('Offline')
+                const cached = localStorage.getItem(`onesign_manifest_${token}`)
+                if (cached) {
+                    try {
+                        setManifest(JSON.parse(cached))
+                    } catch { /* corrupt cache, ignore */ }
+                }
+            }
+
+            // Exponential backoff retry (only when no manifest loaded yet)
+            if (!manifestRef.current) {
+                const delay = Math.min(
+                    (2 ** retryCountRef.current) * 1000,
+                    MAX_RETRY_DELAY_MS
+                )
+                setTimeout(() => fetchData(), delay)
             }
         }
     }, [token])
@@ -61,15 +95,27 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         const delay = (targetTime - now) + 2000
 
         if (delay > 0 && delay < 86400000) { // Sanity: max 24h
-            console.log(`[Player] Precision refresh scheduled for ${manifest.next_check} (in ${Math.round(delay / 1000)}s)`)
-            const timer = setTimeout(() => {
-                console.log('[Player] Precision refresh triggered')
-                fetchData()
-            }, delay)
-
+            const timer = setTimeout(() => fetchData(), delay)
             return () => clearTimeout(timer)
         }
     }, [manifest?.next_check, fetchData])
+
+    // Signed URL refresh — re-fetch manifest before URLs expire
+    useEffect(() => {
+        if (!manifest?.fetched_at) return
+
+        const fetchedAt = new Date(manifest.fetched_at).getTime()
+        const expiresAt = fetchedAt + URL_REFRESH_MS
+        const delay = expiresAt - Date.now()
+
+        if (delay > 0) {
+            const timer = setTimeout(() => fetchData(), delay)
+            return () => clearTimeout(timer)
+        } else {
+            // Already expired, refresh now
+            fetchData()
+        }
+    }, [manifest?.fetched_at, fetchData])
 
     // Initial fetch + polling + heartbeat
     useEffect(() => {
@@ -83,15 +129,15 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 const res = await fetch(
                     `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}`
                 )
+                if (res.status === 429) return // Rate limited, skip
                 if (res.ok) {
                     const data = await res.json()
                     if (data.should_refresh) {
-                        console.log('[Player] Poll detected change, refreshing...')
                         fetchData()
                     }
                 }
             } catch (e) {
-                console.warn('[Player] Poll failed', e)
+                // Network error — silently continue, next poll will retry
             }
         }, POLL_INTERVAL_MS)
 
@@ -105,7 +151,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     viewport: `${window.innerWidth}x${window.innerHeight}`,
                     display_type: 'unknown'
                 })
-            }).catch(console.warn)
+            }).catch(() => {})
         }, HEARTBEAT_INTERVAL_MS)
 
         return () => {
@@ -114,6 +160,12 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [token, fetchData])
 
+    // Media error handler — retry fetch on 403/corrupt media
+    const handleMediaError = useCallback(() => {
+        setMediaError(true)
+        // Signed URL likely expired or file corrupt — re-fetch manifest for new URL
+        setTimeout(() => fetchData(), 2000)
+    }, [fetchData])
 
     // Fullscreen Logic
     useEffect(() => {
@@ -123,18 +175,17 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     await document.documentElement.requestFullscreen()
                 }
             } catch (e) {
-                console.log('Auto-fullscreen blocked, waiting for interaction')
+                // Auto-fullscreen blocked, waiting for interaction
             }
         }
-        // Attempt on mount (often blocked) and when manifest loads
         if (manifest) attemptFullscreen()
     }, [manifest])
 
     const toggleFullscreen = () => {
         if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(console.error)
+            document.documentElement.requestFullscreen().catch(() => {})
         } else {
-            document.exitFullscreen().catch(console.error)
+            document.exitFullscreen().catch(() => {})
         }
     }
 
@@ -145,10 +196,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             if (typeof navigator !== 'undefined' && 'wakeLock' in navigator) {
                 try {
                     wakeLock = await (navigator as any).wakeLock.request('screen')
-                    console.log('Wake Lock active')
-                } catch (err: any) {
-                    console.warn('Wake Lock failed:', err.message)
-                }
+                } catch { /* Wake Lock not available */ }
             }
         }
 
@@ -166,14 +214,39 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [isPlaying])
 
+    // Auto-hide cursor after 3s of inactivity during playback
+    useEffect(() => {
+        if (!isPlaying) return
+
+        let hideTimer: ReturnType<typeof setTimeout>
+
+        const showCursor = () => {
+            setCursorHidden(false)
+            clearTimeout(hideTimer)
+            hideTimer = setTimeout(() => setCursorHidden(true), 3000)
+        }
+
+        // Hide immediately after starting
+        hideTimer = setTimeout(() => setCursorHidden(true), 3000)
+
+        window.addEventListener('mousemove', showCursor)
+        window.addEventListener('touchstart', showCursor)
+        window.addEventListener('pointermove', showCursor)
+
+        return () => {
+            clearTimeout(hideTimer)
+            window.removeEventListener('mousemove', showCursor)
+            window.removeEventListener('touchstart', showCursor)
+            window.removeEventListener('pointermove', showCursor)
+        }
+    }, [isPlaying])
+
     const handleStart = () => {
         setIsPlaying(true)
         toggleFullscreen()
     }
 
     if (!manifest && !error) return (
-        // Initial loading state - wait for manifest before even showing "Start" if we want
-        // But showing "Start" early is fine too. Let's stick to simple loading first.
         <div className="bg-black text-white h-screen flex items-center justify-center">
             Loading Onesign...
         </div>
@@ -199,25 +272,30 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     return (
         <div
             onClick={toggleFullscreen}
-            className="bg-black h-screen w-screen overflow-hidden flex items-center justify-center relative cursor-pointer"
+            className={`bg-black h-screen w-screen overflow-hidden flex items-center justify-center relative ${cursorHidden ? 'cursor-none' : 'cursor-pointer'}`}
+            style={cursorHidden ? { cursor: 'none' } : undefined}
         >
             <NeverSleepGuard active={isPlaying} />
 
-            {manifest?.media?.url ? (
+            {manifest?.media?.url && !mediaError ? (
                 manifest.media.type?.startsWith('video/') ? (
                     <video
+                        key={manifest.media.url}
                         src={manifest.media.url}
                         className="w-full h-full object-contain"
                         autoPlay
                         muted
                         playsInline
                         loop
+                        onError={handleMediaError}
                     />
                 ) : (
                     <img
+                        key={manifest.media.url}
                         src={manifest.media.url}
                         className="w-full h-full object-contain"
                         alt="Digital Signage content"
+                        onError={handleMediaError}
                     />
                 )
             ) : (

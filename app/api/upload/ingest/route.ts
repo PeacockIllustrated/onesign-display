@@ -2,16 +2,22 @@ import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 
+const ALLOWED_MIME_TYPES = new Set([
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/gif',
+    'video/mp4',
+    'video/quicktime',
+])
+
+const MAX_FILES_PER_REQUEST = 20
+
 export async function POST(request: NextRequest) {
     try {
-        console.log('[Upload] Ingest API Hit')
-
-        const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY
-        console.log('[Upload] Has Service Role Key:', hasServiceKey)
-
-        if (!hasServiceKey) {
+        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
             console.error('[Upload] Missing SUPABASE_SERVICE_ROLE_KEY')
-            return NextResponse.json({ error: 'Config Error: Missing Service Key' }, { status: 500 })
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
         }
 
         const supabase = await createClient()
@@ -22,8 +28,6 @@ export async function POST(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
-        // Mock user for upload logic
-        // const user = { id: 'debug-user' }
 
         // 2. Parse FormData
         const formData = await request.formData()
@@ -31,33 +35,64 @@ export async function POST(request: NextRequest) {
         const clientId = formData.get('clientId') as string
         const storeId = formData.get('storeId') as string // Optional
 
-        console.log(`[Upload] Processing ${files.length} files for client ${clientId}`)
-
         if (!files.length || !clientId) {
-            console.error('[Upload] Missing files or clientId')
             return NextResponse.json({ error: 'Missing files or clientId' }, { status: 400 })
+        }
+
+        if (files.length > MAX_FILES_PER_REQUEST) {
+            return NextResponse.json({ error: `Max ${MAX_FILES_PER_REQUEST} files per upload` }, { status: 400 })
+        }
+
+        // Verify user has permission to upload to this client
+        const { data: profile } = await supabase
+            .from('display_profiles')
+            .select('role, client_id')
+            .eq('id', user.id)
+            .single()
+
+        if (!profile) {
+            return NextResponse.json({ error: 'Profile not found' }, { status: 403 })
+        }
+
+        const isSuperAdmin = profile.role === 'super_admin'
+        const isOwner = profile.role === 'client_admin' && profile.client_id === clientId
+
+        if (!isSuperAdmin && !isOwner) {
+            return NextResponse.json({ error: 'Forbidden: Cannot upload to this client' }, { status: 403 })
         }
 
         const results = []
 
         // 3. Process Each File
         for (const file of files) {
-            const ext = file.name.split('.').pop()
-            const storagePath = `${clientId}/${uuidv4()}.${ext}`
-            console.log(`[Upload] Uploading ${file.name} to ${storagePath}`)
+            // Validate MIME type
+            if (!ALLOWED_MIME_TYPES.has(file.type)) {
+                results.push({ file: file.name, status: 'rejected', error: `Unsupported file type: ${file.type}` })
+                continue
+            }
 
-            // Upload to Storage (Using Admin Client to bypass RLS for now if policies are strict)
-            const { data, error: uploadError } = await adminClient
+            // Sanitize extension from MIME type (ignore user-supplied extension)
+            const mimeToExt: Record<string, string> = {
+                'image/jpeg': 'jpg',
+                'image/png': 'png',
+                'image/webp': 'webp',
+                'image/gif': 'gif',
+                'video/mp4': 'mp4',
+                'video/quicktime': 'mov',
+            }
+            const ext = mimeToExt[file.type] || 'bin'
+            const storagePath = `${clientId}/${uuidv4()}.${ext}`
+
+            // Upload to Storage
+            const { error: uploadError } = await adminClient
                 .storage
                 .from('onesign-display')
                 .upload(storagePath, file)
 
             if (uploadError) {
-                console.error(`[Upload] Failed to upload ${file.name}:`, uploadError)
+                console.error(`[Upload] Storage error for ${file.name}:`, uploadError.message)
                 results.push({ file: file.name, status: 'error', error: uploadError.message })
                 continue
-            } else {
-                console.log(`[Upload] Success: ${storagePath}`)
             }
 
             // Create DB Record
@@ -96,8 +131,6 @@ export async function POST(request: NextRequest) {
             const { data: { publicUrl } } = adminClient.storage.from('onesign-display').getPublicUrl(storagePath)
 
             if (storeId && (assignedScreenIndex || assignedOrientation)) {
-                // ... (existing logic) ...
-                // Find matching screen in this store
                 let query = supabase.from('display_screens').select('id, refresh_version').eq('store_id', storeId)
 
                 if (assignedScreenIndex) query = query.eq('index_in_set', assignedScreenIndex).eq('orientation', 'landscape')
@@ -132,7 +165,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, results })
     } catch (e: any) {
-        console.error('[Upload] CRITICAL ERROR:', e)
-        return NextResponse.json({ error: e.message || 'Server Error' }, { status: 500 })
+        console.error('[Upload] Critical error:', e.message)
+        return NextResponse.json({ error: 'Server Error' }, { status: 500 })
     }
 }

@@ -105,7 +105,9 @@ export async function addScreen(formData: FormData) {
     }
 
     // 5. Insert Screen
-    const token = `token-${Math.random().toString(36).substring(2, 10)}`
+    const tokenBytes = new Uint8Array(12)
+    crypto.getRandomValues(tokenBytes)
+    const token = `tok-${Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`
 
     const { error } = await supabase.from('display_screens').insert({
         screen_set_id: screenSetId,

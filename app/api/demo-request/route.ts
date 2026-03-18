@@ -1,26 +1,44 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/server'
+import { z } from 'zod'
+import { rateLimit, getClientIp } from '@/lib/rate-limit'
 
-// Use service role for public submissions
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const DemoRequestSchema = z.object({
+    name: z.string().min(1).max(100),
+    email: z.string().email().max(254),
+    company: z.string().max(200).nullish(),
+    plan: z.string().max(100).nullish(),
+    screens: z.string().max(50).nullish(),
+    message: z.string().max(2000).nullish(),
+})
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { name, email, company, plan, screens, message } = body;
+    // IP-based rate limit: max 5 demo requests per hour
+    const ip = getClientIp(request)
+    const limited = rateLimit('demo-request', ip, { maxRequests: 5, windowMs: 3600000 })
+    if (limited) {
+        return NextResponse.json(
+            { error: 'Too many requests. Please try again later.' },
+            { status: 429 }
+        )
+    }
 
-        // Validate required fields
-        if (!name || !email) {
+    try {
+        const body = await request.json()
+
+        const parsed = DemoRequestSchema.safeParse(body)
+        if (!parsed.success) {
             return NextResponse.json(
-                { error: 'Name and email are required' },
+                { error: 'Invalid input', details: parsed.error.flatten().fieldErrors },
                 { status: 400 }
-            );
+            )
         }
 
-        // Insert prospect into database
+        const { name, email, company, plan, screens, message } = parsed.data
+
+        // Use admin client — prospects table needs insert access for public form submissions
+        const supabase = await createAdminClient()
+
         const { data, error } = await supabase
             .from('display_prospects')
             .insert({
@@ -33,22 +51,22 @@ export async function POST(request: NextRequest) {
                 status: 'new',
             })
             .select()
-            .single();
+            .single()
 
         if (error) {
-            console.error('Failed to save prospect:', error);
+            console.error('Failed to save prospect:', error)
             return NextResponse.json(
                 { error: 'Failed to save demo request' },
                 { status: 500 }
-            );
+            )
         }
 
-        return NextResponse.json({ success: true, id: data.id });
+        return NextResponse.json({ success: true, id: data.id })
     } catch (error) {
-        console.error('Demo request error:', error);
+        console.error('Demo request error:', error)
         return NextResponse.json(
             { error: 'Failed to process demo request' },
             { status: 500 }
-        );
+        )
     }
 }

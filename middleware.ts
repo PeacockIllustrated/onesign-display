@@ -48,6 +48,17 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // Security headers — skip X-Frame-Options for player routes (may be embedded)
+    const isPlayerRoute = request.nextUrl.pathname.startsWith('/player')
+
+    supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
+    supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+    supabaseResponse.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+
+    if (!isPlayerRoute) {
+        supabaseResponse.headers.set('X-Frame-Options', 'DENY')
+    }
+
     return supabaseResponse
 }
 

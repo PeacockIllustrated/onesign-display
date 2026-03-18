@@ -10,12 +10,12 @@ const PlanUpdateSchema = z.object({
     planCode: z.enum(['static_design', 'video_design_system', 'pro_managed', 'enterprise']),
     status: z.enum(['active', 'past_due', 'paused', 'cancelled']),
     maxScreens: z.coerce.number().min(1),
-    videoEnabled: z.coerce.boolean(),
-    specialsEnabled: z.coerce.boolean(),
-    schedulingEnabled: z.coerce.boolean(),
-    fourKEnabled: z.coerce.boolean(),
-    designPackage: z.coerce.boolean(),
-    managedSupport: z.coerce.boolean(),
+    videoEnabled: z.boolean(),
+    specialsEnabled: z.boolean(),
+    schedulingEnabled: z.boolean(),
+    fourKEnabled: z.boolean(),
+    designPackage: z.boolean(),
+    managedSupport: z.boolean(),
     notes: z.string().optional(),
 });
 

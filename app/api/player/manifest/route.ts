@@ -1,12 +1,19 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
     const token = searchParams.get('token')
 
-    if (!token) {
-        return NextResponse.json({ error: 'Missing token' }, { status: 400 })
+    if (!token || token.length > 255) {
+        return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
+    }
+
+    // Token-based rate limit: max 6 requests per 60s per token (normal is ~2/min)
+    const limited = rateLimit('player-manifest', token, { maxRequests: 6, windowMs: 60000 })
+    if (limited) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     const supabase = await createAdminClient()
@@ -16,16 +23,15 @@ export async function GET(request: NextRequest) {
         .from('display_screens')
         .select('id, store_id, refresh_version, store:display_stores(client_id, timezone)')
         .eq('player_token', token)
-        .single() // @ts-ignore
+        .single()
 
     if (!screen) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
     }
 
-    // @ts-ignore
-    const clientId = screen.store?.client_id
-    // @ts-ignore
-    const storeTimezone = screen.store?.timezone || 'Europe/London'
+    const store = screen.store as unknown as { client_id: string; timezone: string } | null
+    const clientId = store?.client_id
+    const storeTimezone = store?.timezone || 'Europe/London'
 
     // 2. Fetch Plan & Status
     const { data: planRaw } = await supabase.from('display_client_plans').select('*').eq('client_id', clientId).single()
@@ -83,21 +89,16 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Calculate "Next Check" time using the STORE's timezone
-    // This must match how the SQL function compares schedule times
     const nowUtc = new Date()
 
-    // Convert UTC now to the store's local time for schedule boundary comparison
     const localTimeStr = nowUtc.toLocaleString('en-GB', { timeZone: storeTimezone, hour12: false })
-    // Format: "DD/MM/YYYY, HH:MM:SS"
-    const timePart = localTimeStr.split(', ')[1] // "HH:MM:SS"
+    const timePart = localTimeStr.split(', ')[1]
     const [localH, localM, localS] = timePart.split(':').map(Number)
     const currentTimeVal = localH * 3600 + localM * 60 + localS
 
-    // Get current day of week in the store's timezone
     const localDateObj = new Date(nowUtc.toLocaleString('en-US', { timeZone: storeTimezone }))
     const currentDow = localDateObj.getDay()
 
-    // Fetch relevant schedules for this screen
     const { data: scheds } = await supabase
         .from('display_scheduled_screen_content')
         .select(`
@@ -126,7 +127,6 @@ export async function GET(request: NextRequest) {
             const start = toSeconds(s.start_time)
             const end = toSeconds(s.end_time)
 
-            // Find nearest future schedule boundary (start or end)
             if (start > currentTimeVal) {
                 const diff = start - currentTimeVal
                 if (diff < minDiff) minDiff = diff

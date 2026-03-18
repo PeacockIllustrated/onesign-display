@@ -1,5 +1,6 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams
@@ -7,15 +8,21 @@ export async function GET(request: NextRequest) {
     const knownVersion = searchParams.get('knownVersion')
     const knownMediaId = searchParams.get('knownMediaId')
 
-    if (!token) {
-        return NextResponse.json({ error: 'Missing token' }, { status: 400 })
+    if (!token || token.length > 255) {
+        return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
+    }
+
+    // Token-based rate limit: max 6 requests per 60s per token
+    const limited = rateLimit('player-refresh', token, { maxRequests: 6, windowMs: 60000 })
+    if (limited) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }
 
     const supabase = await createAdminClient()
 
     const { data: screen } = await supabase
         .from('display_screens')
-        .select('id, refresh_version') // Select ID for RPC
+        .select('id, refresh_version')
         .eq('player_token', token)
         .single()
 
@@ -35,8 +42,6 @@ export async function GET(request: NextRequest) {
             p_now: new Date().toISOString()
         })
 
-        // Compare known media ID with currently resolved ID
-        // Treat undefined/null as empty string for comparison
         const currentId = resolvedMediaId || ''
         const clientKnownId = knownMediaId || ''
 

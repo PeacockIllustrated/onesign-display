@@ -1,22 +1,27 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
+import { rateLimit } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
     const body = await request.json()
     const { token, display_type, viewport } = body
 
-    if (!token) {
-        return NextResponse.json({ error: 'Missing token' }, { status: 400 })
+    if (!token || token.length > 255) {
+        return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
     }
 
-    const supabase = await createClient()
+    // Token-based rate limit: max 3 requests per 60s per token (normal is 1/min)
+    const limited = rateLimit('player-ping', token, { maxRequests: 3, windowMs: 60000 })
+    if (limited) {
+        return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
 
-    // Update last_seen_at
+    const supabase = await createAdminClient()
+
     const { error } = await supabase
         .from('display_screens')
         .update({
             last_seen_at: new Date().toISOString(),
-            // We could also update display_type here if it changed
         })
         .eq('player_token', token)
 
