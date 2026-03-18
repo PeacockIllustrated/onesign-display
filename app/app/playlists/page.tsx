@@ -2,13 +2,15 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { ListVideo, Plus } from 'lucide-react'
 import { createPlaylist } from '@/app/actions/playlist-actions'
+import { ClientSelector } from '@/components/portal/client-selector'
 
 export const metadata = {
     title: 'Playlists — Onesign Display',
     description: 'Manage your content playlists for digital menu boards.',
 }
 
-export default async function PlaylistsPage() {
+export default async function PlaylistsPage({ searchParams }: { searchParams: Promise<{ clientId?: string }> }) {
+    const { clientId: searchClientId } = await searchParams
     const supabase = await createClient()
 
     const { data: { user } } = await supabase.auth.getUser()
@@ -17,19 +19,29 @@ export default async function PlaylistsPage() {
     const { data: profile } = await supabase.from('display_profiles').select('role, client_id').eq('id', user.id).single()
     const isSuperAdmin = profile?.role === 'super_admin'
 
-    // Fetch playlists — super admin sees all, client admin sees own
+    // Super admin: get all clients for selector
+    let availableClients: { id: string, name: string }[] = []
+    let activeClientId = profile?.client_id
+
+    if (isSuperAdmin) {
+        const { data: clients } = await supabase.from('display_clients').select('id, name').order('name')
+        availableClients = clients || []
+        activeClientId = searchClientId || availableClients[0]?.id || null
+    }
+
+    // Fetch playlists scoped to active client
     let query = supabase
         .from('display_playlists')
         .select('*, display_playlist_items(count)')
         .order('created_at', { ascending: false })
 
-    if (!isSuperAdmin && profile?.client_id) {
-        query = query.eq('client_id', profile.client_id)
+    if (activeClientId) {
+        query = query.eq('client_id', activeClientId)
     }
 
     const { data: playlists } = await query
 
-    // Get usage counts (how many screens use each playlist)
+    // Get usage counts
     const playlistIds = playlists?.map(p => p.id) || []
     let usageCounts: Record<string, number> = {}
 
@@ -49,17 +61,6 @@ export default async function PlaylistsPage() {
         }
     }
 
-    // For super admin: use first playlist's client or fall back to first client in system
-    let activeClientId = profile?.client_id
-    if (isSuperAdmin) {
-        if (playlists && playlists.length > 0) {
-            activeClientId = playlists[0].client_id
-        } else {
-            const { data: firstClient } = await supabase.from('display_clients').select('id').order('created_at').limit(1).single()
-            activeClientId = firstClient?.id || null
-        }
-    }
-
     const transitionLabels: Record<string, string> = {
         fade: 'Fade',
         cut: 'Cut',
@@ -69,12 +70,17 @@ export default async function PlaylistsPage() {
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-zinc-900">Playlists</h1>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                    <h1 className="text-2xl font-bold text-zinc-900">Playlists</h1>
+                    {isSuperAdmin && (
+                        <ClientSelector clients={availableClients} activeClientId={activeClientId || undefined} />
+                    )}
+                </div>
                 {activeClientId && (
                     <form action={async () => {
                         'use server'
-                        await createPlaylist(activeClientId, 'New Playlist')
+                        await createPlaylist(activeClientId!, 'New Playlist')
                     }}>
                         <button
                             type="submit"
@@ -91,7 +97,11 @@ export default async function PlaylistsPage() {
                 <div className="text-center py-16 bg-white rounded-lg border border-gray-200">
                     <ListVideo className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-1">No playlists yet</h3>
-                    <p className="text-sm text-gray-500">Create a playlist to rotate multiple images and videos on your screens.</p>
+                    <p className="text-sm text-gray-500">
+                        {isSuperAdmin && activeClientId
+                            ? 'Create a playlist for this client to rotate content on their screens.'
+                            : 'Create a playlist to rotate multiple images and videos on your screens.'}
+                    </p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
