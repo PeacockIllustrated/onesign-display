@@ -76,17 +76,33 @@ CREATE POLICY "display: Manage playlists" ON display_playlists FOR ALL USING (
 );
 
 -- Playlist items: scoped via playlist's client_id
-CREATE POLICY "display: View playlist_items" ON display_playlist_items FOR SELECT USING (
-    EXISTS (SELECT 1 FROM display_playlists p WHERE p.id = display_playlist_items.playlist_id AND (
-        p.client_id = (SELECT client_id FROM display_get_user_role())
-        OR (SELECT role FROM display_get_user_role()) = 'super_admin'
-    ))
+CREATE POLICY "display: View playlist_items" ON display_playlist_items FOR SELECT TO authenticated USING (
+    playlist_id IN (
+        SELECT id FROM display_playlists WHERE
+            client_id = (SELECT client_id FROM display_get_user_role())
+            OR (SELECT role FROM display_get_user_role()) = 'super_admin'
+    )
 );
-CREATE POLICY "display: Manage playlist_items" ON display_playlist_items FOR ALL USING (
-    EXISTS (SELECT 1 FROM display_playlists p WHERE p.id = display_playlist_items.playlist_id AND (
-        p.client_id = (SELECT client_id FROM display_get_user_role())
-        OR (SELECT role FROM display_get_user_role()) = 'super_admin'
-    ))
+CREATE POLICY "display: Insert playlist_items" ON display_playlist_items FOR INSERT TO authenticated WITH CHECK (
+    playlist_id IN (
+        SELECT id FROM display_playlists WHERE
+            client_id = (SELECT client_id FROM display_get_user_role())
+            OR (SELECT role FROM display_get_user_role()) = 'super_admin'
+    )
+);
+CREATE POLICY "display: Update playlist_items" ON display_playlist_items FOR UPDATE TO authenticated USING (
+    playlist_id IN (
+        SELECT id FROM display_playlists WHERE
+            client_id = (SELECT client_id FROM display_get_user_role())
+            OR (SELECT role FROM display_get_user_role()) = 'super_admin'
+    )
+);
+CREATE POLICY "display: Delete playlist_items" ON display_playlist_items FOR DELETE TO authenticated USING (
+    playlist_id IN (
+        SELECT id FROM display_playlists WHERE
+            client_id = (SELECT client_id FROM display_get_user_role())
+            OR (SELECT role FROM display_get_user_role()) = 'super_admin'
+    )
 );
 
 -- 7. Updated resolution function — returns playlist_id as well
