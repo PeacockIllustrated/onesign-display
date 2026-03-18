@@ -13,14 +13,18 @@ import Image from 'next/image'
  * Requires: public/onesign-logo-white.png
  */
 export default function SplashScreen() {
-  const [phase, setPhase] = useState<'entering' | 'visible' | 'exiting' | 'gone'>('entering')
+  const [phase, setPhase] = useState<'entering' | 'visible' | 'exiting' | 'gone'>(() => {
+    // Only show splash once per browser session
+    if (typeof window !== 'undefined' && sessionStorage.getItem('onesign_splash_shown')) {
+      return 'gone'
+    }
+    return 'entering'
+  })
 
   useEffect(() => {
-    // Phase sequence:
-    // 0ms   → mount (entering: logo + line animate in)
-    // 600ms → visible (tagline fades in)
-    // 1800ms → exiting (whole screen fades out)
-    // 2400ms → gone (component unmounts, pointer events restored)
+    if (phase === 'gone') return
+
+    sessionStorage.setItem('onesign_splash_shown', '1')
 
     const t1 = setTimeout(() => setPhase('visible'), 600)
     const t2 = setTimeout(() => setPhase('exiting'), 1800)
@@ -31,7 +35,7 @@ export default function SplashScreen() {
       clearTimeout(t2)
       clearTimeout(t3)
     }
-  }, [])
+  }, [phase])
 
   if (phase === 'gone') return null
 

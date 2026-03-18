@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { GripVertical, Trash2, Plus, X, Film } from 'lucide-react'
+import { GripVertical, Trash2, Plus, X, Film, Check } from 'lucide-react'
 import { SignedImage } from '@/components/ui/signed-image'
 import {
     updatePlaylist,
@@ -44,6 +44,8 @@ export function PlaylistEditor({
     const [items, setItems] = useState(initialItems)
     const [showMediaPicker, setShowMediaPicker] = useState(false)
     const [saving, setSaving] = useState(false)
+    const [settingsSaved, setSettingsSaved] = useState(false)
+    const [savingSettings, setSavingSettings] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
 
     const isVideo = (mime: string) => mime?.startsWith('video/')
@@ -152,16 +154,16 @@ export function PlaylistEditor({
                         </div>
 
                         {item.media && !isVideo(item.media.mime) && (
-                            <div className="flex items-center gap-1 flex-shrink-0">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                                 <input
                                     type="number"
                                     min={1}
                                     max={300}
                                     defaultValue={item.duration_seconds}
                                     onBlur={(e) => handleDurationChange(item.id, parseInt(e.target.value) || 10)}
-                                    className="w-14 text-center text-sm border border-gray-300 rounded px-1 py-0.5"
+                                    className="w-16 text-center text-sm font-medium border border-gray-300 rounded-md px-2 py-1.5 bg-white text-gray-900 focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
                                 />
-                                <span className="text-xs text-gray-400">sec</span>
+                                <span className="text-xs text-gray-500 font-medium">sec</span>
                             </div>
                         )}
 
@@ -220,7 +222,17 @@ export function PlaylistEditor({
                     <h3 className="text-base font-semibold text-gray-900 mb-4">Settings</h3>
 
                     <form action={async (formData) => {
-                        await updatePlaylist(playlist.id, formData)
+                        setSavingSettings(true)
+                        setSettingsSaved(false)
+                        try {
+                            await updatePlaylist(playlist.id, formData)
+                            setSettingsSaved(true)
+                            setTimeout(() => setSettingsSaved(false), 3000)
+                        } catch (e: any) {
+                            alert(e.message || 'Failed to save')
+                        } finally {
+                            setSavingSettings(false)
+                        }
                     }} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Playlist Name</label>
@@ -276,10 +288,16 @@ export function PlaylistEditor({
 
                         <button
                             type="submit"
-                            className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 text-sm font-medium"
+                            disabled={savingSettings}
+                            className="w-full bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            Save Settings
+                            {savingSettings ? 'Saving...' : settingsSaved ? (
+                                <><Check className="w-4 h-4" /> Saved</>
+                            ) : 'Save Settings'}
                         </button>
+                        {settingsSaved && (
+                            <p className="text-xs text-green-600 text-center font-medium">Settings saved successfully</p>
+                        )}
                     </form>
                 </div>
 
