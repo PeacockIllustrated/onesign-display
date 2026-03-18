@@ -343,27 +343,30 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             return
         }
 
-        // Load next slide into inactive layer, then crossfade
+        // Load next slide into inactive layer, then crossfade.
+        // Use setTimeout(50) instead of requestAnimationFrame — rAF is unreliable
+        // on cheap smart TV browsers and may not guarantee a paint between setting
+        // the new content and starting the transition, causing it to snap.
         if (activeLayer === 'A') {
             setLayerBIndex(nextIndex)
-            requestAnimationFrame(() => {
+            setTimeout(() => {
                 setLayerAVisible(false)
                 setLayerBVisible(true)
                 setTimeout(() => {
                     setActiveLayer('B')
                     transitioningRef.current = false
                 }, dur)
-            })
+            }, 50)
         } else {
             setLayerAIndex(nextIndex)
-            requestAnimationFrame(() => {
+            setTimeout(() => {
                 setLayerBVisible(false)
                 setLayerAVisible(true)
                 setTimeout(() => {
                     setActiveLayer('A')
                     transitioningRef.current = false
                 }, dur)
-            })
+            }, 50)
         }
     }, [currentSlideIndex, activeLayer, cleanPlaylist])
 
@@ -522,11 +525,25 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
         switch (cleanPlaylist.transition) {
             case 'fade':
-                return { transition: `opacity ${dur} ease`, opacity: isVisible ? 1 : 0 }
+                return {
+                    transition: `opacity ${dur} ease`,
+                    WebkitTransition: `opacity ${dur} ease`,
+                    opacity: isVisible ? 1 : 0,
+                }
             case 'slide_left':
-                return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(-100%)' }
+                return {
+                    transition: `transform ${dur} ease`,
+                    WebkitTransition: `-webkit-transform ${dur} ease`,
+                    transform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
+                    WebkitTransform: isVisible ? 'translateX(0)' : 'translateX(-100%)',
+                }
             case 'slide_right':
-                return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(100%)' }
+                return {
+                    transition: `transform ${dur} ease`,
+                    WebkitTransition: `-webkit-transform ${dur} ease`,
+                    transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+                    WebkitTransform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+                }
             case 'cut':
             default:
                 return { opacity: isVisible ? 1 : 0 }
@@ -542,7 +559,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             <div
                 key={`layer-${layerKey}`}
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform', zIndex: isVisible ? 2 : 1 }}
+                style={{ ...getSlideStyle(isVisible), zIndex: isVisible ? 2 : 1 }}
             >
                 {item.type?.startsWith('video/') ? (
                     <VideoSlide
