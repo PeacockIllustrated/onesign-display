@@ -27,10 +27,14 @@ function setCachedManifest(screenId: string, version: number, data: any): void {
     manifestCache.set(screenId, { data, version, expiresAt: Date.now() + CACHE_TTL_MS })
 }
 
-const SIGN_TTL_BASE = 86400 // 24 hours — longer TTL lets browsers cache media all day,
-                             // cutting egress by ~97%. Content changes still arrive instantly
-                             // via the refresh_version mechanism.
-const SIGN_TTL_STAGGER = 300 // stagger per item (5 min) so URLs don't all expire at once
+// ── CDN or signed URL resolution ─────────────────────────────
+// When MEDIA_CDN_URL is set, media URLs point to the Cloudflare Worker
+// proxy — stable URLs, browser-cacheable, zero Supabase egress.
+// Without it, falls back to Supabase signed URLs (dev / self-hosted).
+const CDN_BASE_URL = process.env.MEDIA_CDN_URL || null
+
+const SIGN_TTL_BASE = 86400 // 24 hours
+const SIGN_TTL_STAGGER = 300 // stagger per item (5 min)
 const MAX_SIGN_RETRIES = 2
 
 async function signUrlWithRetry(
@@ -57,6 +61,20 @@ async function signUrlWithRetry(
         }
     }
     return null
+}
+
+/** Resolve a storage path to a player-facing URL.
+ *  CDN mode: instant, no async, stable URL → browser caches forever.
+ *  Signed mode: async Supabase call per item (fallback for dev). */
+async function resolveMediaUrl(
+    supabase: any,
+    storagePath: string,
+    ttl: number
+): Promise<string | null> {
+    if (CDN_BASE_URL) {
+        return `${CDN_BASE_URL}/${storagePath}`
+    }
+    return signUrlWithRetry(supabase, storagePath, ttl)
 }
 
 export async function GET(request: NextRequest) {
@@ -171,17 +189,17 @@ export async function GET(request: NextRequest) {
                 if (isVideo && !plan.video_enabled) continue
 
                 const itemTtl = SIGN_TTL_BASE + (itemIndex * SIGN_TTL_STAGGER)
-                const signedUrl = await signUrlWithRetry(supabase, media.storage_path, itemTtl)
+                const mediaUrl = await resolveMediaUrl(supabase, media.storage_path, itemTtl)
 
                 // Drop items with failed URLs entirely — no black frames
-                if (!signedUrl) {
-                    console.error(`[Manifest] Dropping playlist item ${item.id} — URL signing failed permanently`)
+                if (!mediaUrl) {
+                    console.error(`[Manifest] Dropping playlist item ${item.id} — URL resolution failed permanently`)
                     continue
                 }
 
                 signedItems.push({
                     id: item.id,
-                    url: signedUrl,
+                    url: mediaUrl,
                     type: media.mime,
                     // Sync mode requires duration_seconds for ALL items (including videos)
                     // so the deterministic position calculator can build a timeline
@@ -212,10 +230,10 @@ export async function GET(request: NextRequest) {
             const isVideo = media.mime.startsWith('video/')
 
             if (!(isVideo && !plan.video_enabled)) {
-                const signedUrl = await signUrlWithRetry(supabase, media.storage_path, SIGN_TTL_BASE)
+                const mediaUrl = await resolveMediaUrl(supabase, media.storage_path, SIGN_TTL_BASE)
 
-                if (signedUrl) {
-                    mediaResponse = { id: resolvedMediaId, url: signedUrl, type: media.mime }
+                if (mediaUrl) {
+                    mediaResponse = { id: resolvedMediaId, url: mediaUrl, type: media.mime }
                 }
             }
         }
