@@ -6,17 +6,16 @@ import { Home, Users, Store, Image, Calendar, LogOut, Menu, X, BookOpen, UserPlu
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/(auth)/auth/login/actions'
 import { useState } from 'react'
+import { TutorialWizard } from './tutorial-wizard'
 
 const navigation = [
     { name: 'Overview', href: '/app', icon: Home },
     { name: 'Clients', href: '/app/clients', icon: Users, adminOnly: true },
     { name: 'Prospects', href: '/app/prospects', icon: UserPlus, adminOnly: true },
-    /* { name: 'Stores', href: '/app/stores', icon: Store }, // Stores are usually accessed via Clients or Overview for Super Admin */
     { name: 'Media', href: '/app/media', icon: Image },
     { name: 'Playlists', href: '/app/playlists', icon: ListVideo },
     { name: 'Specials', href: '/app/specials', icon: Image },
     { name: 'Schedules', href: '/app/schedules', icon: Calendar },
-    { name: 'User Guide', href: '/app/guide', icon: BookOpen },
 ]
 
 export function Sidebar({ userRole, userEmail, clientName }: {
@@ -26,6 +25,7 @@ export function Sidebar({ userRole, userEmail, clientName }: {
 }) {
     const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
+    const [showTutorial, setShowTutorial] = useState(false)
 
     const toggle = () => setIsOpen(!isOpen)
 
@@ -63,6 +63,14 @@ export function Sidebar({ userRole, userEmail, clientName }: {
                             </Link>
                         )
                     })}
+                    {/* Tutorial button */}
+                    <button
+                        onClick={() => { setShowTutorial(true); setIsOpen(false) }}
+                        className="text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900 group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors w-full"
+                    >
+                        <BookOpen className="text-zinc-400 group-hover:text-zinc-500 mr-3 flex-shrink-0 h-5 w-5 transition-colors" />
+                        App Tutorial
+                    </button>
                 </nav>
             </div>
             <div className="flex-shrink-0 flex flex-col border-t border-zinc-200">
@@ -130,6 +138,8 @@ export function Sidebar({ userRole, userEmail, clientName }: {
 
             {/* Mobile Spacer to push content down active only on mobile */}
             <div className="md:hidden h-16 w-full shrink-0" />
+
+            {showTutorial && <TutorialWizard onClose={() => setShowTutorial(false)} />}
         </>
     )
 }
