@@ -298,6 +298,21 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         } else {
             setLayerAIndex(nextIndex)
         }
+
+        // Safety timeout: if content never loads (broken URL, network failure),
+        // force-mark ready after 10s so the slideshow doesn't get stuck.
+        const safetyTimer = setTimeout(() => {
+            if (!hiddenLayerReadyRef.current) {
+                console.warn('[Player] Hidden layer load timeout — proceeding anyway')
+                hiddenLayerReadyRef.current = true
+                if (pendingAdvanceRef.current) {
+                    pendingAdvanceRef.current = false
+                    advanceSlideRef.current()
+                }
+            }
+        }, 10_000)
+
+        return () => clearTimeout(safetyTimer)
     }, [currentSlideIndex, activeLayer, cleanPlaylist, syncEnabled, layerAIndex, layerBIndex])
 
     // Called when a layer's img fires onLoad or video fires onLoadedData.
@@ -756,8 +771,27 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             // Force GPU layer promotion on mobile — prevents de-compositing
             // that causes black flashes when layers become visible
             backfaceVisibility: 'hidden' as const,
-            zIndex: isVisible ? 2 : 1,
+            // ANDROID FIX: The OUTGOING (active) layer must be on top during
+            // crossfade. Android Chrome may not have composited the incoming
+            // layer's GPU texture yet — keeping the outgoing on top means its
+            // full-opacity content covers any blank frames underneath.
+            // activeLayer hasn't changed yet during a transition (it updates
+            // in the setTimeout after the CSS transition completes), so this
+            // naturally puts the outgoing layer on z-index 2.
+            zIndex: layerKey === activeLayer ? 2 : 1,
         }
+
+        // Wrap onContentReady with double-rAF to wait for GPU paint commit.
+        // Android Chrome fires onLoad when the bitmap is decoded, but the GPU
+        // texture upload is async. Without this, we'd mark "ready" before the
+        // texture is actually paintable, causing a blank frame during crossfade.
+        const onGpuReady = onContentReady ? () => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    onContentReady()
+                })
+            })
+        } : undefined
 
         // CRITICAL: Use STABLE keys (layer-A, layer-B) — NOT keys that
         // include item.id. Changing keys forces React to unmount the old
@@ -779,7 +813,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         fitClass={fitClass}
                         onEnded={isSyncVideoSlide ? undefined : handleVideoEnded}
                         onError={handleMediaError}
-                        onReady={onContentReady}
+                        onReady={onGpuReady}
                         syncMode={isSyncVideoSlide}
                         syncSeekTime={isSyncVideoSlide ? syncEngine.getExpectedVideoTime() : undefined}
                     />
@@ -789,7 +823,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         src={item.url}
                         className={`w-full h-full ${fitClass}`}
                         alt="Slide content"
-                        onLoad={onContentReady}
+                        onLoad={onGpuReady}
                         onError={isVisible ? handleMediaError : undefined}
                     />
                 )}
@@ -846,12 +880,20 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     onLayerBReady,
                 )}
 
-                {/* Loading indicator — only waits for the first slide */}
-                {!firstSlideReady && (
-                    <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+                {/* Loading overlay — fades out over 300ms instead of instant unmount.
+                    Instant removal can flash black on Android because the GPU hasn't
+                    finished compositing the first slide's texture underneath. */}
+                <div
+                    className="absolute inset-0 bg-black flex items-center justify-center z-10 transition-opacity duration-300"
+                    style={{
+                        opacity: firstSlideReady ? 0 : 1,
+                        pointerEvents: firstSlideReady ? 'none' : 'auto',
+                    }}
+                >
+                    {!firstSlideReady && (
                         <div className="text-gray-500 text-sm">Loading slides...</div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {/* Sync calibrating indicator */}
                 {manifest?.sync?.enabled && !syncEngine.isCalibrated && firstSlideReady && (
