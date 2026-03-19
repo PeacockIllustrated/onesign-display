@@ -78,6 +78,12 @@ export default function LoginPage() {
                         <SubmitButton />
                     </div>
                 </form>
+                <p className="text-center text-sm text-zinc-500">
+                    Don&apos;t have an account?{' '}
+                    <a href="/auth/signup" className="text-black font-medium hover:underline">
+                        Sign up
+                    </a>
+                </p>
             </div>
         </div>
     )

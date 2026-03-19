@@ -59,6 +59,30 @@ export const PLAN_DEFS: Record<PlanCode, PlanEntitlements> = {
     },
 };
 
+// Self-serve plan metadata
+export const PLAN_PRICES: Record<PlanCode, string> = {
+    static_design: '39',
+    video_design_system: '59',
+    pro_managed: '89',
+    enterprise: 'POA',
+};
+
+export const SELF_SERVE_PLANS: PlanCode[] = [
+    'static_design',
+    'video_design_system',
+    'pro_managed',
+];
+
+export function getPlanShortName(code: string): string {
+    switch (code) {
+        case 'static_design': return 'Onesign Static';
+        case 'video_design_system': return 'Onesign Video';
+        case 'pro_managed': return 'Onesign Pro';
+        case 'enterprise': return 'Onesign Enterprise';
+        default: return code;
+    }
+}
+
 export function getPlanDisplayName(code: string): string {
     switch (code) {
         case 'static_design': return 'Onesign Static + Menu Design';

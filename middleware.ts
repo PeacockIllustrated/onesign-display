@@ -41,8 +41,8 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // Redirect signed-in users away from /auth/login
-    if (request.nextUrl.pathname.startsWith('/auth/login') && user) {
+    // Redirect signed-in users away from auth pages
+    if (request.nextUrl.pathname.startsWith('/auth/') && user) {
         const url = request.nextUrl.clone()
         url.pathname = '/app'
         return NextResponse.redirect(url)

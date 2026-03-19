@@ -33,7 +33,7 @@ export default function PricingPage() {
                                 "Screen status monitoring"
                             ],
                             cta: "Get Started",
-                            href: "/contact"
+                            href: "/auth/signup?plan=static_design"
                         },
                         {
                             name: "Onesign Video",
@@ -49,7 +49,7 @@ export default function PricingPage() {
                                 "Device-optimised playback"
                             ],
                             cta: "Get Started",
-                            href: "/contact"
+                            href: "/auth/signup?plan=video_design_system"
                         },
                         {
                             name: "Onesign Pro",
@@ -63,8 +63,8 @@ export default function PricingPage() {
                                 "Priority support",
                                 "Advanced scheduling controls"
                             ],
-                            cta: "Contact Sales",
-                            href: "/contact"
+                            cta: "Get Started",
+                            href: "/auth/signup?plan=pro_managed"
                         },
                         {
                             name: "Onesign Enterprise",
