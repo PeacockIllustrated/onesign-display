@@ -15,6 +15,7 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
     const [step, setStep] = useState<Step>('welcome')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
+    const [dismissed, setDismissed] = useState(false)
 
     // Store step
     const [storeName, setStoreName] = useState('')
@@ -25,8 +26,9 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
 
     const handleSkip = async () => {
         setLoading(true)
-        await completeOnboarding()
-        router.refresh()
+        const res = await completeOnboarding()
+        setDismissed(true)
+        if (!res.error) router.refresh()
     }
 
     const handleCreateStore = async (e: React.FormEvent) => {
@@ -61,9 +63,12 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
 
     const handleFinish = async () => {
         setLoading(true)
-        await completeOnboarding()
-        router.refresh()
+        const res = await completeOnboarding()
+        setDismissed(true)
+        if (!res.error) router.refresh()
     }
+
+    if (dismissed) return null
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
