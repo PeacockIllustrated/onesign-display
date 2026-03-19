@@ -72,7 +72,7 @@ function VideoSlide({
         } else {
             video.pause()
         }
-    }, [isVisible])
+    }, [isVisible, src])
 
     return (
         <video
@@ -443,23 +443,22 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         let watchdogTimer: ReturnType<typeof setInterval>
 
         const markProgress = () => { lastProgress = Date.now() }
+        const onStalled = () => { console.warn('[Player] Video stalled, will re-fetch if stuck') }
 
+        // Attach listeners only to videos not yet instrumented
         const attachListeners = () => {
-            const videos = document.querySelectorAll('video:not([data-guard])')
+            const videos = document.querySelectorAll('video:not([data-guard]):not([data-watched])')
             videos.forEach(v => {
+                v.setAttribute('data-watched', 'true')
                 v.addEventListener('timeupdate', markProgress)
                 v.addEventListener('loadeddata', markProgress)
                 v.addEventListener('playing', markProgress)
-                v.addEventListener('stalled', () => {
-                    console.warn('[Player] Video stalled, will re-fetch if stuck')
-                })
+                v.addEventListener('stalled', onStalled)
             })
-            return videos
         }
 
         let refetchPending = false
         watchdogTimer = setInterval(() => {
-            // If no content video elements in DOM right now (image slide), reset timer
             const contentVideos = document.querySelectorAll('video:not([data-guard])')
             if (contentVideos.length === 0) {
                 lastProgress = Date.now()
@@ -476,17 +475,21 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             }
         }, 5000)
 
-        const videos = attachListeners()
+        attachListeners()
         const observer = new MutationObserver(() => attachListeners())
         observer.observe(document.body, { childList: true, subtree: true })
 
         return () => {
             clearInterval(watchdogTimer)
             observer.disconnect()
-            videos.forEach(v => {
+            // Clean up all watched videos
+            const allWatched = document.querySelectorAll('video[data-watched]')
+            allWatched.forEach(v => {
+                v.removeAttribute('data-watched')
                 v.removeEventListener('timeupdate', markProgress)
                 v.removeEventListener('loadeddata', markProgress)
                 v.removeEventListener('playing', markProgress)
+                v.removeEventListener('stalled', onStalled)
             })
         }
     }, [isPlaying, manifest, fetchData, cleanPlaylist])
