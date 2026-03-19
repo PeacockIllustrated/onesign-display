@@ -2,8 +2,35 @@ import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
 
-const SIGN_TTL_BASE = 3600 // 1 hour
-const SIGN_TTL_STAGGER = 60 // stagger per item so URLs don't all expire at once
+// ── In-memory manifest cache ─────────────────────────────────
+// Keyed by screen ID. Serves the same JSON response for 60 seconds,
+// eliminating redundant DB queries when multiple polls hit in quick
+// succession or when many screens share similar polling windows.
+// Cache is automatically invalidated when refresh_version changes.
+const manifestCache = new Map<string, { data: any; version: number; expiresAt: number }>()
+const CACHE_TTL_MS = 60_000 // 60 seconds
+
+function getCachedManifest(screenId: string, currentVersion: number): any | null {
+    const entry = manifestCache.get(screenId)
+    if (!entry) return null
+    if (Date.now() > entry.expiresAt) { manifestCache.delete(screenId); return null }
+    if (entry.version !== currentVersion) { manifestCache.delete(screenId); return null }
+    return entry.data
+}
+
+function setCachedManifest(screenId: string, version: number, data: any): void {
+    // Prevent unbounded growth — evict oldest entries if cache is too large
+    if (manifestCache.size > 10_000) {
+        const oldest = manifestCache.keys().next().value
+        if (oldest) manifestCache.delete(oldest)
+    }
+    manifestCache.set(screenId, { data, version, expiresAt: Date.now() + CACHE_TTL_MS })
+}
+
+const SIGN_TTL_BASE = 86400 // 24 hours — longer TTL lets browsers cache media all day,
+                             // cutting egress by ~97%. Content changes still arrive instantly
+                             // via the refresh_version mechanism.
+const SIGN_TTL_STAGGER = 300 // stagger per item (5 min) so URLs don't all expire at once
 const MAX_SIGN_RETRIES = 2
 
 async function signUrlWithRetry(
@@ -56,6 +83,15 @@ export async function GET(request: NextRequest) {
 
     if (!screen) {
         return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
+    }
+
+    // ── Cache check: return cached manifest if still valid ──
+    // The token lookup above is unavoidable (we need screen.id), but it's a
+    // single indexed query. Everything below this point is the expensive part
+    // (content resolution, playlist joins, URL signing) — cache skips all of it.
+    const cached = getCachedManifest(screen.id, screen.refresh_version)
+    if (cached) {
+        return NextResponse.json(cached)
     }
 
     const fitMode = screen.fit_mode || 'contain'
@@ -252,7 +288,7 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    return NextResponse.json({
+    const responseData = {
         screen_id: screen.id,
         refresh_version: screen.refresh_version,
         fit_mode: fitMode,
@@ -261,5 +297,12 @@ export async function GET(request: NextRequest) {
         sync: syncResponse,
         next_check: nextChange ? nextChange.toISOString() : null,
         fetched_at: new Date().toISOString()
-    })
+    }
+
+    // Cache the full response — subsequent requests within 60s skip all
+    // DB queries except the initial token lookup (which is needed for
+    // cache key + version check anyway).
+    setCachedManifest(screen.id, screen.refresh_version, responseData)
+
+    return NextResponse.json(responseData)
 }

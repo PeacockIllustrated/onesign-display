@@ -42,7 +42,7 @@ type Manifest = {
     fetched_at: string
 }
 
-const URL_REFRESH_MS = 45 * 60 * 1000
+const URL_REFRESH_MS = 12 * 60 * 60 * 1000 // 12 hours — signed URLs now last 24hr, refresh twice daily
 
 // ── VideoSlide: imperative play/pause via ref ────────────────
 // Fixes BUG 1: autoPlay attribute has no effect on already-mounted elements.
@@ -220,7 +220,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     useEffect(() => { manifestRef.current = manifest }, [manifest])
     useEffect(() => { activeLayerRef.current = activeLayer }, [activeLayer])
 
-    const POLL_INTERVAL_MS = 30000
+    const POLL_INTERVAL_MS = 60000 // 60s — content changes detected via refresh_version, not poll speed
     const HEARTBEAT_INTERVAL_MS = 60000
     const MAX_RETRY_DELAY_MS = 120000
 
