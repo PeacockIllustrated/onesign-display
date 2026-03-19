@@ -466,26 +466,33 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             return
         }
 
-        // Load next slide into inactive layer, then crossfade
+        // Load next slide into inactive layer, then crossfade.
+        // Use double-rAF to give mobile browsers time to decode and composite
+        // the new content before starting the transition. A single rAF isn't
+        // enough on lower-powered devices — the new layer paints empty (black).
         if (activeLayer === 'A') {
             setLayerBIndex(nextIndex)
             requestAnimationFrame(() => {
-                setLayerAVisible(false)
-                setLayerBVisible(true)
-                setTimeout(() => {
-                    setActiveLayer('B')
-                    transitioningRef.current = false
-                }, dur)
+                requestAnimationFrame(() => {
+                    setLayerAVisible(false)
+                    setLayerBVisible(true)
+                    setTimeout(() => {
+                        setActiveLayer('B')
+                        transitioningRef.current = false
+                    }, dur)
+                })
             })
         } else {
             setLayerAIndex(nextIndex)
             requestAnimationFrame(() => {
-                setLayerBVisible(false)
-                setLayerAVisible(true)
-                setTimeout(() => {
-                    setActiveLayer('A')
-                    transitioningRef.current = false
-                }, dur)
+                requestAnimationFrame(() => {
+                    setLayerBVisible(false)
+                    setLayerAVisible(true)
+                    setTimeout(() => {
+                        setActiveLayer('A')
+                        transitioningRef.current = false
+                    }, dur)
+                })
             })
         }
     }, [currentSlideIndex, activeLayer, cleanPlaylist])
@@ -644,25 +651,31 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Transition helpers ────────────────────────────────────
 
-    // Timer mode: CSS transitions drive the animation
+    // Timer mode: CSS transitions drive the animation.
+    // IMPORTANT: Hidden layers use opacity 0.01 (not 0) to prevent mobile
+    // browsers from de-compositing them. At 0.01 the layer is visually
+    // invisible but the GPU keeps it in memory, so it's ready to paint
+    // instantly when the transition starts. Using 0 causes a black flash
+    // because the browser has to re-composite from scratch.
     function getSlideStyle(isVisible: boolean): React.CSSProperties {
         if (!cleanPlaylist) return {}
         const dur = `${cleanPlaylist.transition_duration_ms}ms`
 
         switch (cleanPlaylist.transition) {
             case 'fade':
-                return { transition: `opacity ${dur} ease`, opacity: isVisible ? 1 : 0 }
+                return { transition: `opacity ${dur} ease`, opacity: isVisible ? 1 : 0.01 }
             case 'slide_left':
                 return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(-100%)' }
             case 'slide_right':
                 return { transition: `transform ${dur} ease`, transform: isVisible ? 'translateX(0)' : 'translateX(100%)' }
             case 'cut':
             default:
-                return { opacity: isVisible ? 1 : 0 }
+                return { opacity: isVisible ? 1 : 0.01 }
         }
     }
 
-    // Sync mode: computed inline styles at exact interpolation point (no CSS transitions)
+    // Sync mode: computed inline styles at exact interpolation point (no CSS transitions).
+    // Uses Math.max(value, 0.01) on opacity to keep mobile GPU layers composited.
     function getSyncSlideStyle(role: 'current' | 'next', transitionProgress: number): React.CSSProperties {
         if (!cleanPlaylist) return {}
         const isOutgoing = role === 'current'
@@ -671,7 +684,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             case 'fade':
                 return {
                     transition: 'none',
-                    opacity: isOutgoing ? (1 - transitionProgress) : transitionProgress,
+                    opacity: Math.max(isOutgoing ? (1 - transitionProgress) : transitionProgress, 0.01),
                 }
             case 'slide_left':
                 return {
@@ -691,7 +704,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             default:
                 return {
                     transition: 'none',
-                    opacity: isOutgoing ? 0 : 1,
+                    opacity: isOutgoing ? 0.01 : 1,
                 }
         }
     }
@@ -707,10 +720,22 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     ) {
         if (!item?.url) return null
 
-        const style = syncStyle
-            ? { ...syncStyle, willChange: 'opacity, transform' as const, zIndex: isVisible ? 2 : 1 }
-            : { ...getSlideStyle(isVisible), willChange: 'opacity, transform' as const, zIndex: isVisible ? 2 : 1 }
+        const baseStyle = syncStyle ?? getSlideStyle(isVisible)
+        const style: React.CSSProperties = {
+            ...baseStyle,
+            willChange: 'opacity, transform',
+            // Force GPU layer promotion on mobile — prevents de-compositing
+            // that causes black flashes when layers become visible
+            backfaceVisibility: 'hidden' as const,
+            zIndex: isVisible ? 2 : 1,
+        }
 
+        // CRITICAL: Use STABLE keys (layer-A, layer-B) — NOT keys that
+        // include item.id. Changing keys forces React to unmount the old
+        // <img>/<video> and mount a new one. The new element has no loaded
+        // content for 1-3 frames → black flash on mobile. Stable keys keep
+        // the DOM element alive; only the `src` attribute updates, so the
+        // browser shows the old content until the new source paints.
         return (
             <div
                 key={`layer-${layerKey}`}
@@ -719,7 +744,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             >
                 {item.type?.startsWith('video/') ? (
                     <VideoSlide
-                        key={`video-${layerKey}-${item.id}`}
+                        key={`video-${layerKey}`}
                         src={item.url}
                         isVisible={isVisible}
                         fitClass={fitClass}
@@ -730,7 +755,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     />
                 ) : (
                     <img
-                        key={`img-${layerKey}-${item.id}`}
+                        key={`img-${layerKey}`}
                         src={item.url}
                         className={`w-full h-full ${fitClass}`}
                         alt="Slide content"
@@ -758,9 +783,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 layerASyncStyle = getSyncSlideStyle('current', pos.transitionProgress)
                 layerBSyncStyle = getSyncSlideStyle('next', pos.transitionProgress)
             } else {
-                // Only current slide visible
+                // Only current slide visible; keep inactive at 0.01 to stay composited
                 layerASyncStyle = { transition: 'none', opacity: 1 }
-                layerBSyncStyle = { transition: 'none', opacity: 0 }
+                layerBSyncStyle = { transition: 'none', opacity: 0.01 }
             }
         }
 
