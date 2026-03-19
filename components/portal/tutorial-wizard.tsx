@@ -119,7 +119,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     },
 ]
 
-export function TutorialWizard({ onClose }: { onClose: () => void }) {
+export function TutorialWizard({ onClose, onRunSetup }: { onClose: () => void; onRunSetup?: () => void }) {
     const [currentStep, setCurrentStep] = useState(0)
     const step = TUTORIAL_STEPS[currentStep]
     const Icon = step.icon
@@ -196,12 +196,22 @@ export function TutorialWizard({ onClose }: { onClose: () => void }) {
                     </button>
 
                     {isLast ? (
-                        <button
-                            onClick={onClose}
-                            className="px-5 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 transition-colors"
-                        >
-                            Get started
-                        </button>
+                        <div className="flex items-center gap-2">
+                            {onRunSetup && (
+                                <button
+                                    onClick={() => { onClose(); onRunSetup() }}
+                                    className="px-4 py-2 text-sm font-medium text-zinc-600 border border-zinc-200 rounded-md hover:bg-zinc-50 transition-colors"
+                                >
+                                    Run setup wizard
+                                </button>
+                            )}
+                            <button
+                                onClick={onClose}
+                                className="px-5 py-2 text-sm font-medium text-white bg-black rounded-md hover:bg-gray-800 transition-colors"
+                            >
+                                Get started
+                            </button>
+                        </div>
                     ) : (
                         <button
                             onClick={() => setCurrentStep(s => s + 1)}

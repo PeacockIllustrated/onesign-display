@@ -15,7 +15,13 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
     const [step, setStep] = useState<Step>('welcome')
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
-    const [dismissed, setDismissed] = useState(false)
+    const [dismissed, setDismissed] = useState(() => {
+        // Check localStorage as fallback if DB update failed previously
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('onesign_onboarding_done') === 'true'
+        }
+        return false
+    })
 
     // Store step
     const [storeName, setStoreName] = useState('')
@@ -24,11 +30,16 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
     // Screen set step
     const [screenSetName, setScreenSetName] = useState('')
 
+    const dismiss = () => {
+        setDismissed(true)
+        localStorage.setItem('onesign_onboarding_done', 'true')
+    }
+
     const handleSkip = async () => {
         setLoading(true)
-        const res = await completeOnboarding()
-        setDismissed(true)
-        if (!res.error) router.refresh()
+        await completeOnboarding()
+        dismiss()
+        router.refresh()
     }
 
     const handleCreateStore = async (e: React.FormEvent) => {
@@ -63,9 +74,9 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
 
     const handleFinish = async () => {
         setLoading(true)
-        const res = await completeOnboarding()
-        setDismissed(true)
-        if (!res.error) router.refresh()
+        await completeOnboarding()
+        dismiss()
+        router.refresh()
     }
 
     if (dismissed) return null

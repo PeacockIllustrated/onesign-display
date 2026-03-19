@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils'
 import { logout } from '@/app/(auth)/auth/login/actions'
 import { useState } from 'react'
 import { TutorialWizard } from './tutorial-wizard'
+import { OnboardingWizard } from './onboarding-wizard'
 
 const navigation = [
     { name: 'Overview', href: '/app', icon: Home },
@@ -26,6 +27,7 @@ export function Sidebar({ userRole, userEmail, clientName }: {
     const pathname = usePathname()
     const [isOpen, setIsOpen] = useState(false)
     const [showTutorial, setShowTutorial] = useState(false)
+    const [showSetup, setShowSetup] = useState(false)
 
     const toggle = () => setIsOpen(!isOpen)
 
@@ -139,7 +141,20 @@ export function Sidebar({ userRole, userEmail, clientName }: {
             {/* Mobile Spacer to push content down active only on mobile */}
             <div className="md:hidden h-16 w-full shrink-0" />
 
-            {showTutorial && <TutorialWizard onClose={() => setShowTutorial(false)} />}
+            {showTutorial && (
+                <TutorialWizard
+                    onClose={() => setShowTutorial(false)}
+                    onRunSetup={() => {
+                        localStorage.removeItem('onesign_onboarding_done')
+                        setShowSetup(true)
+                    }}
+                />
+            )}
+            {showSetup && (
+                <OnboardingWizard
+                    clientName={clientName || 'your business'}
+                />
+            )}
         </>
     )
 }
