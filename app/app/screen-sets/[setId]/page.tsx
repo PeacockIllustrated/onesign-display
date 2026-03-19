@@ -6,6 +6,7 @@ import { SignedImage } from '@/components/ui/signed-image'
 import { RefreshButton } from '@/components/portal/refresh-button'
 import { CreateScreenButton } from '@/components/admin/create-screen-button'
 import { ScreenCard } from '@/components/portal/screen-card'
+import { SyncToggle } from '@/components/admin/sync-toggle'
 
 export default async function ScreenSetPage({ params }: { params: Promise<{ setId: string }> }) {
     const { setId } = await params
@@ -66,7 +67,12 @@ export default async function ScreenSetPage({ params }: { params: Promise<{ setI
                     <Link href={`/app/stores/${screenSet.store?.id}`} className="text-sm text-gray-500 hover:text-gray-900 mb-1 block">&larr; {screenSet.store?.name}</Link>
                     <h1 className="text-2xl font-bold text-gray-900">{screenSet.name}</h1>
                 </div>
-                <div className="flex space-x-3 w-full md:w-auto">
+                <div className="flex space-x-3 w-full md:w-auto flex-wrap">
+                    <SyncToggle
+                        screenSetId={setId}
+                        enabled={screenSet.sync_enabled ?? false}
+                        syncEpoch={screenSet.sync_epoch ?? null}
+                    />
                     <RefreshButton screenSetId={setId} />
                     <CreateScreenButton screenSetId={setId} />
                 </div>

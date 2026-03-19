@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef, useCallback, useMemo, use } from 'react'
 import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
+import { useSyncEngine } from '@/hooks/use-sync-engine'
+import { SyncDebugOverlay } from '@/components/player/sync-debug-overlay'
 
 type PlaylistItem = {
     id: string
@@ -18,6 +20,13 @@ type PlaylistData = {
     items: PlaylistItem[]
 }
 
+type SyncConfig = {
+    enabled: boolean
+    epoch: string
+    screen_index: number
+    screen_count: number
+}
+
 type Manifest = {
     screen_id: string
     refresh_version: number
@@ -28,6 +37,7 @@ type Manifest = {
     }
     fit_mode: 'contain' | 'cover'
     playlist: PlaylistData | null
+    sync: SyncConfig | null
     next_check: string | null
     fetched_at: string
 }
@@ -45,12 +55,16 @@ function VideoSlide({
     fitClass,
     onEnded,
     onError,
+    syncMode,
+    syncSeekTime,
 }: {
     src: string
     isVisible: boolean
     fitClass: string
     onEnded?: () => void
     onError?: () => void
+    syncMode?: boolean
+    syncSeekTime?: number
 }) {
     const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -59,7 +73,12 @@ function VideoSlide({
         if (!video) return
 
         if (isVisible) {
-            video.currentTime = 0
+            if (syncMode && syncSeekTime !== undefined) {
+                // Sync mode: seek to computed position instead of 0
+                video.currentTime = syncSeekTime
+            } else {
+                video.currentTime = 0
+            }
             const playPromise = video.play()
             if (playPromise) {
                 playPromise.catch((err) => {
@@ -72,7 +91,25 @@ function VideoSlide({
         } else {
             video.pause()
         }
-    }, [isVisible, src])
+    }, [isVisible, src, syncMode, syncSeekTime])
+
+    // Sync mode: drift correction every 2s
+    useEffect(() => {
+        if (!syncMode || syncSeekTime === undefined || !isVisible) return
+
+        const driftCheck = setInterval(() => {
+            const video = videoRef.current
+            if (!video || video.paused) return
+
+            const drift = Math.abs(video.currentTime - syncSeekTime)
+            if (drift > 0.1) { // 100ms threshold
+                console.log(`[Sync] Video drift correction: ${(drift * 1000).toFixed(0)}ms`)
+                video.currentTime = syncSeekTime
+            }
+        }, 2000)
+
+        return () => clearInterval(driftCheck)
+    }, [syncMode, syncSeekTime, isVisible])
 
     return (
         <video
@@ -82,7 +119,7 @@ function VideoSlide({
             muted
             playsInline
             preload="auto"
-            onEnded={onEnded}
+            onEnded={syncMode ? undefined : onEnded}
             onError={onError}
         />
     )
@@ -310,7 +347,36 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return () => { clearInterval(pollTimer); clearInterval(heartbeatTimer) }
     }, [token, fetchData])
 
-    // ── Slideshow: A/B layer crossfade ─────────────────────
+    // ── Sync Engine ────────────────────────────────────────
+    const syncEngine = useSyncEngine(
+        manifest?.sync ?? null,
+        cleanPlaylist,
+        token,
+    )
+    const isSyncMode = syncEngine.position !== null && syncEngine.isCalibrated
+
+    // Sync-driven layer management: when sync is active, override layers from computed position
+    useEffect(() => {
+        if (!isSyncMode || !syncEngine.position || !cleanPlaylist) return
+
+        const pos = syncEngine.position
+
+        if (pos.isInTransition) {
+            // During transition: show current slide on one layer, next on the other
+            setLayerAIndex(pos.slideIndex)
+            setLayerBIndex(pos.nextSlideIndex)
+            // Don't use boolean visibility — sync mode uses computed inline styles
+            setLayerAVisible(true)
+            setLayerBVisible(true)
+        } else {
+            // Display phase: show current slide on layer A, hide B
+            setLayerAIndex(pos.slideIndex)
+            setLayerAVisible(true)
+            setLayerBVisible(false)
+        }
+    }, [isSyncMode, syncEngine.position?.slideIndex, syncEngine.position?.isInTransition, syncEngine.position?.nextSlideIndex, cleanPlaylist])
+
+    // ── Slideshow: A/B layer crossfade (timer mode) ─────
 
     const currentSlideIndex = activeLayer === 'A' ? layerAIndex : layerBIndex
 
@@ -367,8 +433,10 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [currentSlideIndex, activeLayer, cleanPlaylist])
 
-    // Slideshow: timer for image slides
+    // Slideshow: timer for image slides (SKIPPED in sync mode — sync engine drives advancement)
     useEffect(() => {
+        if (isSyncMode) return // Sync engine controls slide advancement
+
         const playlist = cleanPlaylist
         if (!playlist || playlist.items.length === 0 || !isPlaying || !preloaded) return
 
@@ -381,7 +449,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             slideTimerRef.current = setTimeout(() => advanceSlide(), currentItem.duration_seconds * 1000)
             return () => { if (slideTimerRef.current) clearTimeout(slideTimerRef.current) }
         }
-    }, [currentSlideIndex, cleanPlaylist, isPlaying, advanceSlide, preloaded])
+    }, [currentSlideIndex, cleanPlaylist, isPlaying, advanceSlide, preloaded, isSyncMode])
 
     const handleVideoEnded = useCallback(() => advanceSlide(), [advanceSlide])
 
@@ -519,6 +587,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Transition helpers ────────────────────────────────────
 
+    // Timer mode: CSS transitions drive the animation
     function getSlideStyle(isVisible: boolean): React.CSSProperties {
         if (!cleanPlaylist) return {}
         const dur = `${cleanPlaylist.transition_duration_ms}ms`
@@ -536,16 +605,60 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }
 
+    // Sync mode: computed inline styles at exact interpolation point (no CSS transitions)
+    function getSyncSlideStyle(role: 'current' | 'next', transitionProgress: number): React.CSSProperties {
+        if (!cleanPlaylist) return {}
+        const isOutgoing = role === 'current'
+
+        switch (cleanPlaylist.transition) {
+            case 'fade':
+                return {
+                    transition: 'none',
+                    opacity: isOutgoing ? (1 - transitionProgress) : transitionProgress,
+                }
+            case 'slide_left':
+                return {
+                    transition: 'none',
+                    transform: isOutgoing
+                        ? `translateX(${-100 * transitionProgress}%)`
+                        : `translateX(${100 * (1 - transitionProgress)}%)`,
+                }
+            case 'slide_right':
+                return {
+                    transition: 'none',
+                    transform: isOutgoing
+                        ? `translateX(${100 * transitionProgress}%)`
+                        : `translateX(${-100 * (1 - transitionProgress)}%)`,
+                }
+            case 'cut':
+            default:
+                return {
+                    transition: 'none',
+                    opacity: isOutgoing ? 0 : 1,
+                }
+        }
+    }
+
     // ── Render slide helper ──────────────────────────────────
 
-    function renderSlide(item: PlaylistItem, layerKey: string, isVisible: boolean) {
+    function renderSlide(
+        item: PlaylistItem,
+        layerKey: string,
+        isVisible: boolean,
+        syncStyle?: React.CSSProperties,
+        isSyncVideoSlide?: boolean,
+    ) {
         if (!item?.url) return null
+
+        const style = syncStyle
+            ? { ...syncStyle, willChange: 'opacity, transform' as const, zIndex: isVisible ? 2 : 1 }
+            : { ...getSlideStyle(isVisible), willChange: 'opacity, transform' as const, zIndex: isVisible ? 2 : 1 }
 
         return (
             <div
                 key={`layer-${layerKey}`}
                 className="absolute inset-0 flex items-center justify-center"
-                style={{ ...getSlideStyle(isVisible), willChange: 'opacity, transform', zIndex: isVisible ? 2 : 1 }}
+                style={style}
             >
                 {item.type?.startsWith('video/') ? (
                     <VideoSlide
@@ -553,8 +666,10 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         src={item.url}
                         isVisible={isVisible}
                         fitClass={fitClass}
-                        onEnded={handleVideoEnded}
+                        onEnded={isSyncVideoSlide ? undefined : handleVideoEnded}
                         onError={handleMediaError}
+                        syncMode={isSyncVideoSlide}
+                        syncSeekTime={isSyncVideoSlide ? syncEngine.getExpectedVideoTime() : undefined}
                     />
                 ) : (
                     <img
@@ -575,6 +690,23 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         const layerAItem = cleanPlaylist.items[layerAIndex]
         const layerBItem = cleanPlaylist.items[layerBIndex]
 
+        // Compute sync-aware styles for each layer
+        const pos = syncEngine.position
+        let layerASyncStyle: React.CSSProperties | undefined
+        let layerBSyncStyle: React.CSSProperties | undefined
+
+        if (isSyncMode && pos) {
+            if (pos.isInTransition) {
+                // Layer A = outgoing current, Layer B = incoming next
+                layerASyncStyle = getSyncSlideStyle('current', pos.transitionProgress)
+                layerBSyncStyle = getSyncSlideStyle('next', pos.transitionProgress)
+            } else {
+                // Only current slide visible
+                layerASyncStyle = { transition: 'none', opacity: 1 }
+                layerBSyncStyle = { transition: 'none', opacity: 0 }
+            }
+        }
+
         return (
             <div
                 onClick={toggleFullscreen}
@@ -583,11 +715,21 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             >
                 <NeverSleepGuard active={isPlaying} />
 
-                {/* Layer A — always mounted */}
-                {layerAItem && renderSlide(layerAItem, 'A', layerAVisible)}
+                {/* Layer A */}
+                {layerAItem && renderSlide(
+                    layerAItem, 'A',
+                    isSyncMode ? (pos?.isInTransition ? true : true) : layerAVisible,
+                    layerASyncStyle,
+                    isSyncMode,
+                )}
 
-                {/* Layer B — always mounted */}
-                {layerBItem && renderSlide(layerBItem, 'B', layerBVisible)}
+                {/* Layer B */}
+                {layerBItem && renderSlide(
+                    layerBItem, 'B',
+                    isSyncMode ? (pos?.isInTransition ?? false) : layerBVisible,
+                    layerBSyncStyle,
+                    isSyncMode,
+                )}
 
                 {/* Loading indicator while preloading */}
                 {!preloaded && (
@@ -595,6 +737,20 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         <div className="text-gray-500 text-sm">Loading slides...</div>
                     </div>
                 )}
+
+                {/* Sync calibrating indicator */}
+                {manifest?.sync?.enabled && !syncEngine.isCalibrated && preloaded && (
+                    <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
+                        <div className="text-gray-500 text-sm">Synchronizing...</div>
+                    </div>
+                )}
+
+                {/* Debug overlay (toggle with Shift+D x3) */}
+                <SyncDebugOverlay
+                    syncEngine={syncEngine}
+                    syncConfig={manifest?.sync ?? null}
+                    playlist={cleanPlaylist}
+                />
 
                 {error && (
                     <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>

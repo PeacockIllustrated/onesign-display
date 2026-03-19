@@ -47,10 +47,10 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createAdminClient()
 
-    // 1. Find Screen by Token (includes fit_mode in single query)
+    // 1. Find Screen by Token (includes fit_mode + screen set sync data)
     const { data: screen } = await supabase
         .from('display_screens')
-        .select('id, store_id, refresh_version, fit_mode, store:display_stores(client_id, timezone)')
+        .select('id, store_id, refresh_version, fit_mode, screen_set_id, index_in_set, store:display_stores(client_id, timezone), screen_set:display_screen_sets(id, sync_enabled, sync_epoch)')
         .eq('player_token', token)
         .single()
 
@@ -62,6 +62,8 @@ export async function GET(request: NextRequest) {
     const store = screen.store as unknown as { client_id: string; timezone: string } | null
     const clientId = store?.client_id
     const storeTimezone = store?.timezone || 'Europe/London'
+    const screenSet = screen.screen_set as unknown as { id: string; sync_enabled: boolean; sync_epoch: string | null } | null
+    const isSynced = screenSet?.sync_enabled === true
 
     // 2. Fetch Plan & Status
     const { data: planRaw } = await supabase.from('display_client_plans').select('*').eq('client_id', clientId).single()
@@ -145,7 +147,9 @@ export async function GET(request: NextRequest) {
                     id: item.id,
                     url: signedUrl,
                     type: media.mime,
-                    duration_seconds: isVideo ? null : item.duration_seconds,
+                    // Sync mode requires duration_seconds for ALL items (including videos)
+                    // so the deterministic position calculator can build a timeline
+                    duration_seconds: (isVideo && !isSynced) ? null : item.duration_seconds,
                 })
                 itemIndex++
             }
@@ -219,12 +223,42 @@ export async function GET(request: NextRequest) {
         }
     }
 
+    // 6. Build sync data if screen is in a synced screen set
+    let syncResponse = null
+
+    if (isSynced && screen.screen_set_id) {
+        // Lazy-init epoch: if sync is enabled but epoch not yet set, set it now
+        let epoch = screenSet!.sync_epoch
+        if (!epoch) {
+            const newEpoch = new Date().toISOString()
+            await supabase
+                .from('display_screen_sets')
+                .update({ sync_epoch: newEpoch })
+                .eq('id', screen.screen_set_id)
+            epoch = newEpoch
+        }
+
+        // Count screens in the set for the sync config
+        const { count: screenCount } = await supabase
+            .from('display_screens')
+            .select('id', { count: 'exact', head: true })
+            .eq('screen_set_id', screen.screen_set_id)
+
+        syncResponse = {
+            enabled: true,
+            epoch,
+            screen_index: screen.index_in_set ?? 0,
+            screen_count: screenCount ?? 1,
+        }
+    }
+
     return NextResponse.json({
         screen_id: screen.id,
         refresh_version: screen.refresh_version,
         fit_mode: fitMode,
         media: mediaResponse,
         playlist: playlistResponse,
+        sync: syncResponse,
         next_check: nextChange ? nextChange.toISOString() : null,
         fetched_at: new Date().toISOString()
     })

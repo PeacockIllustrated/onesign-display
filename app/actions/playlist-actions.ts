@@ -40,10 +40,13 @@ async function cascadeRefreshForPlaylist(supabase: any, playlistId: string) {
         .eq('active', true)
 
     if (screens && screens.length > 0) {
+        // Track synced screen sets that need epoch reset
+        const syncedSetIds = new Set<string>()
+
         for (const sc of screens) {
             const { data: screen } = await supabase
                 .from('display_screens')
-                .select('refresh_version')
+                .select('refresh_version, screen_set_id')
                 .eq('id', sc.screen_id)
                 .single()
 
@@ -52,7 +55,20 @@ async function cascadeRefreshForPlaylist(supabase: any, playlistId: string) {
                     .from('display_screens')
                     .update({ refresh_version: (screen.refresh_version || 0) + 1 })
                     .eq('id', sc.screen_id)
+
+                // Collect synced screen set IDs for epoch reset
+                if (screen.screen_set_id) {
+                    syncedSetIds.add(screen.screen_set_id)
+                }
             }
+        }
+
+        // Reset sync epoch on any affected synced screen sets
+        // This ensures all screens restart their cycle in unison after playlist edits
+        for (const setId of syncedSetIds) {
+            await supabase.rpc('display_reset_sync_epoch', {
+                p_screen_set_id: setId,
+            })
         }
     }
 }

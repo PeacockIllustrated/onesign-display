@@ -20,6 +20,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         .select(`
         *,
         store:display_stores(id, name),
+        screen_set:display_screen_sets(id, sync_enabled),
         display_screen_content(
             *,
             media_asset:display_media_assets(*),
@@ -87,7 +88,14 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
             <div className="flex items-center justify-between">
                 <div>
                     <Link href={`/app/screen-sets/${screen.screen_set_id}`} className="text-sm text-gray-500 hover:text-gray-900 mb-1 block">&larr; Back to Screen Set</Link>
-                    <h1 className="text-2xl font-bold text-gray-900">Manage {screen.name}</h1>
+                    <div className="flex items-center gap-2">
+                        <h1 className="text-2xl font-bold text-gray-900">Manage {screen.name}</h1>
+                        {(screen as any).screen_set?.sync_enabled && (
+                            <span className="bg-teal-100 text-teal-800 text-xs px-2 py-1 rounded-full font-medium">
+                                Synced · Position {screen.index_in_set ?? 0}
+                            </span>
+                        )}
+                    </div>
                     <p className="text-gray-500 text-sm font-mono">Token: {screen.player_token}</p>
                     <div className="mt-1">
                         <Link
