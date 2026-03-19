@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { GripVertical, Trash2, Plus, X, Film, Check } from 'lucide-react'
 import { SignedImage } from '@/components/ui/signed-image'
 import {
@@ -47,6 +47,16 @@ export function PlaylistEditor({
     const [settingsSaved, setSettingsSaved] = useState(false)
     const [savingSettings, setSavingSettings] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
+    const [reorderError, setReorderError] = useState<string | null>(null)
+
+    // Ref always holds the latest items — prevents stale closure in handleDragEnd.
+    // Without this, handleDragEnd might read items from a previous render if React
+    // hasn't committed the re-render from the last handleDragOver yet.
+    const itemsRef = useRef(items)
+    useEffect(() => { itemsRef.current = items }, [items])
+
+    // Snapshot before drag starts — used for rollback if save fails
+    const preDragItemsRef = useRef<PlaylistItem[]>(items)
 
     // Controlled form state so values don't revert after save
     const [formName, setFormName] = useState(playlist.name)
@@ -57,7 +67,9 @@ export function PlaylistEditor({
     const isVideo = (mime: string) => mime?.startsWith('video/')
 
     const handleDragStart = (index: number) => {
+        preDragItemsRef.current = [...items]
         setDragIndex(index)
+        setReorderError(null)
     }
 
     const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -73,9 +85,21 @@ export function PlaylistEditor({
 
     const handleDragEnd = async () => {
         setDragIndex(null)
-        // Save new order
-        const itemIds = items.map(item => item.id)
-        await reorderPlaylistItems(playlist.id, itemIds)
+
+        // Read from ref to guarantee we have the latest reordered items,
+        // even if React hasn't committed the re-render from handleDragOver.
+        const currentItems = itemsRef.current
+        const itemIds = currentItems.map(item => item.id)
+
+        try {
+            await reorderPlaylistItems(playlist.id, itemIds)
+            setReorderError(null)
+        } catch (e: any) {
+            console.error('[PlaylistEditor] Reorder failed:', e)
+            setReorderError(e?.message || 'Failed to save slide order')
+            // Rollback to pre-drag order so UI matches DB
+            setItems(preDragItemsRef.current)
+        }
     }
 
     const handleAddItem = async (mediaAssetId: string) => {
@@ -123,6 +147,15 @@ export function PlaylistEditor({
                 <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-700">Slides ({items.length})</h3>
                 </div>
+
+                {reorderError && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-sm text-red-700 flex items-center justify-between">
+                        <span>{reorderError} — order has been reverted.</span>
+                        <button onClick={() => setReorderError(null)} className="text-red-400 hover:text-red-600 ml-2">
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
 
                 {items.map((item, index) => (
                     <div

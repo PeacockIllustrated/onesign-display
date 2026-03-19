@@ -256,13 +256,27 @@ export async function reorderPlaylistItems(playlistId: string, itemIds: string[]
 
     await verifyPlaylistOwnership(supabase, user.id, playlistId)
 
-    // Update positions based on array order
+    if (!itemIds || itemIds.length === 0) {
+        throw new Error('No items to reorder')
+    }
+
+    // Update positions based on array order — check each result
+    const errors: string[] = []
     for (let i = 0; i < itemIds.length; i++) {
-        await supabase
+        const { error } = await supabase
             .from('display_playlist_items')
             .update({ position: i + 1 })
             .eq('id', itemIds[i])
             .eq('playlist_id', playlistId) // Safety: only update items in this playlist
+
+        if (error) {
+            console.error(`[Playlist] Failed to update position for item ${itemIds[i]}:`, error)
+            errors.push(`Item ${itemIds[i]}: ${error.message}`)
+        }
+    }
+
+    if (errors.length > 0) {
+        throw new Error(`Failed to save slide order: ${errors.length} update(s) failed`)
     }
 
     await cascadeRefreshForPlaylist(supabase, playlistId)
