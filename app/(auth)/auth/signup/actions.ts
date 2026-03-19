@@ -27,7 +27,7 @@ export async function signup(prevState: any, formData: FormData) {
     const parsed = SignupSchema.safeParse(data)
 
     if (!parsed.success) {
-        const firstError = parsed.error.errors[0]
+        const firstError = parsed.error.issues[0]
         return { error: firstError.message }
     }
 
