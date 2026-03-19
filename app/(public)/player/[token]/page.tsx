@@ -55,6 +55,7 @@ function VideoSlide({
     fitClass,
     onEnded,
     onError,
+    onReady,
     syncMode,
     syncSeekTime,
 }: {
@@ -63,6 +64,7 @@ function VideoSlide({
     fitClass: string
     onEnded?: () => void
     onError?: () => void
+    onReady?: () => void
     syncMode?: boolean
     syncSeekTime?: number
 }) {
@@ -176,6 +178,7 @@ function VideoSlide({
             muted
             playsInline
             preload="auto"
+            onLoadedData={onReady}
             onEnded={syncMode ? undefined : onEnded}
             onError={onError}
         />
@@ -200,12 +203,22 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const [layerBVisible, setLayerBVisible] = useState(false)
     const slideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
     const transitioningRef = useRef(false)
-    const [preloaded, setPreloaded] = useState(false)
+
+    // Lookahead preload state: we only gate on the FIRST slide being ready.
+    // Subsequent slides are pre-loaded into the hidden DOM layer with plenty
+    // of lead time, so they're always decoded before the transition fires.
+    const [firstSlideReady, setFirstSlideReady] = useState(false)
+    const firstSlideReadyRef = useRef(false)
+    const hiddenLayerReadyRef = useRef(false)
+    const pendingAdvanceRef = useRef(false)
+    const activeLayerRef = useRef<'A' | 'B'>('A')
+    const advanceSlideRef = useRef<() => void>(() => {})
 
     const manifestRef = useRef<Manifest | null>(null)
     const retryCountRef = useRef(0)
 
     useEffect(() => { manifestRef.current = manifest }, [manifest])
+    useEffect(() => { activeLayerRef.current = activeLayer }, [activeLayer])
 
     const POLL_INTERVAL_MS = 30000
     const HEARTBEAT_INTERVAL_MS = 60000
@@ -220,77 +233,100 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         return { ...pl, items: validItems }
     }, [manifest?.playlist])
 
+    // Derived: which slide index is currently active (whichever layer is on top)
+    const currentSlideIndex = activeLayer === 'A' ? layerAIndex : layerBIndex
+
     // Reset when playlist changes
     useEffect(() => {
         setActiveLayer('A')
+        activeLayerRef.current = 'A'
         setLayerAIndex(0)
         setLayerBIndex(0)
         setLayerAVisible(true)
         setLayerBVisible(false)
         transitioningRef.current = false
-        setPreloaded(false)
+        setFirstSlideReady(false)
+        firstSlideReadyRef.current = false
+        hiddenLayerReadyRef.current = false
+        pendingAdvanceRef.current = false
         if (slideTimerRef.current) clearTimeout(slideTimerRef.current)
     }, [manifest?.playlist?.id])
 
-    // ── Preload all playlist media (BUG 3+4 fix) ─────────────
-    // Depends on playlist ID only — not the full object reference.
-    // Tracks created elements and aborts them on cleanup.
+    // ── Lookahead preload: load next slide into hidden DOM layer ──
+    // Instead of downloading ALL slides into throwaway elements (which get
+    // garbage-collected and evicted from GPU memory on low-RAM devices),
+    // we pre-load only the NEXT slide directly into the hidden A/B layer.
+    //
+    // The hidden layer sits at opacity 0.01 — invisible but GPU-composited.
+    // Its content stays decoded in video memory, guaranteeing zero black
+    // flash when the crossfade starts. Each slide gets the full display
+    // duration of the previous slide (5-30+ seconds) to download and decode.
+    //
+    // Only the FIRST slide needs a loading gate. This is much faster than
+    // waiting for an entire playlist to download before showing anything.
+
+    // Skip lookahead when sync engine controls layers
+    const syncEnabled = manifest?.sync?.enabled ?? false
+
     useEffect(() => {
-        const playlist = cleanPlaylist
-        if (!playlist || playlist.items.length === 0) return
+        if (syncEnabled || !cleanPlaylist || cleanPlaylist.items.length <= 1) return
+        if (transitioningRef.current) return
 
-        let cancelled = false
-        let loaded = 0
-        const total = playlist.items.length
-        const elements: (HTMLVideoElement | HTMLImageElement)[] = []
+        const nextIndex = currentSlideIndex + 1 >= cleanPlaylist.items.length
+            ? (cleanPlaylist.loop ? 0 : -1)
+            : currentSlideIndex + 1
 
-        const checkDone = () => {
-            if (!cancelled && loaded >= total) setPreloaded(true)
+        if (nextIndex < 0 || nextIndex === currentSlideIndex) return
+
+        // Check if hidden layer already has the correct content (common in short loops —
+        // e.g. a 2-item playlist where the previous slide IS the next slide)
+        const hiddenAlreadyCorrect = activeLayer === 'A'
+            ? layerBIndex === nextIndex
+            : layerAIndex === nextIndex
+
+        if (hiddenAlreadyCorrect) {
+            hiddenLayerReadyRef.current = true
+            return
         }
 
-        playlist.items.forEach(item => {
-            if (!item.url) { loaded++; checkDone(); return }
+        // Pre-set hidden layer to the next slide — it starts loading immediately
+        hiddenLayerReadyRef.current = false
+        pendingAdvanceRef.current = false
 
-            if (item.type?.startsWith('video/')) {
-                const vid = document.createElement('video')
-                vid.preload = 'auto'
-                vid.src = item.url
-                vid.oncanplaythrough = () => { loaded++; checkDone() }
-                vid.onerror = () => { loaded++; checkDone() }
-                elements.push(vid)
-            } else {
-                const img = new Image()
-                img.src = item.url
-                img.onload = () => { loaded++; checkDone() }
-                img.onerror = () => { loaded++; checkDone() }
-                elements.push(img)
+        if (activeLayer === 'A') {
+            setLayerBIndex(nextIndex)
+        } else {
+            setLayerAIndex(nextIndex)
+        }
+    }, [currentSlideIndex, activeLayer, cleanPlaylist, syncEnabled, layerAIndex, layerBIndex])
+
+    // Called when a layer's img fires onLoad or video fires onLoadedData.
+    // Uses refs exclusively so the callback identity is stable ([] deps).
+    const handleLayerContentReady = useCallback((layer: 'A' | 'B') => {
+        // First-slide gate — only fires once per playlist
+        if (!firstSlideReadyRef.current) {
+            firstSlideReadyRef.current = true
+            setFirstSlideReady(true)
+        }
+
+        // If this is the hidden layer (lookahead target), mark it ready
+        if (layer !== activeLayerRef.current) {
+            hiddenLayerReadyRef.current = true
+            if (pendingAdvanceRef.current) {
+                pendingAdvanceRef.current = false
+                // Defer to microtask — avoid calling advanceSlide inside an event handler
+                Promise.resolve().then(() => {
+                    if (!transitioningRef.current) {
+                        advanceSlideRef.current()
+                    }
+                })
             }
-        })
-
-        // Fallback: mark preloaded after 8s even if some fail
-        const fallback = setTimeout(() => {
-            if (!cancelled) setPreloaded(true)
-        }, 8000)
-
-        return () => {
-            cancelled = true
-            clearTimeout(fallback)
-            // Abort all in-flight downloads
-            elements.forEach(el => {
-                if ('oncanplaythrough' in el) {
-                    (el as HTMLVideoElement).oncanplaythrough = null
-                }
-                el.onload = null
-                el.onerror = null
-                if (el instanceof HTMLVideoElement) {
-                    el.removeAttribute('src')
-                    el.load() // Abort network fetch
-                } else {
-                    el.removeAttribute('src')
-                }
-            })
         }
-    }, [manifest?.playlist?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Stable per-layer callbacks (avoids inline arrow in render)
+    const onLayerAReady = useCallback(() => handleLayerContentReady('A'), [handleLayerContentReady])
+    const onLayerBReady = useCallback(() => handleLayerContentReady('B'), [handleLayerContentReady])
 
     const fetchData = useCallback(async () => {
         try {
@@ -435,29 +471,28 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     // ── Slideshow: A/B layer crossfade (timer mode) ─────
 
-    const currentSlideIndex = activeLayer === 'A' ? layerAIndex : layerBIndex
-
     const advanceSlide = useCallback(() => {
         const playlist = cleanPlaylist
-        if (!playlist || playlist.items.length === 0 || transitioningRef.current) return
+        if (!playlist || playlist.items.length <= 1 || transitioningRef.current) return
 
-        const nextIndex = currentSlideIndex + 1 >= playlist.items.length
-            ? (playlist.loop ? 0 : currentSlideIndex)
-            : currentSlideIndex + 1
-
-        if (nextIndex === currentSlideIndex) return // End of non-looping playlist
+        // Hidden layer content must be ready before we crossfade.
+        // If it's still loading (slow network), defer — handleLayerContentReady
+        // will call us back via advanceSlideRef as soon as onLoad fires.
+        if (!hiddenLayerReadyRef.current) {
+            pendingAdvanceRef.current = true
+            return
+        }
 
         const dur = playlist.transition_duration_ms
         transitioningRef.current = true
+        pendingAdvanceRef.current = false
 
         if (playlist.transition === 'cut') {
             if (activeLayer === 'A') {
-                setLayerBIndex(nextIndex)
                 setLayerAVisible(false)
                 setLayerBVisible(true)
                 setActiveLayer('B')
             } else {
-                setLayerAIndex(nextIndex)
                 setLayerBVisible(false)
                 setLayerAVisible(true)
                 setActiveLayer('A')
@@ -466,43 +501,36 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             return
         }
 
-        // Load next slide into inactive layer, then crossfade.
-        // Use double-rAF to give mobile browsers time to decode and composite
-        // the new content before starting the transition. A single rAF isn't
-        // enough on lower-powered devices — the new layer paints empty (black).
+        // Content is pre-decoded in the hidden layer — crossfade directly.
+        // No double-rAF needed: the hidden layer has been sitting at opacity 0.01
+        // with content fully decoded in GPU memory for the entire display duration.
         if (activeLayer === 'A') {
-            setLayerBIndex(nextIndex)
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setLayerAVisible(false)
-                    setLayerBVisible(true)
-                    setTimeout(() => {
-                        setActiveLayer('B')
-                        transitioningRef.current = false
-                    }, dur)
-                })
-            })
+            setLayerAVisible(false)
+            setLayerBVisible(true)
+            setTimeout(() => {
+                setActiveLayer('B')
+                transitioningRef.current = false
+            }, dur)
         } else {
-            setLayerAIndex(nextIndex)
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setLayerBVisible(false)
-                    setLayerAVisible(true)
-                    setTimeout(() => {
-                        setActiveLayer('A')
-                        transitioningRef.current = false
-                    }, dur)
-                })
-            })
+            setLayerBVisible(false)
+            setLayerAVisible(true)
+            setTimeout(() => {
+                setActiveLayer('A')
+                transitioningRef.current = false
+            }, dur)
         }
-    }, [currentSlideIndex, activeLayer, cleanPlaylist])
+    }, [activeLayer, cleanPlaylist])
+
+    // Keep ref in sync so the stable handleLayerContentReady callback
+    // always invokes the latest version of advanceSlide.
+    useEffect(() => { advanceSlideRef.current = advanceSlide }, [advanceSlide])
 
     // Slideshow: timer for image slides (SKIPPED in sync mode — sync engine drives advancement)
     useEffect(() => {
         if (isSyncMode) return // Sync engine controls slide advancement
 
         const playlist = cleanPlaylist
-        if (!playlist || playlist.items.length === 0 || !isPlaying || !preloaded) return
+        if (!playlist || playlist.items.length === 0 || !isPlaying || !firstSlideReady) return
 
         const currentItem = playlist.items[currentSlideIndex]
         if (!currentItem) return
@@ -513,7 +541,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             slideTimerRef.current = setTimeout(() => advanceSlide(), currentItem.duration_seconds * 1000)
             return () => { if (slideTimerRef.current) clearTimeout(slideTimerRef.current) }
         }
-    }, [currentSlideIndex, cleanPlaylist, isPlaying, advanceSlide, preloaded, isSyncMode])
+    }, [currentSlideIndex, cleanPlaylist, isPlaying, advanceSlide, firstSlideReady, isSyncMode])
 
     const handleVideoEnded = useCallback(() => advanceSlide(), [advanceSlide])
 
@@ -717,6 +745,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         isVisible: boolean,
         syncStyle?: React.CSSProperties,
         isSyncVideoSlide?: boolean,
+        onContentReady?: () => void,
     ) {
         if (!item?.url) return null
 
@@ -750,6 +779,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         fitClass={fitClass}
                         onEnded={isSyncVideoSlide ? undefined : handleVideoEnded}
                         onError={handleMediaError}
+                        onReady={onContentReady}
                         syncMode={isSyncVideoSlide}
                         syncSeekTime={isSyncVideoSlide ? syncEngine.getExpectedVideoTime() : undefined}
                     />
@@ -759,6 +789,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         src={item.url}
                         className={`w-full h-full ${fitClass}`}
                         alt="Slide content"
+                        onLoad={onContentReady}
                         onError={isVisible ? handleMediaError : undefined}
                     />
                 )}
@@ -803,6 +834,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     isSyncMode ? (pos?.isInTransition ? true : true) : layerAVisible,
                     layerASyncStyle,
                     isSyncMode,
+                    onLayerAReady,
                 )}
 
                 {/* Layer B */}
@@ -811,17 +843,18 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     isSyncMode ? (pos?.isInTransition ?? false) : layerBVisible,
                     layerBSyncStyle,
                     isSyncMode,
+                    onLayerBReady,
                 )}
 
-                {/* Loading indicator while preloading */}
-                {!preloaded && (
+                {/* Loading indicator — only waits for the first slide */}
+                {!firstSlideReady && (
                     <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
                         <div className="text-gray-500 text-sm">Loading slides...</div>
                     </div>
                 )}
 
                 {/* Sync calibrating indicator */}
-                {manifest?.sync?.enabled && !syncEngine.isCalibrated && preloaded && (
+                {manifest?.sync?.enabled && !syncEngine.isCalibrated && firstSlideReady && (
                     <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
                         <div className="text-gray-500 text-sm">Synchronizing...</div>
                     </div>
