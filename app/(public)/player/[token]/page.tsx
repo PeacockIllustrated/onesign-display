@@ -67,18 +67,28 @@ function VideoSlide({
     syncSeekTime?: number
 }) {
     const videoRef = useRef<HTMLVideoElement>(null)
+    // Track the sync seek time in a ref so the drift-correction interval
+    // always reads the latest value without re-triggering the effect.
+    const syncSeekRef = useRef(syncSeekTime)
+    syncSeekRef.current = syncSeekTime
+
+    // Track whether we've done the initial seek for this visibility cycle.
+    // This prevents re-seeking on every syncSeekTime update from the engine.
+    const hasInitialSeeked = useRef(false)
 
     useEffect(() => {
         const video = videoRef.current
         if (!video) return
 
         if (isVisible) {
-            if (syncMode && syncSeekTime !== undefined) {
-                // Sync mode: seek to computed position instead of 0
-                video.currentTime = syncSeekTime
+            if (syncMode && syncSeekRef.current !== undefined) {
+                // Sync mode: seek once to computed position, then let video free-run
+                video.currentTime = syncSeekRef.current
             } else {
                 video.currentTime = 0
             }
+            hasInitialSeeked.current = true
+
             const playPromise = video.play()
             if (playPromise) {
                 playPromise.catch((err) => {
@@ -90,26 +100,73 @@ function VideoSlide({
             }
         } else {
             video.pause()
+            hasInitialSeeked.current = false
         }
-    }, [isVisible, src, syncMode, syncSeekTime])
+        // Only re-run when visibility or src changes — NOT on syncSeekTime updates.
+        // The initial seek uses the ref value; after that, drift correction handles it.
+    }, [isVisible, src, syncMode])
 
-    // Sync mode: drift correction every 2s
+    // Sync mode: gentle drift correction via playbackRate nudging.
+    // Checks every 5s. Never hard-seeks unless drift is catastrophic (>1s).
+    // This eliminates the jitter caused by frequent seeking.
     useEffect(() => {
-        if (!syncMode || syncSeekTime === undefined || !isVisible) return
+        if (!syncMode || !isVisible) return
+
+        // Deadband thresholds (in seconds)
+        const DRIFT_IGNORE   = 0.2   // <200ms: do nothing, imperceptible
+        const DRIFT_NUDGE    = 1.0   // 200ms–1s: adjust playbackRate to catch up/slow down
+        const DRIFT_HARD_SEEK = 1.0  // >1s: something went very wrong, hard seek
+
+        // How much to speed up / slow down (2% is inaudible even with audio)
+        const RATE_FAST = 1.02
+        const RATE_SLOW = 0.98
+        const RATE_NORMAL = 1.0
+
+        let currentRate = RATE_NORMAL
 
         const driftCheck = setInterval(() => {
             const video = videoRef.current
-            if (!video || video.paused) return
+            const expected = syncSeekRef.current
+            if (!video || video.paused || expected === undefined) return
 
-            const drift = Math.abs(video.currentTime - syncSeekTime)
-            if (drift > 0.1) { // 100ms threshold
-                console.log(`[Sync] Video drift correction: ${(drift * 1000).toFixed(0)}ms`)
-                video.currentTime = syncSeekTime
+            const actual = video.currentTime
+            const drift = actual - expected // positive = video is ahead, negative = behind
+
+            const absDrift = Math.abs(drift)
+
+            if (absDrift < DRIFT_IGNORE) {
+                // Within deadband — restore normal rate if we were nudging
+                if (currentRate !== RATE_NORMAL) {
+                    video.playbackRate = RATE_NORMAL
+                    currentRate = RATE_NORMAL
+                }
+            } else if (absDrift < DRIFT_HARD_SEEK) {
+                // Nudge zone: gently adjust playback rate
+                const targetRate = drift > 0 ? RATE_SLOW : RATE_FAST
+                if (currentRate !== targetRate) {
+                    video.playbackRate = targetRate
+                    currentRate = targetRate
+                    console.log(
+                        `[Sync] Video drift ${drift > 0 ? '+' : ''}${(drift * 1000).toFixed(0)}ms — ` +
+                        `nudging rate to ${targetRate}`
+                    )
+                }
+            } else {
+                // Catastrophic drift — hard seek as last resort
+                console.warn(`[Sync] Video drift ${(drift * 1000).toFixed(0)}ms — hard seeking`)
+                video.currentTime = expected
+                video.playbackRate = RATE_NORMAL
+                currentRate = RATE_NORMAL
             }
-        }, 2000)
+        }, 5000)
 
-        return () => clearInterval(driftCheck)
-    }, [syncMode, syncSeekTime, isVisible])
+        return () => {
+            clearInterval(driftCheck)
+            // Restore normal rate on cleanup
+            const video = videoRef.current
+            if (video) video.playbackRate = 1.0
+        }
+    }, [syncMode, isVisible])
 
     return (
         <video
