@@ -94,6 +94,11 @@ export function SyncToggle({
                                 <li>Video slides must have accurate duration set</li>
                                 <li>Enabling sync will restart all screens from slide 1</li>
                             </ul>
+                            <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2 mt-3">
+                                <p className="text-teal-800 text-xs">
+                                    <span className="font-semibold">Note:</span> Screens will align seamlessly after a few run-throughs of the playlist while the sync calibrates. This is normal — once locked in, transitions stay tight.
+                                </p>
+                            </div>
                         </div>
                         <div className="flex gap-3 justify-end">
                             <button
