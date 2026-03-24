@@ -52,10 +52,8 @@ export async function signup(prevState: any, formData: FormData) {
         })
 
         if (authError) {
-            if (authError.message.includes('already been registered')) {
-                return { error: 'An account with this email already exists. Try signing in instead.' }
-            }
-            return { error: `Failed to create account: ${authError.message}` }
+            // Generic message for all auth failures — prevents email enumeration
+            return { error: 'Unable to create account. Please check your details or try signing in.' }
         }
 
         if (!newUser.user) return { error: 'Failed to create account' }
@@ -71,7 +69,9 @@ export async function signup(prevState: any, formData: FormData) {
 
         if (clientError?.code === '23505') {
             // Slug collision — append random suffix
-            const suffix = Math.random().toString(36).slice(2, 6)
+            const bytes = new Uint8Array(3)
+            crypto.getRandomValues(bytes)
+            const suffix = Array.from(bytes, b => b.toString(36).padStart(2, '0')).join('').slice(0, 6)
             slug = `${slug}-${suffix}`
             const retry = await adminClient
                 .from('display_clients')
