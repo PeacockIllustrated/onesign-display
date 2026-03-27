@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Users, Store, Image, Calendar, LogOut, Menu, X, BookOpen, UserPlus, ListVideo } from 'lucide-react'
+import { Home, Users, Store, Image, Calendar, LogOut, Menu, X, BookOpen, UserPlus, ListVideo, Radio } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logout } from '@/app/(auth)/auth/login/actions'
 import { useState } from 'react'
@@ -15,6 +15,7 @@ const navigation = [
     { name: 'Prospects', href: '/app/prospects', icon: UserPlus, adminOnly: true },
     { name: 'Media', href: '/app/media', icon: Image },
     { name: 'Playlists', href: '/app/playlists', icon: ListVideo },
+    { name: 'Streams', href: '/app/streams', icon: Radio },
     { name: 'Specials', href: '/app/specials', icon: Image },
     { name: 'Schedules', href: '/app/schedules', icon: Calendar },
 ]

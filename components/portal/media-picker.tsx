@@ -7,8 +7,10 @@ import { createClient } from '@/lib/supabase/client'
 import { registerMediaAsset } from '@/app/app/media/actions'
 import { assignMedia } from '@/app/actions/assign-media'
 import { assignPlaylist } from '@/app/actions/playlist-actions'
+import { assignStream } from '@/app/actions/stream-actions'
 import { MediaPickerItem } from './media-picker-item'
 import { v4 as uuidv4 } from 'uuid'
+import { Radio } from 'lucide-react'
 
 type Asset = {
     id: string
@@ -23,16 +25,24 @@ type Playlist = {
     item_count: number
 }
 
-export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
+type StreamOption = {
+    id: string
+    name: string
+    stream_type: string
+    audio_enabled: boolean
+}
+
+export function MediaPicker({ screenId, assets, playlists = [], streams = [], clientId }: {
     screenId: string
     assets: Asset[]
     playlists?: Playlist[]
+    streams?: StreamOption[]
     clientId?: string
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
-    const [tab, setTab] = useState<'media' | 'playlists' | 'upload'>('media')
+    const [tab, setTab] = useState<'media' | 'playlists' | 'streams' | 'upload'>('media')
     const router = useRouter()
 
     const handleSelectMedia = async (assetId: string) => {
@@ -56,6 +66,19 @@ export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
         } catch (error) {
             console.error(error)
             alert('Failed to assign playlist')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleSelectStream = async (streamId: string) => {
+        setSaving(true)
+        try {
+            await assignStream(screenId, streamId)
+            setIsOpen(false)
+        } catch (error) {
+            console.error(error)
+            alert('Failed to assign stream')
         } finally {
             setSaving(false)
         }
@@ -145,6 +168,17 @@ export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
                 >
                     Playlists
                 </button>
+                {streams.length > 0 && (
+                    <button
+                        onClick={() => setTab('streams')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+                            tab === 'streams' ? 'bg-black text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        <Radio className="w-3 h-3" />
+                        Streams
+                    </button>
+                )}
                 {clientId && (
                     <button
                         onClick={() => setTab('upload')}
@@ -210,6 +244,36 @@ export function MediaPicker({ screenId, assets, playlists = [], clientId }: {
                         className="block w-full text-center py-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-dashed border-gray-300 rounded-md hover:border-gray-400 transition-colors"
                     >
                         + Create / Manage Playlists
+                    </a>
+                </div>
+            )}
+
+            {/* Streams tab */}
+            {tab === 'streams' && (
+                <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto">
+                        {streams.map(stream => (
+                            <button
+                                key={stream.id}
+                                onClick={() => handleSelectStream(stream.id)}
+                                disabled={saving}
+                                className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-400 transition-colors text-left"
+                            >
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <Radio className="w-3 h-3 text-red-400" />
+                                    <p className="text-sm font-medium text-gray-900 truncate">{stream.name}</p>
+                                </div>
+                                <p className="text-xs text-gray-500">
+                                    {stream.stream_type.toUpperCase()} · {stream.audio_enabled ? 'Audio on' : 'Muted'}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
+                    <a
+                        href="/app/streams"
+                        className="block w-full text-center py-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-dashed border-gray-300 rounded-md hover:border-gray-400 transition-colors"
+                    >
+                        + Manage Streams
                     </a>
                 </div>
             )}

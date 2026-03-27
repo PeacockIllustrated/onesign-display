@@ -121,6 +121,20 @@ create table public.display_scheduled_screen_content (
   created_at timestamptz default now()
 );
 
+-- Streams (Live HLS/DASH feeds)
+create table public.display_streams (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.display_clients(id) on delete cascade not null,
+  name text not null,
+  stream_url text not null,
+  stream_type text not null default 'hls'
+    check (stream_type in ('hls', 'dash', 'embed')),
+  audio_enabled boolean not null default false,
+  fallback_media_asset_id uuid references public.display_media_assets(id) on delete set null,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Audit Log
 create table public.display_audit_log (
   id uuid primary key default gen_random_uuid(),
@@ -226,6 +240,7 @@ alter table display_screen_content enable row level security;
 alter table display_schedules enable row level security;
 alter table display_scheduled_screen_content enable row level security;
 alter table display_audit_log enable row level security;
+alter table display_streams enable row level security;
 alter table display_specials_projects enable row level security;
 alter table display_specials_templates enable row level security;
 alter table display_client_plans enable row level security;
@@ -341,6 +356,16 @@ create policy "display: Manage sche_content" on display_scheduled_screen_content
   exists (select 1 from display_screens sc join display_stores s on sc.store_id = s.id where sc.id = display_scheduled_screen_content.screen_id and (
     s.client_id = (select client_id from display_get_user_role()) or (select role from display_get_user_role()) = 'super_admin'
   ))
+);
+
+-- Streams
+create policy "display: View streams" on display_streams for select using (
+  client_id = (select client_id from display_get_user_role())
+  or (select role from display_get_user_role()) = 'super_admin'
+);
+create policy "display: Manage streams" on display_streams for all using (
+  client_id = (select client_id from display_get_user_role())
+  or (select role from display_get_user_role()) = 'super_admin'
 );
 
 -- ============================================================

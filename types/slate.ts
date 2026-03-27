@@ -53,6 +53,20 @@ export const MediaAssetSchema = z.object({
   created_at: z.string(),
 });
 
+export const StreamSchema = z.object({
+  id: z.string().uuid(),
+  client_id: z.string().uuid(),
+  name: z.string().min(1),
+  stream_url: z.string().url(),
+  stream_type: z.enum(['hls', 'dash', 'embed']),
+  audio_enabled: z.boolean(),
+  fallback_media_asset_id: z.string().uuid().nullable(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export type Stream = z.infer<typeof StreamSchema>;
+
 export const ScheduleSchema = z.object({
   id: z.string().uuid(),
   store_id: z.string().uuid(),

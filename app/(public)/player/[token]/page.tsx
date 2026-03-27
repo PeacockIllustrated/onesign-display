@@ -4,6 +4,15 @@ import { useEffect, useState, useRef, useCallback, useMemo, use } from 'react'
 import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
 import { useSyncEngine } from '@/hooks/use-sync-engine'
 import { SyncDebugOverlay } from '@/components/player/sync-debug-overlay'
+import Hls from 'hls.js'
+
+type StreamData = {
+    id: string
+    url: string
+    type: 'hls' | 'dash' | 'embed'
+    audio_enabled: boolean
+    fallback_url: string | null
+}
 
 type PlaylistItem = {
     id: string
@@ -37,6 +46,7 @@ type Manifest = {
     }
     fit_mode: 'contain' | 'cover'
     playlist: PlaylistData | null
+    stream: StreamData | null
     sync: SyncConfig | null
     next_check: string | null
     fetched_at: string
@@ -182,6 +192,185 @@ function VideoSlide({
             onEnded={syncMode ? undefined : onEnded}
             onError={onError}
         />
+    )
+}
+
+// ── StreamSlide: HLS/DASH live stream playback ──────────────
+// Uses hls.js for Chrome/Firefox, native HLS for Safari.
+// Auto-reconnects on network errors, shows fallback on fatal failure.
+
+function StreamSlide({
+    url,
+    type,
+    audioEnabled,
+    fallbackUrl,
+    fitClass,
+    onError,
+}: {
+    url: string
+    type: 'hls' | 'dash' | 'embed'
+    audioEnabled: boolean
+    fallbackUrl: string | null
+    fitClass: string
+    onError?: () => void
+}) {
+    const videoRef = useRef<HTMLVideoElement>(null)
+    const hlsRef = useRef<Hls | null>(null)
+    const [showFallback, setShowFallback] = useState(false)
+    const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    const attemptReconnect = useCallback(() => {
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+        retryTimerRef.current = setTimeout(() => {
+            setShowFallback(false)
+            // Force re-attach by destroying and recreating
+            if (hlsRef.current) {
+                hlsRef.current.destroy()
+                hlsRef.current = null
+            }
+            const video = videoRef.current
+            if (!video) return
+
+            if (Hls.isSupported()) {
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 30,
+                })
+                hlsRef.current = hls
+                hls.loadSource(url)
+                hls.attachMedia(video)
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play().catch(() => {})
+                })
+                hls.on(Hls.Events.ERROR, (_event, data) => {
+                    if (data.fatal) {
+                        if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                            hls.recoverMediaError()
+                        } else {
+                            setShowFallback(true)
+                            attemptReconnect()
+                        }
+                    }
+                })
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = url
+                video.play().catch(() => {})
+            }
+        }, 30_000) // Retry every 30 seconds
+    }, [url])
+
+    useEffect(() => {
+        const video = videoRef.current
+        if (!video || type === 'embed') return
+
+        if (Hls.isSupported()) {
+            const hls = new Hls({
+                enableWorker: true,
+                lowLatencyMode: true,
+                backBufferLength: 30,
+            })
+            hlsRef.current = hls
+
+            hls.loadSource(url)
+            hls.attachMedia(video)
+
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                video.play().catch(() => {})
+            })
+
+            hls.on(Hls.Events.ERROR, (_event, data) => {
+                if (data.fatal) {
+                    switch (data.type) {
+                        case Hls.ErrorTypes.MEDIA_ERROR:
+                            console.warn('[Stream] Media error — attempting recovery')
+                            hls.recoverMediaError()
+                            break
+                        case Hls.ErrorTypes.NETWORK_ERROR:
+                            console.warn('[Stream] Network error — showing fallback, retrying in 30s')
+                            setShowFallback(true)
+                            attemptReconnect()
+                            break
+                        default:
+                            console.error('[Stream] Fatal error — showing fallback, retrying in 30s')
+                            hls.destroy()
+                            setShowFallback(true)
+                            attemptReconnect()
+                            break
+                    }
+                }
+            })
+
+            return () => {
+                hls.destroy()
+                hlsRef.current = null
+                if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+            }
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            // Native HLS (Safari)
+            video.src = url
+            video.addEventListener('loadedmetadata', () => {
+                video.play().catch(() => {})
+            })
+
+            const handleError = () => {
+                console.warn('[Stream] Native HLS error — showing fallback')
+                setShowFallback(true)
+                attemptReconnect()
+            }
+            video.addEventListener('error', handleError)
+
+            return () => {
+                video.removeEventListener('error', handleError)
+                if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+            }
+        } else {
+            console.error('[Stream] HLS not supported on this browser')
+            setShowFallback(true)
+            onError?.()
+        }
+    }, [url, type, attemptReconnect, onError])
+
+    if (type === 'embed') {
+        return (
+            <iframe
+                src={url}
+                className="w-full h-full border-0"
+                allow="autoplay; encrypted-media; fullscreen"
+                sandbox="allow-scripts allow-same-origin"
+            />
+        )
+    }
+
+    return (
+        <>
+            <video
+                ref={videoRef}
+                className={`w-full h-full ${fitClass} ${showFallback ? 'hidden' : ''}`}
+                muted={!audioEnabled}
+                playsInline
+                autoPlay
+            />
+            {showFallback && (
+                fallbackUrl ? (
+                    <img
+                        src={fallbackUrl}
+                        className={`w-full h-full ${fitClass}`}
+                        alt="Stream offline — showing fallback"
+                    />
+                ) : (
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                        <div className="w-16 h-16 mb-4 rounded-full border-2 border-gray-600 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 3.75H6A2.25 2.25 0 003.75 6v1.5M16.5 3.75H18A2.25 2.25 0 0120.25 6v1.5m0 9V18A2.25 2.25 0 0118 20.25h-1.5m-9 0H6A2.25 2.25 0 013.75 18v-1.5" />
+                            </svg>
+                        </div>
+                        <p className="text-sm font-mono">Stream Offline</p>
+                        <p className="text-xs text-gray-600 mt-1">Reconnecting...</p>
+                    </div>
+                )
+            )}
+        </>
     )
 }
 
@@ -826,6 +1015,31 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         onLoad={onGpuReady}
                         onError={isVisible ? handleMediaError : undefined}
                     />
+                )}
+            </div>
+        )
+    }
+
+    // ── Render: Stream mode ──────────────────────────────────
+
+    if (manifest?.stream?.url) {
+        return (
+            <div
+                onClick={toggleFullscreen}
+                className="bg-black h-screen w-screen overflow-hidden flex items-center justify-center relative"
+                style={{ cursor: cursorHidden ? 'none' : 'pointer' }}
+            >
+                <NeverSleepGuard active={isPlaying} />
+                <StreamSlide
+                    url={manifest.stream.url}
+                    type={manifest.stream.type}
+                    audioEnabled={manifest.stream.audio_enabled}
+                    fallbackUrl={manifest.stream.fallback_url}
+                    fitClass={fitClass}
+                    onError={handleMediaError}
+                />
+                {error && (
+                    <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>
                 )}
             </div>
         )

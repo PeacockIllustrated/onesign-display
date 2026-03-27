@@ -5,7 +5,7 @@ import { SignedImage } from '@/components/ui/signed-image'
 import { MediaPicker } from '@/components/portal/media-picker'
 import { EmptyScreenPreview } from '@/components/portal/empty-screen-preview'
 import { ScreenSettingsForm } from '@/components/admin/screen-settings-form'
-import { ListVideo } from 'lucide-react'
+import { ListVideo, Radio, Volume2, VolumeX } from 'lucide-react'
 
 export default async function ScreenDetailPage({ params }: { params: Promise<{ screenId: string }> }) {
     const { screenId } = await params
@@ -24,7 +24,8 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         display_screen_content(
             *,
             media_asset:display_media_assets(*),
-            playlist:display_playlists(id, name, transition, transition_duration_ms, loop)
+            playlist:display_playlists(id, name, transition, transition_duration_ms, loop),
+            stream:display_streams(id, name, stream_url, stream_type, audio_enabled)
         )
     `)
         .eq('id', screenId)
@@ -39,6 +40,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
 
     const activeMedia = activeContent?.media_asset
     const activePlaylist = activeContent?.playlist
+    const activeStream = activeContent?.stream
 
     // If playlist is active, fetch its first item for preview thumbnail
     let playlistFirstItem: any = null
@@ -71,6 +73,20 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         .select('id, name, transition, display_playlist_items(count)')
         .eq('client_id', clientId)
         .order('created_at', { ascending: false })
+
+    // Fetch streams for this client
+    const { data: streamsRaw } = await supabase
+        .from('display_streams')
+        .select('id, name, stream_type, audio_enabled')
+        .eq('client_id', clientId)
+        .order('created_at', { ascending: false })
+
+    const availableStreams = (streamsRaw || []).map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        stream_type: s.stream_type,
+        audio_enabled: s.audio_enabled,
+    }))
 
     const playlists = (playlistsRaw || []).map((p: any) => ({
         id: p.id,
@@ -131,7 +147,14 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
                         <div className="p-4 border-b border-gray-200 font-medium text-sm">Live Preview (Last Known)</div>
                         <div className="aspect-video bg-gray-900 flex items-center justify-center relative">
-                            {activePlaylist ? (
+                            {activeStream ? (
+                                // Stream preview: show live indicator
+                                <div className="flex flex-col items-center justify-center text-white">
+                                    <Radio className="w-10 h-10 text-red-400 animate-pulse mb-2" />
+                                    <p className="text-sm font-medium">{activeStream.name}</p>
+                                    <p className="text-xs text-gray-400 mt-1">{(activeStream as any).stream_type?.toUpperCase()} · Live Stream</p>
+                                </div>
+                            ) : activePlaylist ? (
                                 // Playlist preview: show first slide with playlist overlay
                                 <>
                                     {playlistFirstItem ? (
@@ -166,7 +189,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Content Assignment</h3>
 
                         <div className="mb-4">
-                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} clientId={clientId} />
+                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} streams={availableStreams} clientId={clientId} />
                         </div>
 
                         {/* Active content info card */}
@@ -190,7 +213,33 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                             </div>
                         )}
 
-                        {activeMedia && !activePlaylist && (
+                        {activeStream && (
+                            <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
+                                <div className="h-10 w-10 bg-gray-800 rounded overflow-hidden mr-3 flex items-center justify-center flex-shrink-0">
+                                    <Radio className="w-5 h-5 text-red-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900">{activeStream.name}</p>
+                                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                                        <span>{(activeStream as any).stream_type?.toUpperCase()} Stream</span>
+                                        <span>·</span>
+                                        {(activeStream as any).audio_enabled ? (
+                                            <span className="flex items-center gap-0.5"><Volume2 className="w-3 h-3" /> Audio</span>
+                                        ) : (
+                                            <span className="flex items-center gap-0.5"><VolumeX className="w-3 h-3" /> Muted</span>
+                                        )}
+                                    </div>
+                                </div>
+                                <Link
+                                    href={`/app/streams/${activeStream.id}`}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex-shrink-0"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
+                        )}
+
+                        {activeMedia && !activePlaylist && !activeStream && (
                             <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
                                 <div className="h-10 w-10 bg-gray-200 rounded overflow-hidden mr-3 flex-shrink-0">
                                     <SignedImage path={activeMedia.storage_path} alt="Thumb" className="h-full w-full object-cover" mime={activeMedia.mime} />

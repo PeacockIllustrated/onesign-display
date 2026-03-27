@@ -139,6 +139,7 @@ export async function GET(request: NextRequest) {
     // 3. Resolve Content — try new function first, fallback to legacy
     let resolvedMediaId: string | null = null
     let resolvedPlaylistId: string | null = null
+    let resolvedStreamId: string | null = null
 
     const { data: resolved } = await supabase
         .rpc('display_resolve_screen_content', {
@@ -149,6 +150,7 @@ export async function GET(request: NextRequest) {
     if (resolved && resolved.length > 0) {
         resolvedMediaId = resolved[0].resolved_media_id
         resolvedPlaylistId = resolved[0].resolved_playlist_id
+        resolvedStreamId = resolved[0].resolved_stream_id ?? null
     } else {
         // Fallback to legacy function if new one doesn't exist yet
         const { data: legacyMediaId } = await supabase
@@ -159,11 +161,43 @@ export async function GET(request: NextRequest) {
         resolvedMediaId = legacyMediaId
     }
 
-    // 4. Build response — playlist mode or single media mode
+    // 4. Build response — stream, playlist, or single media mode
     let mediaResponse = { id: null as string | null, url: null as string | null, type: null as string | null }
     let playlistResponse = null
+    let streamResponse = null
 
-    if (resolvedPlaylistId) {
+    if (resolvedStreamId) {
+        // Stream mode: fetch stream config and optional fallback image
+        const { data: stream } = await supabase
+            .from('display_streams')
+            .select('id, stream_url, stream_type, audio_enabled, fallback_media_asset_id')
+            .eq('id', resolvedStreamId)
+            .single()
+
+        if (stream) {
+            let fallbackUrl: string | null = null
+
+            if (stream.fallback_media_asset_id) {
+                const { data: fallbackMedia } = await supabase
+                    .from('display_media_assets')
+                    .select('storage_path')
+                    .eq('id', stream.fallback_media_asset_id)
+                    .single()
+
+                if (fallbackMedia) {
+                    fallbackUrl = await resolveMediaUrl(supabase, fallbackMedia.storage_path, SIGN_TTL_BASE)
+                }
+            }
+
+            streamResponse = {
+                id: stream.id,
+                url: stream.stream_url,
+                type: stream.stream_type as 'hls' | 'dash' | 'embed',
+                audio_enabled: stream.audio_enabled,
+                fallback_url: fallbackUrl,
+            }
+        }
+    } else if (resolvedPlaylistId) {
         // Playlist mode: fetch playlist settings + all items with signed URLs
         const { data: playlist } = await supabase
             .from('display_playlists')
@@ -312,6 +346,7 @@ export async function GET(request: NextRequest) {
         fit_mode: fitMode,
         media: mediaResponse,
         playlist: playlistResponse,
+        stream: streamResponse,
         sync: syncResponse,
         next_check: nextChange ? nextChange.toISOString() : null,
         fetched_at: new Date().toISOString()

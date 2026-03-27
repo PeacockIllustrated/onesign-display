@@ -3,14 +3,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function assignToSchedule(scheduleId: string, screenId: string, mediaId: string) {
+export async function assignToSchedule(
+    scheduleId: string,
+    screenId: string,
+    mediaId?: string | null,
+    playlistId?: string | null,
+    streamId?: string | null,
+) {
     const supabase = await createClient()
 
-    // Upsert logic? Table has ID. 
-    // We should check if an assignment exists for this screen+schedule.
-    // If mediaId is provided, upsert. If null/empty, delete?
+    // Build the content fields — exactly one must be set
+    const contentFields: Record<string, string | null> = {
+        media_asset_id: mediaId || null,
+        playlist_id: playlistId || null,
+        stream_id: streamId || null,
+    }
 
-    // First, find if exists
+    // First, find if an assignment exists for this screen+schedule
     const { data: existing } = await supabase
         .from('display_scheduled_screen_content')
         .select('id')
@@ -19,10 +28,10 @@ export async function assignToSchedule(scheduleId: string, screenId: string, med
         .single()
 
     if (existing) {
-        // Update
+        // Update — clear all content fields and set the new one
         await supabase
             .from('display_scheduled_screen_content')
-            .update({ media_asset_id: mediaId })
+            .update(contentFields)
             .eq('id', existing.id)
     } else {
         // Insert
@@ -31,7 +40,7 @@ export async function assignToSchedule(scheduleId: string, screenId: string, med
             .insert({
                 schedule_id: scheduleId,
                 screen_id: screenId,
-                media_asset_id: mediaId
+                ...contentFields,
             })
     }
 
