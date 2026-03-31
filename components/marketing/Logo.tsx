@@ -7,11 +7,11 @@ interface LogoProps {
     height?: number;
 }
 
-export function Logo({ className, width = 100, height = 32 }: LogoProps) {
+export function Logo({ className, width = 140, height = 48 }: LogoProps) {
     return (
         <div className={clsx("relative flex items-center", className)}>
             <Image
-                src="/onesign-logo-dark.png"
+                src="/assets/OD-Logo-Dark.svg"
                 alt="Onesign Display"
                 width={width}
                 height={height}

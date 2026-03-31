@@ -25,10 +25,10 @@ export function Footer() {
                     <div className="sm:col-span-2 lg:col-span-1">
                         <Link href="/" className="inline-block mb-5">
                             <Image
-                                src="/onesign-logo-white.png"
+                                src="/assets/OD-Logo-Light.svg"
                                 alt="Onesign Display"
-                                width={90}
-                                height={28}
+                                width={130}
+                                height={44}
                                 className="object-contain"
                             />
                         </Link>

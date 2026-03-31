@@ -45,7 +45,7 @@ function SignupForm() {
             <div className="max-w-md w-full space-y-8">
                 <div>
                     <div className="flex justify-center">
-                        <img src="/onesign-logo-dark.png" alt="Onesign" className="h-8 w-auto" />
+                        <img src="/assets/OD-Logo-Dark.svg" alt="Onesign Display" className="h-16 w-auto" />
                     </div>
                     <p className="mt-2 text-center text-sm text-zinc-600">
                         Create your account

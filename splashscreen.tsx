@@ -10,7 +10,7 @@ import Image from 'next/image'
  * gold accent line, tagline fade-in. Auto-dismisses after ~2.4s.
  *
  * Drop into app/layout.tsx as first child of <body>.
- * Requires: public/onesign-logo-white.png
+ * Requires: public/assets/OD-Logo-Light.svg
  */
 export default function SplashScreen() {
   const [phase, setPhase] = useState<'entering' | 'visible' | 'exiting' | 'gone'>('entering')
@@ -63,10 +63,10 @@ export default function SplashScreen() {
         }}
       >
         <Image
-          src="/onesign-logo-white.png"
+          src="/assets/OD-Logo-Light.svg"
           alt="Onesign Display"
-          width={180}
-          height={40}
+          width={300}
+          height={140}
           priority
           style={{ objectFit: 'contain' }}
         />

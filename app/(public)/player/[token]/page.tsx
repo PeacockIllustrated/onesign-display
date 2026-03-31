@@ -858,7 +858,18 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [isPlaying, manifest, fetchData, cleanPlaylist])
 
-    const handleStart = () => { setIsPlaying(true); toggleFullscreen() }
+    const [initPhase, setInitPhase] = useState<'idle' | 'shrink' | 'draw' | 'fill' | 'done'>('idle')
+
+    const handleStart = () => {
+        setInitPhase('shrink')
+        setTimeout(() => setInitPhase('draw'), 300)
+        setTimeout(() => setInitPhase('fill'), 1500)
+        setTimeout(() => {
+            setInitPhase('done')
+            setIsPlaying(true)
+            toggleFullscreen()
+        }, 2000)
+    }
 
     // Content fit mode from manifest
     const fitClass = manifest?.fit_mode === 'cover' ? 'object-cover' : 'object-contain'
@@ -870,14 +881,79 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     )
 
     if (!isPlaying) return (
-        <div className="bg-black h-screen w-screen flex flex-col items-center justify-center text-white cursor-pointer z-50" onClick={handleStart}>
-            <div className="w-24 h-24 mb-6 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 ml-1">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
-                </svg>
+        <div className="bg-black h-screen w-screen flex flex-col items-center justify-center text-white cursor-pointer z-50" onClick={initPhase === 'idle' ? handleStart : undefined}>
+            <style>{`
+                @keyframes playerDrawIcon {
+                    from { stroke-dashoffset: 1; }
+                    to { stroke-dashoffset: 0; }
+                }
+            `}</style>
+
+            {/* Play button — shrinks away on click */}
+            <div
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 300ms cubic-bezier(0.4, 0, 0.2, 1), opacity 300ms cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: initPhase !== 'idle' ? 'scale(0)' : 'scale(1)',
+                    opacity: initPhase !== 'idle' ? 0 : 1,
+                    position: 'absolute',
+                }}
+            >
+                <div className="w-24 h-24 mb-6 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 ml-1">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                    </svg>
+                </div>
+                <h1 className="text-2xl font-bold tracking-widest uppercase mb-2 text-center">Onesign Display</h1>
+                <p className="text-gray-400 text-sm text-center">Tap screen to initialize display</p>
             </div>
-            <h1 className="text-2xl font-bold tracking-widest uppercase mb-2">Onesign Display</h1>
-            <p className="text-gray-400 text-sm">Tap screen to initialize display</p>
+
+            {/* OD icon animation — appears after play shrinks */}
+            {initPhase !== 'idle' && (
+                <div
+                    style={{
+                        filter: initPhase === 'fill' ? 'drop-shadow(0 0 12px rgba(149,218,248,0.7)) drop-shadow(0 0 30px rgba(36,84,91,0.9))' : 'drop-shadow(0 0 6px rgba(149,218,248,0.4)) drop-shadow(0 0 18px rgba(36,84,91,0.6))',
+                        transition: 'filter 400ms ease, opacity 400ms ease',
+                        opacity: initPhase === 'done' ? 0 : 1,
+                    }}
+                >
+                    <svg viewBox="0 0 292.79 264.11" style={{ width: 100, height: 'auto' }}>
+                        <defs>
+                            <filter id="player-icon-glow">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feFlood floodColor="#95daf8" floodOpacity="0.7" />
+                                <feComposite in2="blur" operator="in" />
+                                <feComposite in="SourceGraphic" />
+                            </filter>
+                        </defs>
+                        <path
+                            d="M251.54,227.11c25.61-23.24,38.42-54.89,38.42-94.93s-12.77-71.62-38.33-94.71C226.09,14.38,191.09,2.83,146.6,2.83S66.86,14.36,41.25,37.48C15.64,60.57,2.83,92.14,2.83,132.18s12.88,71.69,38.62,94.93c22.1,19.93,51.03,31.31,86.84,34.14,3.98.31,7.4-2.79,7.4-6.78v-93.78c0-3.76-3.05-6.8-6.8-6.8H61.96c-3.76,0-6.8-3.05-6.8-6.8v-39.44c0-3.76,3.05-6.8,6.8-6.8h0c24.97,0,43.96-4.2,56.95-12.62,11.77-7.62,19.79-19.43,24.05-35.43.79-2.96,3.49-5.01,6.56-5.01h51.04c3.76,0,6.8,3.05,6.8,6.8v188.34c0,4.88,5,8.18,9.49,6.26,13.03-5.56,24.59-12.9,34.69-22.07"
+                            fill="none"
+                            stroke="#95daf8"
+                            strokeWidth="5.67"
+                            strokeMiterlimit="10"
+                            pathLength={1}
+                            strokeDasharray={1}
+                            strokeDashoffset={1}
+                            filter="url(#player-icon-glow)"
+                            style={{
+                                animation: 'playerDrawIcon 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                            }}
+                        />
+                        <path
+                            d="M248.7,224.28c25.61-23.24,38.42-54.89,38.42-94.93s-12.77-71.62-38.33-94.71C223.26,11.55,188.25,0,143.76,0S64.03,11.53,38.42,34.64C12.81,57.73,0,89.31,0,129.35s12.88,71.69,38.62,94.93c23.6,21.29,55,32.82,94.24,34.6v-107.83H52.32v-53.05h6.8c24.97,0,43.96-4.2,56.95-12.62,12.97-8.39,21.38-21.87,25.23-40.44h63.22v205.05c16.96-5.84,31.69-14.37,44.18-25.72"
+                            fill="white"
+                            style={{
+                                opacity: initPhase === 'fill' || initPhase === 'done' ? 1 : 0,
+                                transition: 'opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                            }}
+                        />
+                    </svg>
+                </div>
+            )}
         </div>
     )
 

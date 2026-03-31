@@ -35,7 +35,7 @@ export function Sidebar({ userRole, userEmail, clientName }: {
     const NavContent = () => (
         <>
             <div className="flex items-center px-6 h-16 border-b border-zinc-200">
-                <img src="/onesign-logo-dark.png" alt="Onesign" className="h-6 w-auto" />
+                <img src="/assets/OD-Logo-Dark.svg" alt="Onesign Display" className="h-9 w-auto" />
             </div>
             <div className="flex-1 flex flex-col overflow-y-auto pt-5 pb-4">
                 <nav className="mt-5 flex-1 px-2 space-y-1">
@@ -112,7 +112,7 @@ export function Sidebar({ userRole, userEmail, clientName }: {
         <>
             {/* Mobile Trigger */}
             <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-40 flex items-center px-4 justify-between">
-                <img src="/onesign-logo-dark.png" alt="Onesign" className="h-6 w-auto" />
+                <img src="/assets/OD-Logo-Dark.svg" alt="Onesign Display" className="h-9 w-auto" />
                 <button onClick={toggle} className="p-2 -mr-2 text-gray-600 hover:text-gray-900">
                     <Menu className="h-6 w-6" />
                 </button>

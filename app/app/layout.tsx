@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/portal/sidebar'
 import { OnboardingWizard } from '@/components/portal/onboarding-wizard'
+import { DashboardSplash } from '@/components/portal/DashboardSplash'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
@@ -49,6 +50,8 @@ export default async function AppLayout({
     }
 
     return (
+        <>
+        <DashboardSplash />
         <div className="flex flex-col md:flex-row h-screen bg-gray-50">
             <Sidebar
                 userRole={role}
@@ -73,5 +76,6 @@ export default async function AppLayout({
             </main>
             {showOnboarding && <OnboardingWizard clientName={clientName} />}
         </div>
+        </>
     )
 }
