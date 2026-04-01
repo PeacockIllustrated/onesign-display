@@ -1,6 +1,8 @@
 import { MarketingHero } from "@/components/marketing/MarketingHero";
 import { SectionWrapper } from "@/components/marketing/SectionWrapper";
 import { LaptopCarousel } from "@/components/marketing/LaptopCarousel";
+import { SyncScreens } from "@/components/marketing/SyncScreens";
+import { HeroAnimation } from "@/components/marketing/HeroAnimation";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -155,18 +157,8 @@ export default function MarketingHome() {
                 subhead="Upload your menus, set your schedule, and walk away. Onesign Display streams the right content to every screen — breakfast, lunch, dinner — automatically."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
                 secondaryCta={{ href: "/product", label: "See How It Works" }}
-            >
-                <LaptopCarousel
-                    className="max-w-5xl mx-auto"
-                    interval={5000}
-                    slides={[
-                        { src: '/marketing/screenshot-dashboard.png', alt: 'Onesign Display admin dashboard showing multi-location client overview' },
-                        { src: '/marketing/screenshot-media-library.png', alt: 'Media library with drag-and-drop upload and filter tabs' },
-                        { src: '/marketing/screenshot-screen-detail.png', alt: 'Screen management page with live preview and content assignment' },
-                        { src: '/marketing/screenshot-specials-studio.png', alt: 'Specials Studio template picker for creating daily specials' },
-                    ]}
-                />
-            </MarketingHero>
+                above={<HeroAnimation />}
+            />
 
             {/* ──────────────── PAIN / SOLUTION ──────────────── */}
             <SectionWrapper>
@@ -494,79 +486,63 @@ export default function MarketingHome() {
 
             {/* ──────────────── FEATURE 5: MULTI-SCREEN SYNC ──────────────── */}
             <SectionWrapper className="bg-neutral-50">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-                    {/* Sync visual — left on desktop */}
-                    <div className="order-2 lg:order-1 flex justify-center">
-                        <div className="relative flex items-end justify-center gap-4 py-8">
-                            {[1, 2, 3].map((n) => (
-                                <div key={n} className="flex flex-col items-center">
-                                    <div className="w-24 md:w-32 aspect-video bg-neutral-900 rounded-lg border-2 border-neutral-700 flex items-center justify-center relative overflow-hidden">
-                                        <div className="absolute inset-0 bg-gradient-to-br from-[#4e7e8c]/30 to-transparent" />
-                                        <span className="text-white/60 text-xs font-mono">Screen {n}</span>
-                                    </div>
-                                    <div className="w-16 md:w-20 h-1.5 bg-neutral-300 rounded-b-sm mt-0" />
-                                    <div className="w-8 md:w-10 h-3 bg-neutral-200 rounded-b-sm" />
-                                </div>
-                            ))}
-                            <div className="absolute left-1/2 -translate-x-1/2 -bottom-2">
-                                <span className="text-xs text-[#4e7e8c] font-semibold">Synchronised</span>
-                            </div>
-                        </div>
-                    </div>
+                <div className="flex flex-col items-center text-center">
+                    <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
+                        Synchronised Playback
+                    </p>
+                    <h2 className="text-3xl md:text-4xl font-bold mb-4 leading-tight text-neutral-950">
+                        Multi-Screen Sync. No Extra&nbsp;Hardware.
+                    </h2>
+                    <p className="text-neutral-500 text-lg leading-relaxed mb-12 max-w-2xl">
+                        Got three menu boards behind the counter? Onesign
+                        Display keeps them all in sync — every slide, every
+                        transition, at the same time. No HDMI splitters, no
+                        mini PCs, no extra hardware. Just your existing screens
+                        and WiFi.
+                    </p>
 
-                    {/* Text — right on desktop */}
-                    <div className="order-1 lg:order-2">
-                        <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
-                            Synchronised Playback
-                        </p>
-                        <h2 className="text-3xl md:text-4xl font-bold mb-6 leading-tight text-neutral-950">
-                            Multi-Screen Sync. No Extra&nbsp;Hardware.
-                        </h2>
-                        <p className="text-neutral-500 text-lg leading-relaxed mb-8">
-                            Got three menu boards behind the counter? Onesign
-                            Display keeps them all in sync — every slide, every
-                            transition, at the same time. No HDMI splitters, no
-                            mini PCs, no extra hardware. Just your existing screens
-                            and WiFi.
-                        </p>
-                        <ul className="space-y-4">
-                            {[
-                                {
-                                    icon: Layers,
-                                    title: "Software-only sync",
-                                    desc: "Each screen checks a shared clock and calculates which slide to show. No cables between screens.",
-                                },
-                                {
-                                    icon: ToggleLeft,
-                                    title: "One-toggle setup",
-                                    desc: "Enable sync on a screen set with a single switch. All screens align automatically.",
-                                },
-                                {
-                                    icon: MonitorSmartphone,
-                                    title: "Any device",
-                                    desc: "Fire Sticks, tablets, PCs, Smart TVs — sync works on any device with a browser.",
-                                },
-                                {
-                                    icon: PoundSterling,
-                                    title: "Save £200–500 per location",
-                                    desc: "No mini PCs or HDMI splitters needed. Each screen runs independently but stays in lockstep.",
-                                },
-                            ].map((item, i) => (
-                                <li key={i} className="flex items-start gap-4">
-                                    <div className="mt-0.5 flex-shrink-0 h-9 w-9 rounded-lg bg-[#4e7e8c]/10 flex items-center justify-center">
-                                        <item.icon className="h-4.5 w-4.5 text-[#4e7e8c]" />
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-neutral-950">
-                                            {item.title}
-                                        </p>
-                                        <p className="text-neutral-500 text-sm">
-                                            {item.desc}
-                                        </p>
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
+                    {/* Synced screens */}
+                    <SyncScreens />
+                    <p className="text-xs text-[#4e7e8c] font-semibold mt-4 mb-12">Synchronised</p>
+
+                    {/* Feature bullets — 2×2 grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full text-left">
+                        {[
+                            {
+                                icon: Layers,
+                                title: "Software-only sync",
+                                desc: "Each screen checks a shared clock and calculates which slide to show. No cables between screens.",
+                            },
+                            {
+                                icon: ToggleLeft,
+                                title: "One-toggle setup",
+                                desc: "Enable sync on a screen set with a single switch. All screens align automatically.",
+                            },
+                            {
+                                icon: MonitorSmartphone,
+                                title: "Any device",
+                                desc: "Fire Sticks, tablets, PCs, Smart TVs — sync works on any device with a browser.",
+                            },
+                            {
+                                icon: PoundSterling,
+                                title: "Save £200–500 per location",
+                                desc: "No mini PCs or HDMI splitters needed. Each screen runs independently but stays in lockstep.",
+                            },
+                        ].map((item, i) => (
+                            <div key={i} className="flex items-start gap-4">
+                                <div className="mt-0.5 flex-shrink-0 h-9 w-9 rounded-lg bg-[#4e7e8c]/10 flex items-center justify-center">
+                                    <item.icon className="h-4.5 w-4.5 text-[#4e7e8c]" />
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-neutral-950">
+                                        {item.title}
+                                    </p>
+                                    <p className="text-neutral-500 text-sm">
+                                        {item.desc}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </SectionWrapper>

@@ -16,6 +16,7 @@ interface MarketingHeroProps {
         label: string;
     };
     children?: React.ReactNode;
+    above?: React.ReactNode;
     variant?: "light" | "dark";
 }
 
@@ -26,6 +27,7 @@ export function MarketingHero({
     primaryCta,
     secondaryCta,
     children,
+    above,
     variant = "light",
 }: MarketingHeroProps) {
     const isDark = variant === "dark";
@@ -58,7 +60,7 @@ export function MarketingHero({
                 <div className="absolute inset-0 -z-10 h-full w-full bg-white bg-[linear-gradient(to_right,#f0f0f0_1px,transparent_1px),linear-gradient(to_bottom,#f0f0f0_1px,transparent_1px)] bg-[size:6rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-40" />
             )}
 
-            <div className="relative z-10 pt-20 pb-32 md:pt-32 md:pb-48">
+            <div className="relative z-10 pt-20 pb-20 md:pt-28 md:pb-28">
                 <SectionWrapper
                     className={
                         isDark
@@ -67,6 +69,11 @@ export function MarketingHero({
                     }
                 >
                     <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-16">
+                        {above && (
+                            <div className="mb-10">
+                                {above}
+                            </div>
+                        )}
                         {pill && (
                             <div
                                 className={`inline-flex items-center rounded-full border px-3 py-1 text-sm font-medium mb-8 backdrop-blur-sm ${
