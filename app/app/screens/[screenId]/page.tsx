@@ -5,7 +5,7 @@ import { SignedImage } from '@/components/ui/signed-image'
 import { MediaPicker } from '@/components/portal/media-picker'
 import { EmptyScreenPreview } from '@/components/portal/empty-screen-preview'
 import { ScreenSettingsForm } from '@/components/admin/screen-settings-form'
-import { ListVideo, Radio, Volume2, VolumeX } from 'lucide-react'
+import { ListVideo, Radio, Volume2, VolumeX, LayoutTemplate } from 'lucide-react'
 
 export default async function ScreenDetailPage({ params }: { params: Promise<{ screenId: string }> }) {
     const { screenId } = await params
@@ -25,7 +25,8 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
             *,
             media_asset:display_media_assets(*),
             playlist:display_playlists(id, name, transition, transition_duration_ms, loop),
-            stream:display_streams(id, name, stream_url, stream_type, audio_enabled)
+            stream:display_streams(id, name, stream_url, stream_type, audio_enabled),
+            html_menu:display_html_menus(id, name, theme_key, rendered_at)
         )
     `)
         .eq('id', screenId)
@@ -41,6 +42,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
     const activeMedia = activeContent?.media_asset
     const activePlaylist = activeContent?.playlist
     const activeStream = activeContent?.stream
+    const activeMenu = activeContent?.html_menu
 
     // If playlist is active, fetch its first item for preview thumbnail
     let playlistFirstItem: any = null
@@ -86,6 +88,21 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         name: s.name,
         stream_type: s.stream_type,
         audio_enabled: s.audio_enabled,
+    }))
+
+    // Fetch html menus for this client. has_render is exposed so the picker can
+    // gray out menus that haven't been rendered yet (would show blank on the screen).
+    const { data: menusRaw } = await supabase
+        .from('display_html_menus')
+        .select('id, name, theme_key, rendered_html')
+        .eq('client_id', clientId)
+        .order('updated_at', { ascending: false })
+
+    const availableMenus = (menusRaw || []).map((m: any) => ({
+        id: m.id,
+        name: m.name,
+        theme_key: m.theme_key,
+        has_render: !!m.rendered_html,
     }))
 
     const playlists = (playlistsRaw || []).map((p: any) => ({
@@ -189,7 +206,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Content Assignment</h3>
 
                         <div className="mb-4">
-                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} streams={availableStreams} clientId={clientId} />
+                            <MediaPicker screenId={screen.id} assets={mediaAssets || []} playlists={playlists} streams={availableStreams} menus={availableMenus} clientId={clientId} />
                         </div>
 
                         {/* Active content info card */}
@@ -239,7 +256,28 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                             </div>
                         )}
 
-                        {activeMedia && !activePlaylist && !activeStream && (
+                        {activeMenu && (
+                            <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
+                                <div className="h-10 w-10 bg-gradient-to-br from-emerald-900 to-emerald-700 rounded overflow-hidden mr-3 flex items-center justify-center flex-shrink-0">
+                                    <LayoutTemplate className="w-5 h-5 text-amber-300/80" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{(activeMenu as any).name}</p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        HTML menu · <span className="font-mono">{(activeMenu as any).theme_key}</span>
+                                        {(activeMenu as any).rendered_at ? ` · rendered ${new Date((activeMenu as any).rendered_at).toLocaleString()}` : ' · not rendered'}
+                                    </p>
+                                </div>
+                                <Link
+                                    href={`/app/menus/${(activeMenu as any).id}`}
+                                    className="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex-shrink-0"
+                                >
+                                    Edit
+                                </Link>
+                            </div>
+                        )}
+
+                        {activeMedia && !activePlaylist && !activeStream && !activeMenu && (
                             <div className="flex items-center p-3 border border-gray-200 rounded-md bg-gray-50">
                                 <div className="h-10 w-10 bg-gray-200 rounded overflow-hidden mr-3 flex-shrink-0">
                                     <SignedImage path={activeMedia.storage_path} alt="Thumb" className="h-full w-full object-cover" mime={activeMedia.mime} />

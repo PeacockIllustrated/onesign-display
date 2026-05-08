@@ -131,6 +131,8 @@ export async function GET(request: NextRequest) {
             fit_mode: fitMode,
             media: { id: null, url: null, type: null },
             playlist: null,
+            stream: null,
+            html_menu: null,
             next_check: new Date(Date.now() + 60000).toISOString(),
             fetched_at: new Date().toISOString()
         })
@@ -140,6 +142,7 @@ export async function GET(request: NextRequest) {
     let resolvedMediaId: string | null = null
     let resolvedPlaylistId: string | null = null
     let resolvedStreamId: string | null = null
+    let resolvedHtmlMenuId: string | null = null
 
     const { data: resolved } = await supabase
         .rpc('display_resolve_screen_content', {
@@ -151,6 +154,7 @@ export async function GET(request: NextRequest) {
         resolvedMediaId = resolved[0].resolved_media_id
         resolvedPlaylistId = resolved[0].resolved_playlist_id
         resolvedStreamId = resolved[0].resolved_stream_id ?? null
+        resolvedHtmlMenuId = resolved[0].resolved_html_menu_id ?? null
     } else {
         // Fallback to legacy function if new one doesn't exist yet
         const { data: legacyMediaId } = await supabase
@@ -161,12 +165,31 @@ export async function GET(request: NextRequest) {
         resolvedMediaId = legacyMediaId
     }
 
-    // 4. Build response — stream, playlist, or single media mode
+    // 4. Build response — html menu, stream, playlist, or single media mode
     let mediaResponse = { id: null as string | null, url: null as string | null, type: null as string | null }
     let playlistResponse = null
     let streamResponse = null
+    let htmlMenuResponse: { id: string; theme_key: string; rendered_at: string | null; html: string } | null = null
 
-    if (resolvedStreamId) {
+    if (resolvedHtmlMenuId) {
+        // HTML menu mode: ship the cached rendered HTML inline for iframe srcdoc.
+        // Payload typically 15–25 KB. If a future theme exceeds ~250 KB rendered,
+        // switch to "store rendered HTML in storage + signed URL in manifest".
+        const { data: htmlMenu } = await supabase
+            .from('display_html_menus')
+            .select('id, theme_key, rendered_html, rendered_at')
+            .eq('id', resolvedHtmlMenuId)
+            .single()
+
+        if (htmlMenu?.rendered_html) {
+            htmlMenuResponse = {
+                id: htmlMenu.id,
+                theme_key: htmlMenu.theme_key,
+                rendered_at: htmlMenu.rendered_at,
+                html: htmlMenu.rendered_html,
+            }
+        }
+    } else if (resolvedStreamId) {
         // Stream mode: fetch stream config and optional fallback image
         const { data: stream } = await supabase
             .from('display_streams')
@@ -347,6 +370,7 @@ export async function GET(request: NextRequest) {
         media: mediaResponse,
         playlist: playlistResponse,
         stream: streamResponse,
+        html_menu: htmlMenuResponse,
         sync: syncResponse,
         next_check: nextChange ? nextChange.toISOString() : null,
         fetched_at: new Date().toISOString()

@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Upload } from 'lucide-react'
+import { X, Upload, LayoutTemplate } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { registerMediaAsset } from '@/app/app/media/actions'
 import { assignMedia } from '@/app/actions/assign-media'
 import { assignPlaylist } from '@/app/actions/playlist-actions'
 import { assignStream } from '@/app/actions/stream-actions'
+import { assignMenu } from '@/app/actions/menu-actions'
 import { MediaPickerItem } from './media-picker-item'
 import { v4 as uuidv4 } from 'uuid'
 import { Radio } from 'lucide-react'
@@ -32,17 +33,25 @@ type StreamOption = {
     audio_enabled: boolean
 }
 
-export function MediaPicker({ screenId, assets, playlists = [], streams = [], clientId }: {
+type MenuOption = {
+    id: string
+    name: string
+    theme_key: string
+    has_render: boolean
+}
+
+export function MediaPicker({ screenId, assets, playlists = [], streams = [], menus = [], clientId }: {
     screenId: string
     assets: Asset[]
     playlists?: Playlist[]
     streams?: StreamOption[]
+    menus?: MenuOption[]
     clientId?: string
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
-    const [tab, setTab] = useState<'media' | 'playlists' | 'streams' | 'upload'>('media')
+    const [tab, setTab] = useState<'media' | 'playlists' | 'streams' | 'menus' | 'upload'>('media')
     const router = useRouter()
 
     const handleSelectMedia = async (assetId: string) => {
@@ -79,6 +88,20 @@ export function MediaPicker({ screenId, assets, playlists = [], streams = [], cl
         } catch (error) {
             console.error(error)
             alert('Failed to assign stream')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleSelectMenu = async (menuId: string) => {
+        setSaving(true)
+        try {
+            await assignMenu(screenId, menuId)
+            setIsOpen(false)
+            router.refresh()
+        } catch (error) {
+            console.error(error)
+            alert('Failed to assign menu')
         } finally {
             setSaving(false)
         }
@@ -179,6 +202,17 @@ export function MediaPicker({ screenId, assets, playlists = [], streams = [], cl
                         Streams
                     </button>
                 )}
+                {menus.length > 0 && (
+                    <button
+                        onClick={() => setTab('menus')}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1 ${
+                            tab === 'menus' ? 'bg-black text-white' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }`}
+                    >
+                        <LayoutTemplate className="w-3 h-3" />
+                        Menus
+                    </button>
+                )}
                 {clientId && (
                     <button
                         onClick={() => setTab('upload')}
@@ -274,6 +308,38 @@ export function MediaPicker({ screenId, assets, playlists = [], streams = [], cl
                         className="block w-full text-center py-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-dashed border-gray-300 rounded-md hover:border-gray-400 transition-colors"
                     >
                         + Manage Streams
+                    </a>
+                </div>
+            )}
+
+            {/* Menus tab */}
+            {tab === 'menus' && (
+                <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2 max-h-52 overflow-y-auto">
+                        {menus.map(menu => (
+                            <button
+                                key={menu.id}
+                                onClick={() => handleSelectMenu(menu.id)}
+                                disabled={saving || !menu.has_render}
+                                title={!menu.has_render ? 'This menu has not rendered yet — open it in the editor and save once before assigning.' : undefined}
+                                className="bg-white border border-gray-200 rounded-lg p-3 hover:border-gray-400 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                    <LayoutTemplate className="w-3 h-3 text-amber-600" />
+                                    <p className="text-sm font-medium text-gray-900 truncate">{menu.name}</p>
+                                </div>
+                                <p className="text-xs text-gray-500 truncate">
+                                    {menu.theme_key}
+                                    {!menu.has_render && <span className="text-red-500 ml-1">· not rendered</span>}
+                                </p>
+                            </button>
+                        ))}
+                    </div>
+                    <a
+                        href="/app/menus"
+                        className="block w-full text-center py-2 text-xs font-medium text-indigo-600 hover:text-indigo-800 border border-dashed border-gray-300 rounded-md hover:border-gray-400 transition-colors"
+                    >
+                        + Manage Menus
                     </a>
                 </div>
             )}

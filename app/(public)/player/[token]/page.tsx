@@ -36,6 +36,13 @@ type SyncConfig = {
     screen_count: number
 }
 
+type HtmlMenuData = {
+    id: string
+    theme_key: string
+    rendered_at: string | null
+    html: string
+}
+
 type Manifest = {
     screen_id: string
     refresh_version: number
@@ -47,6 +54,7 @@ type Manifest = {
     fit_mode: 'contain' | 'cover'
     playlist: PlaylistData | null
     stream: StreamData | null
+    html_menu: HtmlMenuData | null
     sync: SyncConfig | null
     next_check: string | null
     fetched_at: string
@@ -193,6 +201,66 @@ function VideoSlide({
             onError={onError}
         />
     )
+}
+
+// ── HtmlSlide: themed HTML menu rendered into a sandboxed iframe ──
+// Themes are authored at exactly 1920×1080. We center on a black wrapper
+// and scale via CSS transform (contain or cover) so any screen resolution
+// gets a faithful render — letterboxing on non-16:9 displays is correct.
+
+function HtmlSlide({
+    html,
+    fitMode,
+}: {
+    html: string
+    fitMode: 'contain' | 'cover'
+}) {
+    const [scale, setScale] = useState(() => computeScale(fitMode))
+
+    useEffect(() => {
+        let raf = 0
+        const update = () => setScale(computeScale(fitMode))
+        const onResize = () => {
+            if (raf) cancelAnimationFrame(raf)
+            raf = requestAnimationFrame(update)
+        }
+        window.addEventListener('resize', onResize)
+        update()
+        return () => {
+            window.removeEventListener('resize', onResize)
+            if (raf) cancelAnimationFrame(raf)
+        }
+    }, [fitMode])
+
+    return (
+        <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
+            <div
+                style={{
+                    width: '1920px',
+                    height: '1080px',
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                }}
+            >
+                <iframe
+                    srcDoc={html}
+                    // No allow-scripts: themes are pure CSS for the trial.
+                    // allow-same-origin lets the iframe load Google Fonts.
+                    sandbox="allow-same-origin"
+                    style={{ width: '1920px', height: '1080px', border: 0, display: 'block' }}
+                    title="HTML menu"
+                />
+            </div>
+        </div>
+    )
+}
+
+function computeScale(fitMode: 'contain' | 'cover'): number {
+    if (typeof window === 'undefined') return 1
+    const sx = window.innerWidth / 1920
+    const sy = window.innerHeight / 1080
+    return fitMode === 'cover' ? Math.max(sx, sy) : Math.min(sx, sy)
 }
 
 // ── StreamSlide: HLS/DASH live stream playback ──────────────
@@ -622,8 +690,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             if (!current) return
             try {
                 const playlistId = current.playlist?.id || ''
+                const htmlMenuId = current.html_menu?.id || ''
                 const res = await fetch(
-                    `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}&knownPlaylistId=${playlistId}`
+                    `/api/player/refresh?token=${token}&knownVersion=${current.refresh_version}&knownMediaId=${current.media.id || ''}&knownPlaylistId=${playlistId}&knownHtmlMenuId=${htmlMenuId}`
                 )
                 if (res.status === 429) return
                 if (res.ok) {
@@ -860,7 +929,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     const [initPhase, setInitPhase] = useState<'idle' | 'shrink' | 'draw' | 'fill' | 'done'>('idle')
 
-    const handleStart = () => {
+    const handleStart = useCallback(() => {
         setInitPhase('shrink')
         setTimeout(() => setInitPhase('draw'), 300)
         setTimeout(() => setInitPhase('fill'), 1500)
@@ -869,7 +938,19 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             setIsPlaying(true)
             toggleFullscreen()
         }, 2000)
-    }
+    }, [])
+
+    // Smart-TV remote support: TV browsers (Tizen, WebOS, AOSP stock) don't have
+    // a cursor, so onClick on the splash never fires. Any keydown — OK/Enter,
+    // arrow keys, MediaPlay, you name it — counts as a user gesture for the
+    // browser's autoplay policy, so we treat it as a click. { once: true } so
+    // a stuck remote can't fire handleStart twice.
+    useEffect(() => {
+        if (isPlaying || initPhase !== 'idle' || !manifest) return
+        const startOnKey = () => handleStart()
+        window.addEventListener('keydown', startOnKey, { once: true })
+        return () => window.removeEventListener('keydown', startOnKey)
+    }, [isPlaying, initPhase, manifest, handleStart])
 
     // Content fit mode from manifest
     const fitClass = manifest?.fit_mode === 'cover' ? 'object-cover' : 'object-contain'
@@ -908,7 +989,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                     </svg>
                 </div>
                 <h1 className="text-2xl font-bold tracking-widest uppercase mb-2 text-center">Onesign Display</h1>
-                <p className="text-gray-400 text-sm text-center">Tap screen to initialize display</p>
+                <p className="text-gray-400 text-sm text-center">Tap screen or press any remote button to start</p>
             </div>
 
             {/* OD icon animation — appears after play shrinks */}
@@ -1092,6 +1173,24 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         onLoad={onGpuReady}
                         onError={isVisible ? handleMediaError : undefined}
                     />
+                )}
+            </div>
+        )
+    }
+
+    // ── Render: HTML menu mode ───────────────────────────────
+
+    if (manifest?.html_menu?.html) {
+        return (
+            <div
+                onClick={toggleFullscreen}
+                className="bg-black h-screen w-screen overflow-hidden relative"
+                style={{ cursor: cursorHidden ? 'none' : 'pointer' }}
+            >
+                <NeverSleepGuard active={true} />
+                <HtmlSlide html={manifest.html_menu.html} fitMode={manifest.fit_mode} />
+                {error && (
+                    <div className="absolute bottom-4 right-4 bg-red-600 text-white px-2 py-1 text-xs rounded opacity-50">Offline</div>
                 )}
             </div>
         )

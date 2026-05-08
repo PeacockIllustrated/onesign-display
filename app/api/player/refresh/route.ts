@@ -8,6 +8,14 @@ export async function GET(request: NextRequest) {
     const knownVersion = searchParams.get('knownVersion')
     const knownMediaId = searchParams.get('knownMediaId')
     const knownPlaylistId = searchParams.get('knownPlaylistId')
+    // knownHtmlMenuId is new — safe to compare because old kiosks (running the
+    // pre-html-menus bundle) are by definition on screens with no html_menu
+    // assigned, so the resolved value will also be empty and no spurious
+    // refresh fires. We deliberately do NOT introduce knownStreamId here:
+    // old kiosks don't send it, and adding the comparison would force a
+    // pointless extra /manifest call per minute on every existing stream-mode
+    // screen until those kiosks reload.
+    const knownHtmlMenuId = searchParams.get('knownHtmlMenuId')
 
     if (!token || token.length > 255) {
         return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
@@ -47,9 +55,11 @@ export async function GET(request: NextRequest) {
         if (resolved && resolved.length > 0) {
             const currentMediaId = resolved[0].resolved_media_id || ''
             const currentPlaylistId = resolved[0].resolved_playlist_id || ''
+            const currentHtmlMenuId = resolved[0].resolved_html_menu_id || ''
 
             if (currentMediaId !== (knownMediaId || '')) shouldRefresh = true
             if (currentPlaylistId !== (knownPlaylistId || '')) shouldRefresh = true
+            if (currentHtmlMenuId !== (knownHtmlMenuId || '')) shouldRefresh = true
         } else {
             // Fallback to legacy function
             const { data: resolvedMediaId } = await supabase.rpc('display_resolve_screen_media', {
