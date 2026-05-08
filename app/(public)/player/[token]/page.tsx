@@ -248,7 +248,11 @@ function HtmlSlide({
                     // No allow-scripts: themes are pure CSS for the trial.
                     // allow-same-origin lets the iframe load Google Fonts.
                     sandbox="allow-same-origin"
-                    style={{ width: '1920px', height: '1080px', border: 0, display: 'block' }}
+                    // tabIndex=-1 keeps the iframe out of the TV remote's focus
+                    // ring so smart-TV browsers don't draw a focus outline
+                    // around the menu when the user presses OK to init.
+                    tabIndex={-1}
+                    style={{ width: '1920px', height: '1080px', border: 0, display: 'block', outline: 'none' }}
                     title="HTML menu"
                 />
             </div>
@@ -406,6 +410,8 @@ function StreamSlide({
                 className="w-full h-full border-0"
                 allow="autoplay; encrypted-media; fullscreen"
                 sandbox="allow-scripts allow-same-origin"
+                tabIndex={-1}
+                style={{ outline: 'none' }}
             />
         )
     }
@@ -937,6 +943,15 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             setInitPhase('done')
             setIsPlaying(true)
             toggleFullscreen()
+            // Smart-TV browsers move focus to whatever element handled the OK
+            // press, leaving a visible focus outline around the iframe / video.
+            // Blur the active element so nothing is focused once playback
+            // starts. Doing it on a microtask after the state flush so React
+            // has rendered the player surface first.
+            queueMicrotask(() => {
+                const el = document.activeElement as HTMLElement | null
+                if (el && typeof el.blur === 'function' && el !== document.body) el.blur()
+            })
         }, 2000)
     }, [])
 
@@ -951,6 +966,25 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         window.addEventListener('keydown', startOnKey, { once: true })
         return () => window.removeEventListener('keydown', startOnKey)
     }, [isPlaying, initPhase, manifest, handleStart])
+
+    // Suppress browser focus outlines for the duration of the player route.
+    // Smart-TV browsers (Tizen, WebOS, FireTV stock) draw a thick blue/yellow
+    // focus ring around whatever last received focus — the iframe, the video,
+    // the wrapper div. The kiosk is non-interactive once playing, so any focus
+    // ring is just visual noise. Scoped to the player route via a single
+    // <style> tag in the document head; cleaned up on unmount.
+    useEffect(() => {
+        const styleEl = document.createElement('style')
+        styleEl.dataset.player = 'no-focus-outline'
+        styleEl.textContent = `
+            html, body { outline: none !important; }
+            *:focus, *:focus-visible { outline: none !important; box-shadow: none !important; }
+        `
+        document.head.appendChild(styleEl)
+        return () => {
+            styleEl.remove()
+        }
+    }, [])
 
     // Content fit mode from manifest
     const fitClass = manifest?.fit_mode === 'cover' ? 'object-cover' : 'object-contain'
