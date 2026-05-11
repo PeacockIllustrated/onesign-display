@@ -117,6 +117,16 @@ async function main() {
     });
     await writePng(storeIconLarge, path.join(OUT_STORE, "store-icon-square.png"));
 
+    // 5b. High-resolution 1024x1024 — for LG Seller Lounge fields that require ≥400px
+    const storeIcon1024Art = await renderSvg(SRC_ICON_LIGHT, 720, 720);
+    const storeIcon1024 = await compose({
+        width: 1024,
+        height: 1024,
+        background: hexToRgba(BRAND_TEAL_DEEP),
+        layers: [{ buffer: storeIcon1024Art, top: 152, left: 152 }],
+    });
+    await writePng(storeIcon1024, path.join(OUT_STORE, "store-icon-1024.png"));
+
     // 6. Store tile — 800x450 with wordmark centered on brand-teal
     const tileWordmark = await renderSvg(SRC_WORDMARK_LIGHT, 500, 145);
     const storeTile = await compose({
