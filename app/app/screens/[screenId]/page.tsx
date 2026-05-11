@@ -5,6 +5,7 @@ import { SignedImage } from '@/components/ui/signed-image'
 import { MediaPicker } from '@/components/portal/media-picker'
 import { EmptyScreenPreview } from '@/components/portal/empty-screen-preview'
 import { ScreenSettingsForm } from '@/components/admin/screen-settings-form'
+import { ScreenEventTimeline } from '@/components/portal/screen-event-timeline'
 import { ListVideo, Radio, Volume2, VolumeX, LayoutTemplate } from 'lucide-react'
 
 export default async function ScreenDetailPage({ params }: { params: Promise<{ screenId: string }> }) {
@@ -291,7 +292,7 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                     </div>
                 </div>
 
-                {/* Right Column: Settings */}
+                {/* Right Column: Settings + Activity */}
                 <div className="space-y-6">
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
@@ -311,6 +312,8 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                             </div>
                         )}
                     </div>
+
+                    <ScreenEventTimeline screenId={screenId} />
                 </div>
             </div>
         </div>

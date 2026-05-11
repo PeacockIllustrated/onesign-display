@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { CreateClientButton } from '@/components/admin/create-client-button'
 import { StatCard } from '@/components/portal/stat-card'
 import { ScreenStatusPanel } from '@/components/portal/screen-status-panel'
+import { ActivityFeed } from '@/components/portal/activity-feed'
 import { Users, Monitor, Wifi, UserPlus, Image, Calendar, CreditCard } from 'lucide-react'
 
 async function SuperAdminDashboard() {
@@ -95,8 +96,11 @@ async function SuperAdminDashboard() {
                 />
             </div>
 
-            {/* Screen Health */}
-            <ScreenStatusPanel screens={screenStatusData} title="Screen Health" />
+            {/* Screen Health + Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ScreenStatusPanel screens={screenStatusData} title="Screen Health" />
+                <ActivityFeed />
+            </div>
 
             {/* Client Quick Access */}
             <div>
@@ -216,8 +220,11 @@ async function ClientAdminDashboard() {
                 />
             </div>
 
-            {/* Screen Status */}
-            <ScreenStatusPanel screens={allScreens} title="Screen Status" />
+            {/* Screen Status + Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ScreenStatusPanel screens={allScreens} title="Screen Status" />
+                <ActivityFeed />
+            </div>
 
             {/* Store Quick Access */}
             <div>
