@@ -9,7 +9,9 @@
     "lint": "eslint",
     "lg:assets": "node scripts/generate-lg-assets.mjs",
     "lg:verify": "node scripts/verify-lg-submission.mjs",
-    "lg:package": "ares-package webos-app -o dist/"
+    "lg:package": "ares-package webos-app -o dist/",
+    "tv:pair": "python scripts/tv-pair.py",
+    "tv:keepalive": "python scripts/tv-keepalive.py"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

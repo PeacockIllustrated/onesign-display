@@ -40,3 +40,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# LG TV control — contains persistent client_keys that grant network
+# control of paired TVs. Treat as credentials.
+webos-tv-keys.json
+
+# Built LG webOS .ipk packages (rebuild with `npm run lg:package`)
+/dist/
+
+# Claude Code worktree state (session-local, never committed)
+.claude/
