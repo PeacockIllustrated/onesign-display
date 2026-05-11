@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ScreenStatusPanel } from './screen-status-panel'
 
@@ -25,6 +25,7 @@ export function ScreenStatusPanelLive({
     showAllLink?: string
 }) {
     const [screens, setScreens] = useState<ScreenInfo[]>(initial)
+    const instanceId = useId()
 
     // If the initial prop changes (server re-renders for any reason), reset.
     useEffect(() => {
@@ -37,7 +38,7 @@ export function ScreenStatusPanelLive({
         const screenIds = new Set(initial.map(s => s.id))
 
         const channel = supabase
-            .channel('screen-status-live')
+            .channel(`screen-status-live:${instanceId}`)
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'display_screens' },
@@ -65,7 +66,7 @@ export function ScreenStatusPanelLive({
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [initial])
+    }, [initial, instanceId])
 
     return <ScreenStatusPanel screens={screens} title={title} showAllLink={showAllLink} />
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EventRow } from './event-row'
 import type { EventSeverity, ScreenEvent } from '@/lib/event-formatting'
@@ -30,12 +30,13 @@ export function ActivityFeedLive({
     title: string
 }) {
     const [events, setEvents] = useState<ActivityFeedItem[]>(initial)
+    const instanceId = useId()
 
     useEffect(() => {
         const supabase = createClient()
 
         const channel = supabase
-            .channel('screen-events-feed')
+            .channel(`screen-events-feed:${instanceId}`)
             .on(
                 'postgres_changes',
                 { event: 'INSERT', schema: 'public', table: 'display_screen_events' },
@@ -77,7 +78,7 @@ export function ActivityFeedLive({
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [limit])
+    }, [limit, instanceId])
 
     return (
         <div className="bg-white rounded-lg border border-zinc-200 shadow-sm">

@@ -364,7 +364,7 @@ export async function assignPlaylist(screenId: string, playlistId: string) {
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
 
-    await logContentAssigned(supabase, screenId, 'playlist', playlistId, user.id)
+    await logContentAssigned(screenId, 'playlist', playlistId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }

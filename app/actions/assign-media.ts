@@ -64,7 +64,7 @@ export async function assignMedia(screenId: string, mediaAssetId: string) {
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
 
-    await logContentAssigned(supabase, screenId, 'media', mediaAssetId, user.id)
+    await logContentAssigned(screenId, 'media', mediaAssetId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }

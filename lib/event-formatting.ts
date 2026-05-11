@@ -54,13 +54,13 @@ export function summariseDetails(eventType: string, details: Record<string, unkn
     switch (eventType) {
         case 'online':
             if (typeof d.gap_ms === 'number') {
-                const mins = Math.round(d.gap_ms / 60000)
+                const mins = Math.floor(d.gap_ms / 60000)
                 return mins > 0 ? `after ${mins}m offline` : null
             }
             return null
         case 'offline':
             if (typeof d.duration_online_ms === 'number') {
-                const mins = Math.round(d.duration_online_ms / 60000)
+                const mins = Math.floor(d.duration_online_ms / 60000)
                 return mins > 0 ? `was online for ${mins}m` : null
             }
             return null

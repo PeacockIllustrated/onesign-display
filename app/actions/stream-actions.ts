@@ -151,7 +151,7 @@ export async function assignStream(screenId: string, streamId: string) {
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
 
-    await logContentAssigned(supabase, screenId, 'stream', streamId, user.id)
+    await logContentAssigned(screenId, 'stream', streamId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }

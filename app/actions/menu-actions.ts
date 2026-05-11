@@ -73,7 +73,7 @@ export async function assignMenu(screenId: string, menuId: string) {
   const newVersion = (screen.refresh_version || 0) + 1
   await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
 
-  await logContentAssigned(supabase, screenId, 'html_menu', menuId, user.id)
+  await logContentAssigned(screenId, 'html_menu', menuId, user.id)
 
   revalidatePath(`/app/screens/${screenId}`, 'page')
 }

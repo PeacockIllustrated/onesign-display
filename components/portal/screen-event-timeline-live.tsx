@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EventRow } from './event-row'
 import type { EventSeverity, ScreenEvent } from '@/lib/event-formatting'
@@ -24,12 +24,13 @@ export function ScreenEventTimelineLive({
     limit?: number
 }) {
     const [events, setEvents] = useState<ScreenEvent[]>(initial)
+    const instanceId = useId()
 
     useEffect(() => {
         const supabase = createClient()
 
         const channel = supabase
-            .channel(`screen-events-${screenId}`)
+            .channel(`screen-events-${screenId}:${instanceId}`)
             .on(
                 'postgres_changes',
                 {
@@ -58,7 +59,7 @@ export function ScreenEventTimelineLive({
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [screenId, limit])
+    }, [screenId, limit, instanceId])
 
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm">

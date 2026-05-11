@@ -5,10 +5,15 @@ import { rateLimit } from '@/lib/rate-limit'
 const OFFLINE_GAP_MS = 3 * 60 * 1000
 
 export async function POST(request: NextRequest) {
-    const body = await request.json()
-    const { token, display_type, viewport } = body
+    let body: any
+    try {
+        body = await request.json()
+    } catch {
+        return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
+    }
+    const { token, display_type, viewport } = body ?? {}
 
-    if (!token || token.length > 255) {
+    if (!token || typeof token !== 'string' || token.length > 255) {
         return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
     }
 
