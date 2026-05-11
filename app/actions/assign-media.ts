@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logContentAssigned } from '@/lib/screen-events'
 
 export async function assignMedia(screenId: string, mediaAssetId: string) {
     const supabase = await createClient()
@@ -62,6 +63,8 @@ export async function assignMedia(screenId: string, mediaAssetId: string) {
     // 3. Atomic refresh version increment
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
+
+    await logContentAssigned(screenId, 'media', mediaAssetId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }

@@ -3,13 +3,9 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { CreateClientButton } from '@/components/admin/create-client-button'
 import { StatCard } from '@/components/portal/stat-card'
-import { ScreenStatusPanel } from '@/components/portal/screen-status-panel'
+import { ScreenStatusPanelLive } from '@/components/portal/screen-status-panel-live'
+import { ActivityFeed } from '@/components/portal/activity-feed'
 import { Users, Monitor, Wifi, UserPlus, Image, Calendar, CreditCard } from 'lucide-react'
-
-function isOnline(lastSeenAt: string | null): boolean {
-    if (!lastSeenAt) return false
-    return Date.now() - new Date(lastSeenAt).getTime() < 5 * 60 * 1000
-}
 
 async function SuperAdminDashboard() {
     const supabase = await createClient()
@@ -17,7 +13,7 @@ async function SuperAdminDashboard() {
     // Fetch all stats in parallel
     const [clientsRes, screensRes, prospectsRes, clientsDetailRes] = await Promise.all([
         supabase.from('display_clients').select('*', { count: 'exact', head: true }),
-        supabase.from('display_screens').select('id, name, last_seen_at, store_id, screen_set_id'),
+        supabase.from('display_screens').select('id, name, last_seen_at, current_status, status_changed_at, store_id, screen_set_id'),
         supabase.from('display_prospects').select('*', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('display_clients').select('id, name, slug, display_stores(count)').order('created_at', { ascending: false }),
     ])
@@ -25,7 +21,7 @@ async function SuperAdminDashboard() {
     const totalClients = clientsRes.count ?? 0
     const allScreens = screensRes.data ?? []
     const totalScreens = allScreens.length
-    const onlineScreens = allScreens.filter(s => isOnline(s.last_seen_at)).length
+    const onlineScreens = allScreens.filter(s => s.current_status === 'online').length
     const offlineScreens = totalScreens - onlineScreens
     const newProspects = prospectsRes.count ?? 0
     const clients = clientsDetailRes.data ?? []
@@ -57,6 +53,8 @@ async function SuperAdminDashboard() {
         id: s.id,
         name: s.name,
         last_seen_at: s.last_seen_at,
+        current_status: s.current_status,
+        status_changed_at: s.status_changed_at,
         store_name: storeMap[s.store_id] || 'Unknown Store',
         screen_set_name: setMap[s.screen_set_id] || 'Unknown Set',
     }))
@@ -98,8 +96,11 @@ async function SuperAdminDashboard() {
                 />
             </div>
 
-            {/* Screen Health */}
-            <ScreenStatusPanel screens={screenStatusData} title="Screen Health" />
+            {/* Screen Health + Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ScreenStatusPanelLive initial={screenStatusData} title="Screen Health" />
+                <ActivityFeed />
+            </div>
 
             {/* Client Quick Access */}
             <div>
@@ -148,7 +149,7 @@ async function ClientAdminDashboard() {
     const [storesRes, mediaRes, schedulesRes] = await Promise.all([
         supabase
             .from('display_stores')
-            .select('id, name, display_screen_sets(id, name, display_screens(id, name, last_seen_at))')
+            .select('id, name, display_screen_sets(id, name, display_screens(id, name, last_seen_at, current_status, status_changed_at))')
             .eq('client_id', clientId)
             .order('name'),
         supabase.from('display_media_assets').select('*', { count: 'exact', head: true }).eq('client_id', clientId),
@@ -164,7 +165,7 @@ async function ClientAdminDashboard() {
     const activeSchedules = schedulesRes.data?.length ?? 0
 
     // Flatten screens for stats and status panel
-    const allScreens: { id: string; name: string; last_seen_at: string | null; store_name: string; screen_set_name: string }[] = []
+    const allScreens: { id: string; name: string; last_seen_at: string | null; current_status: string; status_changed_at: string | null; store_name: string; screen_set_name: string }[] = []
     stores.forEach(store => {
         const sets = (store.display_screen_sets as any[]) ?? []
         sets.forEach(set => {
@@ -174,6 +175,8 @@ async function ClientAdminDashboard() {
                     id: screen.id,
                     name: screen.name,
                     last_seen_at: screen.last_seen_at,
+                    current_status: screen.current_status ?? 'never_connected',
+                    status_changed_at: screen.status_changed_at,
                     store_name: store.name,
                     screen_set_name: set.name,
                 })
@@ -182,7 +185,7 @@ async function ClientAdminDashboard() {
     })
 
     const totalScreens = allScreens.length
-    const onlineScreens = allScreens.filter(s => isOnline(s.last_seen_at)).length
+    const onlineScreens = allScreens.filter(s => s.current_status === 'online').length
     const offlineScreens = totalScreens - onlineScreens
 
     return (
@@ -217,8 +220,11 @@ async function ClientAdminDashboard() {
                 />
             </div>
 
-            {/* Screen Status */}
-            <ScreenStatusPanel screens={allScreens} title="Screen Status" />
+            {/* Screen Status + Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <ScreenStatusPanelLive initial={allScreens} title="Screen Status" />
+                <ActivityFeed />
+            </div>
 
             {/* Store Quick Access */}
             <div>

@@ -2,11 +2,6 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { CheckCircle2 } from 'lucide-react'
 
-function isOnline(lastSeenAt: string | null): boolean {
-    if (!lastSeenAt) return false
-    return Date.now() - new Date(lastSeenAt).getTime() < 5 * 60 * 1000
-}
-
 function timeAgo(dateStr: string): string {
     const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
     if (seconds < 60) return 'just now'
@@ -19,6 +14,8 @@ type ScreenInfo = {
     id: string
     name: string
     last_seen_at: string | null
+    current_status: string
+    status_changed_at: string | null
     content_name?: string | null
     store_name: string
     screen_set_name: string
@@ -35,16 +32,16 @@ export function ScreenStatusPanel({
 }) {
     // Sort: offline first, then by store/screen set
     const sorted = [...screens].sort((a, b) => {
-        const aOnline = isOnline(a.last_seen_at)
-        const bOnline = isOnline(b.last_seen_at)
+        const aOnline = a.current_status === 'online'
+        const bOnline = b.current_status === 'online'
         if (aOnline !== bOnline) return aOnline ? 1 : -1
         return `${a.store_name}${a.screen_set_name}${a.name}`.localeCompare(
             `${b.store_name}${b.screen_set_name}${b.name}`
         )
     })
 
-    const allOnline = screens.length > 0 && screens.every(s => isOnline(s.last_seen_at))
-    const offlineCount = screens.filter(s => !isOnline(s.last_seen_at)).length
+    const allOnline = screens.length > 0 && screens.every(s => s.current_status === 'online')
+    const offlineCount = screens.filter(s => s.current_status !== 'online').length
 
     return (
         <div className="bg-white rounded-lg border border-zinc-200 shadow-sm">
@@ -76,7 +73,14 @@ export function ScreenStatusPanel({
             ) : (
                 <div className="divide-y divide-zinc-50">
                     {sorted.map((screen) => {
-                        const online = isOnline(screen.last_seen_at)
+                        const online = screen.current_status === 'online'
+                        const sinceLabel = online
+                            ? (screen.last_seen_at ? timeAgo(screen.last_seen_at) : 'just now')
+                            : (screen.status_changed_at
+                                ? `offline ${timeAgo(screen.status_changed_at)}`
+                                : screen.last_seen_at
+                                    ? timeAgo(screen.last_seen_at)
+                                    : 'Never seen')
                         return (
                             <Link
                                 key={screen.id}
@@ -103,7 +107,7 @@ export function ScreenStatusPanel({
                                         {online ? 'Online' : 'Offline'}
                                     </p>
                                     <p className="text-[10px] text-zinc-400">
-                                        {screen.last_seen_at ? timeAgo(screen.last_seen_at) : 'Never seen'}
+                                        {sinceLabel}
                                     </p>
                                 </div>
                                 {screen.content_name && (

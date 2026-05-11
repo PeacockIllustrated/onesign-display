@@ -487,6 +487,25 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const HEARTBEAT_INTERVAL_MS = 60000
     const MAX_RETRY_DELAY_MS = 120000
 
+    // Fire-and-forget event reporter. MUST NOT throw, MUST NOT block.
+    // If the network is down the POST will fail silently — that's fine; the
+    // point of this telemetry is best-effort visibility, never to gate playback.
+    const reportEvent = useCallback((
+        event_type: 'media_load_failed' | 'manifest_fetch_failed' | 'playback_started',
+        details?: Record<string, unknown>,
+    ) => {
+        try {
+            fetch('/api/player/event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, event_type, details: details ?? {} }),
+                keepalive: true,
+            }).catch(() => {})
+        } catch {
+            // Defensive: even constructing the request must never throw out.
+        }
+    }, [token])
+
     // ── Clean playlist: filter out null-URL items (BUG 7 defense-in-depth) ──
     const cleanPlaylist = useMemo(() => {
         const pl = manifest?.playlist
@@ -612,15 +631,28 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             if (res.status === 429) return
             if (res.status >= 400 && res.status < 500) {
                 if (!manifestRef.current) setError('Invalid token')
+                reportEvent('manifest_fetch_failed', { status: res.status })
                 return
             }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`)
+            if (!res.ok) {
+                reportEvent('manifest_fetch_failed', { status: res.status })
+                throw new Error(`HTTP ${res.status}`)
+            }
             const data = await res.json()
+            const priorMediaId = manifestRef.current?.media?.id ?? null
             setManifest(data)
             setError(null)
             setMediaError(false)
             retryCountRef.current = 0
             localStorage.setItem(`onesign_manifest_${token}`, JSON.stringify(data))
+            const newMediaId = data?.media?.id ?? null
+            if (newMediaId && newMediaId !== priorMediaId) {
+                reportEvent('playback_started', {
+                    media_id: newMediaId,
+                    playlist_id: data?.playlist?.id ?? null,
+                    refresh_version: data?.refresh_version ?? null,
+                })
+            }
         } catch (err) {
             retryCountRef.current++
             if (!manifestRef.current) {
@@ -633,7 +665,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 setTimeout(() => fetchData(), delay)
             }
         }
-    }, [token])
+    }, [token, reportEvent])
 
     // Schedule precision refresh
     useEffect(() => {
@@ -826,8 +858,14 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     const handleMediaError = useCallback(() => {
         setMediaError(true)
+        const m = manifestRef.current
+        reportEvent('media_load_failed', {
+            media_id: m?.media?.id ?? null,
+            url: m?.media?.url ?? null,
+            playlist_id: m?.playlist?.id ?? null,
+        })
         setTimeout(() => fetchData(), 2000)
-    }, [fetchData])
+    }, [fetchData, reportEvent])
 
     // Fullscreen
     useEffect(() => {

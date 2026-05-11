@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/screen-status",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/prune-events",
+      "schedule": "0 3 * * *"
+    }
+  ]
+}

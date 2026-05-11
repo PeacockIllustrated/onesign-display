@@ -66,8 +66,14 @@ create table public.display_screens (
   player_token text unique,
   refresh_version bigint default 0,
   last_seen_at timestamptz,
+  current_status text
+    check (current_status in ('online','offline','error','never_connected'))
+    default 'never_connected' not null,
+  status_changed_at timestamptz,
   created_at timestamptz default now()
 );
+
+create index idx_display_screens_status on public.display_screens (current_status);
 
 -- Media Assets
 create table public.display_media_assets (
@@ -135,7 +141,7 @@ create table public.display_streams (
   updated_at timestamptz default now()
 );
 
--- Audit Log
+-- Audit Log (user-driven actions on entities)
 create table public.display_audit_log (
   id uuid primary key default gen_random_uuid(),
   actor_id uuid references auth.users(id) on delete set null,
@@ -147,6 +153,22 @@ create table public.display_audit_log (
   details jsonb,
   created_at timestamptz default now()
 );
+
+-- Screen Events (device telemetry: connectivity transitions + player-reported errors)
+create table public.display_screen_events (
+  id uuid primary key default gen_random_uuid(),
+  screen_id uuid references public.display_screens(id) on delete cascade not null,
+  event_type text not null,
+  severity text not null default 'info' check (severity in ('info','warning','error')),
+  details jsonb,
+  created_at timestamptz default now()
+);
+
+create index idx_screen_events_screen_time
+  on public.display_screen_events (screen_id, created_at desc);
+create index idx_screen_events_severity_time
+  on public.display_screen_events (created_at desc)
+  where severity in ('warning','error');
 
 -- ============================================================
 -- 3. SPECIALS STUDIO TABLES
@@ -240,6 +262,7 @@ alter table display_screen_content enable row level security;
 alter table display_schedules enable row level security;
 alter table display_scheduled_screen_content enable row level security;
 alter table display_audit_log enable row level security;
+alter table display_screen_events enable row level security;
 alter table display_streams enable row level security;
 alter table display_specials_projects enable row level security;
 alter table display_specials_templates enable row level security;
@@ -366,6 +389,23 @@ create policy "display: View streams" on display_streams for select using (
 create policy "display: Manage streams" on display_streams for all using (
   client_id = (select client_id from display_get_user_role())
   or (select role from display_get_user_role()) = 'super_admin'
+);
+
+-- Audit Log (read-only for the relevant client; writes go through service role in server actions)
+create policy "display: View audit_log" on display_audit_log for select using (
+  (select role from display_get_user_role()) = 'super_admin'
+  or client_id = (select client_id from display_get_user_role())
+);
+
+-- Screen Events (read-only for the relevant client; writes go through service role)
+create policy "display: View screen_events" on display_screen_events for select using (
+  (select role from display_get_user_role()) = 'super_admin'
+  or exists (
+    select 1 from display_screens sc
+    join display_stores st on st.id = sc.store_id
+    where sc.id = display_screen_events.screen_id
+      and st.client_id = (select client_id from display_get_user_role())
+  )
 );
 
 -- ============================================================
