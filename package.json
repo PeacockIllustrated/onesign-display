@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "lg:assets": "node scripts/generate-lg-assets.mjs",
+    "lg:verify": "node scripts/verify-lg-submission.mjs",
+    "lg:package": "ares-package webos-app -o dist/"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",

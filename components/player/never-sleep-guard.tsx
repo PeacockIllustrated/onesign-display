@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 
 export function NeverSleepGuard({ active }: { active: boolean }) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    const videoRef = useRef<HTMLVideoElement>(null)
 
     // 1. Silent Audio Heartbeat — primary anti-sleep mechanism
     useEffect(() => {
@@ -86,6 +87,41 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
         }
     }, [active])
 
+    // 3. Media Session API — declares "playing" at OS API level (separate
+    //    signal pathway from Web Audio output; some TV OSes monitor this
+    //    independently of whether audio is actually flowing).
+    useEffect(() => {
+        if (!active) return
+        if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return
+
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Onesign Display',
+                artist: 'Onesign & Digital',
+            })
+            navigator.mediaSession.playbackState = 'playing'
+            const noop = () => {}
+            navigator.mediaSession.setActionHandler('play', noop)
+            navigator.mediaSession.setActionHandler('pause', noop)
+        } catch (e) {
+            console.warn('[Guard] Media Session unavailable', e)
+        }
+
+        return () => {
+            try {
+                navigator.mediaSession.playbackState = 'none'
+                navigator.mediaSession.metadata = null
+            } catch {}
+        }
+    }, [active])
+
+    // 4. Hidden looping <video> — distinct HTMLMediaElement signal that hits
+    //    the OS media pipeline (different code path from Web Audio oscillator).
+    useEffect(() => {
+        if (!active || !videoRef.current) return
+        videoRef.current.play().catch(() => {})
+    }, [active])
+
     if (!active) return null
 
     return (
@@ -101,6 +137,14 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
             zIndex: -1
         }}>
             <canvas ref={canvasRef} />
+            <video
+                ref={videoRef}
+                src="/silent.mp4"
+                muted
+                playsInline
+                loop
+                preload="auto"
+            />
         </div>
     )
 }

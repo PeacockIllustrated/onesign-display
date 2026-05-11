@@ -839,7 +839,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         else document.exitFullscreen().catch(() => {})
     }
 
-    // Wake Lock
+    // Wake Lock — request on play, re-acquire on tab visible, and poll every
+    // 5 minutes for silent OS releases (TVs drop wake locks under memory
+    // pressure without firing the release event).
     useEffect(() => {
         let wakeLock: any = null
         const requestWakeLock = async () => {
@@ -850,8 +852,56 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         if (isPlaying) requestWakeLock()
         const handleVisibility = () => { if (document.visibilityState === 'visible' && isPlaying) requestWakeLock() }
         document.addEventListener('visibilitychange', handleVisibility)
-        return () => { if (wakeLock) wakeLock.release(); document.removeEventListener('visibilitychange', handleVisibility) }
+        const reacquireTimer = setInterval(() => {
+            if (isPlaying && (!wakeLock || wakeLock.released)) requestWakeLock()
+        }, 5 * 60 * 1000)
+        return () => {
+            clearInterval(reacquireTimer)
+            if (wakeLock) wakeLock.release()
+            document.removeEventListener('visibilitychange', handleVisibility)
+        }
     }, [isPlaying])
+
+    // Full-page reload watchdog — last-resort recovery for JS heap leaks,
+    // render-loop death, HTML-menu stalls. If the manifest hasn't refreshed
+    // successfully in 15 minutes the page reloads itself. Independent of
+    // the video-stall watchdog which only catches frozen <video> elements.
+    const lastManifestSuccessRef = useRef(Date.now())
+    useEffect(() => {
+        if (manifest?.fetched_at) lastManifestSuccessRef.current = Date.now()
+    }, [manifest?.fetched_at])
+
+    useEffect(() => {
+        if (!isPlaying) return
+        const STALE_THRESHOLD_MS = 15 * 60 * 1000
+        const timer = setInterval(() => {
+            if (Date.now() - lastManifestSuccessRef.current > STALE_THRESHOLD_MS) {
+                console.warn('[Player] No manifest fetch in 15min — forcing reload')
+                location.reload()
+            }
+        }, 60_000)
+        return () => clearInterval(timer)
+    }, [isPlaying])
+
+    // Network state — refetch immediately when connectivity returns rather
+    // than waiting up to 60s for the next poll cycle.
+    useEffect(() => {
+        if (!isPlaying) return
+        const handleOnline = () => {
+            console.log('[Player] Network restored — refetching manifest')
+            fetchData()
+        }
+        const handleOffline = () => {
+            console.log('[Player] Network lost')
+            if (!manifestRef.current) setError('Offline')
+        }
+        window.addEventListener('online', handleOnline)
+        window.addEventListener('offline', handleOffline)
+        return () => {
+            window.removeEventListener('online', handleOnline)
+            window.removeEventListener('offline', handleOffline)
+        }
+    }, [isPlaying, fetchData])
 
     // Cursor hide
     useEffect(() => {
