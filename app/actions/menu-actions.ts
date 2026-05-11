@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logContentAssigned } from '@/lib/screen-events'
 
 export async function renameMenu(menuId: string, name: string) {
   const supabase = await createClient()
@@ -71,6 +72,8 @@ export async function assignMenu(screenId: string, menuId: string) {
 
   const newVersion = (screen.refresh_version || 0) + 1
   await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
+
+  await logContentAssigned(supabase, screenId, 'html_menu', menuId, user.id)
 
   revalidatePath(`/app/screens/${screenId}`, 'page')
 }

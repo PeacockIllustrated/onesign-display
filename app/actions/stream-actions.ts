@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { logContentAssigned } from '@/lib/screen-events'
 import { revalidatePath } from 'next/cache'
 
 export async function createStream(
@@ -149,6 +150,8 @@ export async function assignStream(screenId: string, streamId: string) {
     // 3. Atomic refresh version increment
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
+
+    await logContentAssigned(supabase, screenId, 'stream', streamId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }

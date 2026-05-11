@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { logContentAssigned } from '@/lib/screen-events'
 
 // ── Helpers ──────────────────────────────────────────────────
 
@@ -362,6 +363,8 @@ export async function assignPlaylist(screenId: string, playlistId: string) {
     // Bump refresh version
     const newVersion = (screen.refresh_version || 0) + 1
     await supabase.from('display_screens').update({ refresh_version: newVersion }).eq('id', screenId)
+
+    await logContentAssigned(supabase, screenId, 'playlist', playlistId, user.id)
 
     revalidatePath(`/app/screens/${screenId}`, 'page')
 }
