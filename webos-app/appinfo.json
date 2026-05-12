@@ -1,0 +1,20 @@
+{
+    "id": "com.onesignanddigital.display",
+    "version": "1.0.0",
+    "vendor": "Onesign & Digital",
+    "type": "web",
+    "main": "index.html",
+    "title": "Onesign Display",
+    "appDescription": "Stream your menus to LG TVs — managed remotely from the Onesign Display dashboard.",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "iconColor": "#4e7e8c",
+    "splashBackground": "splashBackground.png",
+    "resolution": "1920x1080",
+    "uiRevision": "2",
+    "disableBackHistoryAPI": true,
+    "handlesRelaunch": true,
+    "supportTouchMode": "none",
+    "transparent": false,
+    "bgImage": ""
+}
