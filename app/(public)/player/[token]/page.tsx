@@ -626,7 +626,6 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const onLayerBReady = useCallback(() => handleLayerContentReady('B'), [handleLayerContentReady])
 
     const fetchData = useCallback(async () => {
-        lastFetchAttemptRef.current = Date.now()
         try {
             const res = await fetch(`/api/player/manifest?token=${token}`)
             if (res.status === 429) return
@@ -639,6 +638,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 reportEvent('manifest_fetch_failed', { status: res.status })
                 throw new Error(`HTTP ${res.status}`)
             }
+            lastHealthyNetworkRef.current = Date.now()
             const data = await res.json()
             const priorMediaId = manifestRef.current?.media?.id ?? null
             setManifest(data)
@@ -695,6 +695,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             try {
                 const res = await fetch(`/api/player/manifest?token=${token}`)
                 if (res.ok) {
+                    lastHealthyNetworkRef.current = Date.now()
                     const data = await res.json()
                     setManifest(data)
                     setError(null)
@@ -735,6 +736,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 )
                 if (res.status === 429) return
                 if (res.ok) {
+                    // Proof-of-life for the watchdog. The poll succeeding —
+                    // even when no refresh is needed — means JS is alive.
+                    lastHealthyNetworkRef.current = Date.now()
                     const data = await res.json()
                     if (data.should_refresh) fetchData()
                 }
@@ -746,6 +750,8 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, viewport: `${window.innerWidth}x${window.innerHeight}`, display_type: 'unknown' })
+            }).then((res) => {
+                if (res?.ok) lastHealthyNetworkRef.current = Date.now()
             }).catch(() => {})
         }, HEARTBEAT_INTERVAL_MS)
 
@@ -901,65 +907,41 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [isPlaying])
 
-    // Full-page reload watchdog with freeze-mode fallback.
+    // Network-health watchdog.
     //
-    // - lastManifestSuccessRef: when the last GOOD manifest fetch landed
-    // - lastFetchAttemptRef:   when we last *tried* to fetch (success or fail)
+    // Reload the page only when JS has actually died — measured honestly as
+    // "no successful network round-trip in 15 minutes." A healthy player
+    // satisfies this every 60 seconds via either the poll, the heartbeat,
+    // or a manifest fetch. Any one of those returning OK proves the JS
+    // event loop, the fetch stack, and our network path are all alive.
     //
-    // If the manifest is stale (>15min since last good fetch), we have two cases:
+    // Earlier versions of this watchdog measured "time since the manifest
+    // content last changed" — which falsely reloads stable-content systems
+    // every 15 minutes for no reason. Roma's TVs displayed evidence: a
+    // perfect 15.1-minute cadence of playback_started events even while
+    // every network call was succeeding. The fix is to count *all*
+    // successful network activity as proof of life, not just content
+    // changes.
     //
-    //   A. JS is hung — fetchData hasn't even attempted in >5min. The render
-    //      loop is dead, video is frozen, page is stuck. Reload to recover.
-    //
-    //   B. Upstream is down — fetchData IS running and failing (Supabase
-    //      paused, server 500s, network out). JS is healthy, we just can't
-    //      reach the API. Don't reload — that would discard the cached
-    //      content currently on screen and likely show "Offline" or a
-    //      blank loader. Instead, FREEZE: keep displaying what's there
-    //      and keep retrying in the background. Recover automatically
-    //      when the next fetch succeeds.
-    //
-    // This means an outage at 03:00am while the screen is showing last
-    // night's menu won't blank the screen for the morning crew.
-    const lastManifestSuccessRef = useRef(Date.now())
-    const lastFetchAttemptRef = useRef(Date.now())
+    // Bumped on success in:
+    //   - fetchData()                  (full manifest fetch)
+    //   - poll loop /api/player/refresh
+    //   - heartbeat /api/player/ping
+    //   - URL refresh /api/player/manifest (every 12hr)
+    const lastHealthyNetworkRef = useRef(Date.now())
     useEffect(() => {
-        if (manifest?.fetched_at) lastManifestSuccessRef.current = Date.now()
+        if (manifest?.fetched_at) lastHealthyNetworkRef.current = Date.now()
     }, [manifest?.fetched_at])
 
     useEffect(() => {
         if (!isPlaying) return
         const STALE_THRESHOLD_MS = 15 * 60 * 1000
-        const FETCH_HUNG_MS = 5 * 60 * 1000
-        let frozenLogged = false
         const timer = setInterval(() => {
-            const sinceSuccess = Date.now() - lastManifestSuccessRef.current
-            const sinceAttempt = Date.now() - lastFetchAttemptRef.current
-            const hasCachedContent = !!manifestRef.current
-
-            if (sinceSuccess <= STALE_THRESHOLD_MS) {
-                if (frozenLogged) {
-                    console.info('[Player] Manifest fresh again — exiting freeze mode')
-                    frozenLogged = false
-                }
-                return
-            }
-
-            // Stale. Decide between freeze and reload.
-            if (hasCachedContent && sinceAttempt < FETCH_HUNG_MS) {
-                // Upstream is down but our JS is alive. Hold the line.
-                if (!frozenLogged) {
-                    console.warn(
-                        `[Player] Manifest stale ${Math.round(sinceSuccess / 60000)}min ` +
-                        `but fetchData still running (last attempt ${Math.round(sinceAttempt)}ms ago). ` +
-                        `Entering freeze mode — keeping cached content on screen.`
-                    )
-                    frozenLogged = true
-                }
-            } else {
+            const sinceHealthy = Date.now() - lastHealthyNetworkRef.current
+            if (sinceHealthy > STALE_THRESHOLD_MS) {
                 console.warn(
-                    `[Player] No manifest in ${Math.round(sinceSuccess / 60000)}min ` +
-                    `and fetchData hasn't run in ${Math.round(sinceAttempt / 1000)}s — forcing reload`
+                    `[Player] No successful network call in ${Math.round(sinceHealthy / 60000)}min — ` +
+                    `JS likely hung, forcing reload`
                 )
                 location.reload()
             }
