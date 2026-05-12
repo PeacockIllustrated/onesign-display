@@ -1031,6 +1031,13 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
 
     const [initPhase, setInitPhase] = useState<'idle' | 'shrink' | 'draw' | 'fill' | 'done'>('idle')
 
+    // Per-token auto-resume key. Once a human has started this player once
+    // (on a given token), we remember it and bypass the splash on every
+    // subsequent page load. Crucial for kiosk recovery — any forced reload
+    // (watchdog, OS-initiated reload, network blip, etc.) would otherwise
+    // strand the player on the "Tap to start" screen forever.
+    const AUTO_RESUME_KEY = `onesign_auto_resume_${token}`
+
     const handleStart = useCallback(() => {
         setInitPhase('shrink')
         setTimeout(() => setInitPhase('draw'), 300)
@@ -1039,6 +1046,9 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             setInitPhase('done')
             setIsPlaying(true)
             toggleFullscreen()
+            // Remember this token has been "blessed" by a real user gesture
+            // so we auto-resume on any future reload of this URL.
+            try { localStorage.setItem(AUTO_RESUME_KEY, '1') } catch {}
             // Smart-TV browsers move focus to whatever element handled the OK
             // press, leaving a visible focus outline around the iframe / video.
             // Blur the active element so nothing is focused once playback
@@ -1049,7 +1059,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 if (el && typeof el.blur === 'function' && el !== document.body) el.blur()
             })
         }, 2000)
-    }, [])
+    }, [AUTO_RESUME_KEY])
 
     // Smart-TV remote support: TV browsers (Tizen, WebOS, AOSP stock) don't have
     // a cursor, so onClick on the splash never fires. Any keydown — OK/Enter,
@@ -1062,6 +1072,25 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         window.addEventListener('keydown', startOnKey, { once: true })
         return () => window.removeEventListener('keydown', startOnKey)
     }, [isPlaying, initPhase, manifest, handleStart])
+
+    // Kiosk auto-resume: if THIS token has been started by a human before
+    // (flag in localStorage), skip the splash automatically on this load.
+    // The 700ms delay lets the splash render briefly so it doesn't feel
+    // like a broken page — a flash of branding, then content. Without this
+    // the screen would sit on splash forever after any forced reload.
+    useEffect(() => {
+        if (isPlaying || initPhase !== 'idle' || !manifest) return
+        let resumed = false
+        try {
+            if (localStorage.getItem(AUTO_RESUME_KEY) === '1') {
+                console.log('[Player] Auto-resume — previously gestured for this token')
+                resumed = true
+            }
+        } catch {}
+        if (!resumed) return
+        const t = setTimeout(() => handleStart(), 700)
+        return () => clearTimeout(t)
+    }, [isPlaying, initPhase, manifest, handleStart, AUTO_RESUME_KEY])
 
     // Suppress browser focus outlines for the duration of the player route.
     // Smart-TV browsers (Tizen, WebOS, FireTV stock) draw a thick blue/yellow
