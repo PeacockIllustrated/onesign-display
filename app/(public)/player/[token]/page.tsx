@@ -607,6 +607,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     const onLayerBReady = useCallback(() => handleLayerContentReady('B'), [handleLayerContentReady])
 
     const fetchData = useCallback(async () => {
+        lastFetchAttemptRef.current = Date.now()
         try {
             const res = await fetch(`/api/player/manifest?token=${token}`)
             if (res.status === 429) return
@@ -862,11 +863,28 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [isPlaying])
 
-    // Full-page reload watchdog — last-resort recovery for JS heap leaks,
-    // render-loop death, HTML-menu stalls. If the manifest hasn't refreshed
-    // successfully in 15 minutes the page reloads itself. Independent of
-    // the video-stall watchdog which only catches frozen <video> elements.
+    // Full-page reload watchdog with freeze-mode fallback.
+    //
+    // - lastManifestSuccessRef: when the last GOOD manifest fetch landed
+    // - lastFetchAttemptRef:   when we last *tried* to fetch (success or fail)
+    //
+    // If the manifest is stale (>15min since last good fetch), we have two cases:
+    //
+    //   A. JS is hung — fetchData hasn't even attempted in >5min. The render
+    //      loop is dead, video is frozen, page is stuck. Reload to recover.
+    //
+    //   B. Upstream is down — fetchData IS running and failing (Supabase
+    //      paused, server 500s, network out). JS is healthy, we just can't
+    //      reach the API. Don't reload — that would discard the cached
+    //      content currently on screen and likely show "Offline" or a
+    //      blank loader. Instead, FREEZE: keep displaying what's there
+    //      and keep retrying in the background. Recover automatically
+    //      when the next fetch succeeds.
+    //
+    // This means an outage at 03:00am while the screen is showing last
+    // night's menu won't blank the screen for the morning crew.
     const lastManifestSuccessRef = useRef(Date.now())
+    const lastFetchAttemptRef = useRef(Date.now())
     useEffect(() => {
         if (manifest?.fetched_at) lastManifestSuccessRef.current = Date.now()
     }, [manifest?.fetched_at])
@@ -874,9 +892,37 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     useEffect(() => {
         if (!isPlaying) return
         const STALE_THRESHOLD_MS = 15 * 60 * 1000
+        const FETCH_HUNG_MS = 5 * 60 * 1000
+        let frozenLogged = false
         const timer = setInterval(() => {
-            if (Date.now() - lastManifestSuccessRef.current > STALE_THRESHOLD_MS) {
-                console.warn('[Player] No manifest fetch in 15min — forcing reload')
+            const sinceSuccess = Date.now() - lastManifestSuccessRef.current
+            const sinceAttempt = Date.now() - lastFetchAttemptRef.current
+            const hasCachedContent = !!manifestRef.current
+
+            if (sinceSuccess <= STALE_THRESHOLD_MS) {
+                if (frozenLogged) {
+                    console.info('[Player] Manifest fresh again — exiting freeze mode')
+                    frozenLogged = false
+                }
+                return
+            }
+
+            // Stale. Decide between freeze and reload.
+            if (hasCachedContent && sinceAttempt < FETCH_HUNG_MS) {
+                // Upstream is down but our JS is alive. Hold the line.
+                if (!frozenLogged) {
+                    console.warn(
+                        `[Player] Manifest stale ${Math.round(sinceSuccess / 60000)}min ` +
+                        `but fetchData still running (last attempt ${Math.round(sinceAttempt)}ms ago). ` +
+                        `Entering freeze mode — keeping cached content on screen.`
+                    )
+                    frozenLogged = true
+                }
+            } else {
+                console.warn(
+                    `[Player] No manifest in ${Math.round(sinceSuccess / 60000)}min ` +
+                    `and fetchData hasn't run in ${Math.round(sinceAttempt / 1000)}s — forcing reload`
+                )
                 location.reload()
             }
         }, 60_000)
