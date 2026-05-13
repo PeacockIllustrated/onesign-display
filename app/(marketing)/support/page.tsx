@@ -27,14 +27,14 @@ export default function SupportPage() {
                             icon={<Mail className="h-6 w-6 text-neutral-950" />}
                             title="Email"
                             primary="tom@onesignanddigital.com"
-                            secondary="Replies within one working day"
+                            secondary="Monitored anytime, replies in working hours"
                             href="mailto:tom@onesignanddigital.com"
                         />
                         <ContactCard
                             icon={<Phone className="h-6 w-6 text-neutral-950" />}
                             title="Phone"
                             primary="0191 487 6767"
-                            secondary="Mon–Fri, 9am–5pm UK time"
+                            secondary="Mon–Thu 9am–4pm, Fri 9am–12pm UK time"
                             href="tel:+441914876767"
                         />
                         <ContactCard

@@ -393,7 +393,7 @@ export default function ProductPage() {
                         <ul className="space-y-4">
                             <FeatureItem
                                 icon={RefreshCw}
-                                text="Auto-refresh — new content appears within 30 seconds"
+                                text="Auto-refresh — new content appears within 60 seconds"
                             />
                             <FeatureItem
                                 icon={WifiOff}

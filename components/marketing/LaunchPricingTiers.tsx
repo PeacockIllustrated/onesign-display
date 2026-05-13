@@ -188,15 +188,6 @@ const FEATURES: FeatureRow[] = [
         },
     },
     {
-        label: "Storage",
-        values: {
-            static: "500 MB",
-            video: "5 GB",
-            pro: "20 GB",
-            enterprise: "Unlimited",
-        },
-    },
-    {
         label: "Support",
         values: {
             static: "Email, 48h",

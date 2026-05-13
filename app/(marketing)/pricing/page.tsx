@@ -96,7 +96,7 @@ const FAQS: { question: string; answer: string }[] = [
     },
     {
         question: "What happens when I report a critical bug?",
-        answer: "Report through the support form, email, or chat. We acknowledge within 4 hours during cover hours (8am to 8pm Mon to Sat UK time) and have a fix or workaround within 48 hours. Sunday and outside-hours response is best-effort. Check the status page before reporting in case it's a known platform-wide issue.",
+        answer: "Report through the support form, email, or chat. We acknowledge within 4 hours during cover hours (Mon to Thu 9am to 4pm, Fri 9am to 12pm UK time) and have a fix or workaround within 48 hours. Email is monitored outside cover hours; phone and chat are best-effort. Check the status page before reporting in case it's a known platform-wide issue.",
     },
     {
         question: "Can I upgrade my tier during launch?",
@@ -309,8 +309,9 @@ export default function PricingPage() {
                                 Cover hours
                             </p>
                             <p className="text-sm text-neutral-600 leading-relaxed">
-                                Monday to Saturday, 8am to 8pm UK time. Sunday
-                                and outside-hours: best effort.
+                                Monday to Thursday 9am to 4pm, Friday 9am to
+                                12pm UK time. Email is monitored outside cover
+                                hours; phone and chat are best-effort.
                             </p>
                         </li>
                         <li className="bg-white p-6 rounded-2xl border border-neutral-200">

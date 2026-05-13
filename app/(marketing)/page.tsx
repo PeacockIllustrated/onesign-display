@@ -76,7 +76,7 @@ const painPoints = [
 /* -------------------------------------------------------------------------- */
 
 const stats = [
-    { icon: Clock, value: "30 seconds", label: "to update any menu" },
+    { icon: Clock, value: "60 seconds", label: "to update any menu" },
     { icon: Shield, value: "24/7", label: "uptime monitoring" },
     { icon: MonitorSmartphone, value: "Multi-screen", label: "sync" },
     { icon: Usb, value: "Zero", label: "USB sticks required" },
