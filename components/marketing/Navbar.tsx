@@ -16,7 +16,7 @@ export function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false);
 
     return (
-        <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-100">
+        <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 supports-[backdrop-filter]:bg-white/80 backdrop-blur-md border-b border-neutral-200 shadow-sm">
             <div className="w-full max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
@@ -24,7 +24,7 @@ export function Navbar() {
                 </Link>
 
                 {/* Desktop nav */}
-                <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-neutral-600">
+                <nav className="hidden md:flex gap-8 items-center text-sm font-medium text-neutral-700">
                     {navLinks.map((link) => (
                         <Link
                             key={link.href}
@@ -40,7 +40,7 @@ export function Navbar() {
                 <div className="hidden md:flex gap-4 items-center">
                     <Link
                         href="/app"
-                        className="text-sm font-medium text-neutral-600 hover:text-neutral-950 transition-colors"
+                        className="text-sm font-medium text-neutral-700 hover:text-neutral-950 transition-colors"
                     >
                         Sign in
                     </Link>
@@ -55,7 +55,7 @@ export function Navbar() {
                 {/* Mobile hamburger */}
                 <button
                     type="button"
-                    className="md:hidden p-2 -mr-2 text-neutral-600 hover:text-neutral-950 transition-colors"
+                    className="md:hidden p-2 -mr-2 text-neutral-800 hover:text-neutral-950 transition-colors"
                     onClick={() => setMobileOpen(!mobileOpen)}
                     aria-label={mobileOpen ? "Close menu" : "Open menu"}
                 >

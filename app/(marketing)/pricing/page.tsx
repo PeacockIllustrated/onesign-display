@@ -1,141 +1,150 @@
-import { MarketingHero } from "@/components/marketing/MarketingHero";
 import { SectionWrapper } from "@/components/marketing/SectionWrapper";
-import { PricingCards } from "@/components/marketing/PricingCards";
-import { Check, X, ChevronDown, ArrowRight, Mail, Phone } from "lucide-react";
+import { LaunchPricingTiers } from "@/components/marketing/LaunchPricingTiers";
+import { ChevronDown, ArrowRight, Calendar, Clock, AlertCircle, ShieldCheck, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Digital Menu Board Pricing — Onesign Display",
+    title: "Pricing — Onesign Display",
     description:
-        "Simple monthly pricing. Every plan includes scheduling, unlimited updates, and Onesign design included.",
+        "Hospitality digital signage and menu boards. Launch pricing from £30/mo for up to 5 screens, ends 31 August 2026.",
+    openGraph: {
+        title: "Pricing — Onesign Display",
+        description:
+            "Hospitality digital signage and menu boards. Launch pricing from £30/mo for up to 5 screens, ends 31 August 2026.",
+        siteName: "Onesign Display",
+    },
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Structured data                                                    */
 /* ------------------------------------------------------------------ */
 
-const tiers = [
+const OFFER_TIERS = [
     {
-        name: "Onesign Static",
-        description: "Single-location cafes and static image menus",
-        price: "\u00A339",
-        features: [
-            "Up to 5 screens",
-            "Static image menus",
-            "Daypart scheduling",
-            "Dashboard access",
-            "Screen status monitoring",
-        ],
-        notIncluded: ["Video playback", "Specials Studio", "Live streams", "Multi-screen sync"],
-        cta: "Get Started",
-        href: "/contact",
+        name: "Onesign Display — Static",
+        description: "HTML menu, up to 5 screens, day-of-week scheduling.",
+        price: "30.00",
     },
     {
-        name: "Onesign Video",
-        description: "Daily specials, rotating menus, and video content",
-        price: "\u00A359",
-        popular: true,
-        features: [
-            "Everything in Static, plus:",
-            "Image + video support",
-            "Playlists with transitions",
-            "Specials Studio",
-            "Design package included",
-        ],
-        notIncluded: ["4K asset support", "Multi-screen sync", "Live streams"],
-        cta: "Get Started",
-        href: "/contact",
+        name: "Onesign Display — Video",
+        description:
+            "All menu layouts, Specials Studio, video, 1 HLS stream, up to 5 screens.",
+        price: "50.00",
     },
     {
-        name: "Onesign Pro",
-        description: "Multi-location businesses with premium needs",
-        price: "\u00A389",
-        features: [
-            "Everything in Video, plus:",
-            "Unlimited screens",
-            "4K asset support",
-            "Live HLS/DASH streams",
-            "Multi-screen sync",
-            "Managed design support",
-            "Priority onboarding",
-            "Multi-location dashboards",
-        ],
-        cta: "Get Started",
-        href: "/contact",
+        name: "Onesign Display — Pro",
+        description:
+            "Custom layouts, brand-kit templates, sync groups, up to 3 HLS streams, multi-site.",
+        price: "80.00",
     },
     {
-        name: "Onesign Enterprise",
-        description: "Franchise groups and multi-location chains",
-        price: "POA",
-        features: [
-            "Multi-location management",
-            "Centralised brand governance",
-            "Live streams with fallback",
-            "Unlimited synced screen sets",
-            "Bespoke design system",
-            "Ongoing design partnership",
-            "SLA-backed software support",
-            "Dedicated account management",
-        ],
-        cta: "Contact Sales",
-        href: "/contact",
+        name: "Onesign Display — Enterprise",
+        description:
+            "Hardware sourced and installed, dedicated AM, 99.5% SLA, bespoke design refreshes.",
+        price: "600.00",
     },
 ];
 
-const faqs = [
+function jsonLd() {
+    const products = OFFER_TIERS.map((t) => ({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: t.name,
+        description: t.description,
+        brand: { "@type": "Brand", name: "Onesign Display" },
+        offers: {
+            "@type": "Offer",
+            price: t.price,
+            priceCurrency: "GBP",
+            availability: "https://schema.org/InStock",
+            url: "https://display.onesignanddigital.com/pricing",
+            priceValidUntil: "2026-08-31",
+            validThrough: "2026-08-31",
+            priceSpecification: {
+                "@type": "UnitPriceSpecification",
+                price: t.price,
+                priceCurrency: "GBP",
+                unitText: "MONTH",
+                billingIncrement: 1,
+            },
+        },
+    }));
+    return JSON.stringify(products);
+}
+
+/* ------------------------------------------------------------------ */
+/*  FAQ (verbatim copy)                                                */
+/* ------------------------------------------------------------------ */
+
+const FAQS: { question: string; answer: string }[] = [
     {
-        question: "Do I need to buy hardware?",
-        answer: "Any device with a browser works — Smart TVs, Fire Sticks, PCs, Android boxes. We can also supply pre-configured hardware if you prefer a turnkey setup.",
+        question: "What happens to my price after 90 days?",
+        answer: "After your 90-day launch period ends, your subscription moves to standard rates at next renewal. We email you 30 days before the change with the new amount. Worked example: Video at launch rate £50/mo moves to £110/mo on renewal.",
     },
     {
-        question: "Can I cancel anytime?",
-        answer: "Yes. No contracts, no lock-in. Cancel your subscription at any time and your screens will continue working until the end of your billing period.",
+        question: "Can I cancel during launch?",
+        answer: "Yes. No minimum term. Monthly subscriptions cancel with 30 days notice. Annual prepay subscriptions cancel but aren't refunded for remaining months, which is standard across the industry.",
     },
     {
-        question: "Who designs the menus?",
-        answer: "Every plan includes initial professional design by the Onesign team. You update content; we handle the layouts. Pro and Enterprise plans include ongoing design support.",
+        question: "Why is annual prepay better during launch?",
+        answer: "Annual prepay during launch locks your rate at launch pricing for 12 months from sign-up (longer than the 90-day monthly lock) and includes one month free. A Pro customer pays £880 for 12 months instead of £960 paid monthly, and stays at launch rates the whole way through.",
     },
     {
-        question: "What about multi-location?",
-        answer: "Pro and Enterprise plans support unlimited locations with centralised management. Push content to every site from one dashboard, or let individual venues manage their own specials.",
+        question: "What counts as a critical bug?",
+        answer: "Anything stopping your screens from displaying the right content, or stopping you from logging in to update it. Specifically: screens showing nothing despite being powered and online, screens showing wrong or stale content, login failures, Specials Studio crashes on publish, or lost content. Cosmetic bugs and feature requests don't count as critical.",
     },
     {
-        question: "What does the price cover?",
-        answer: "The monthly price is per venue and includes the software platform, scheduling, unlimited content updates, and initial design setup. Hardware is not included but we can advise on the best options for your space.",
+        question: "What happens when I report a critical bug?",
+        answer: "Report through the support form, email, or chat. We acknowledge within 4 hours during cover hours (8am to 8pm Mon to Sat UK time) and have a fix or workaround within 48 hours. Sunday and outside-hours response is best-effort. Check the status page before reporting in case it's a known platform-wide issue.",
     },
     {
-        question: "How long does setup take?",
-        answer: "Most venues are live within a week. We handle the design, you plug in the player, and the screens start streaming. Priority onboarding on Pro plans means we can move even faster.",
+        question: "Can I upgrade my tier during launch?",
+        answer: "Yes, any time. You're billed pro-rata for the rest of the month at your new tier, and your 90-day launch lock continues from your original sign-up date. Upgrading doesn't reset the launch clock.",
     },
     {
-        question: "Can I stream live TV or sports to screens?",
-        answer: "Yes. Pro and Enterprise plans include live HLS and DASH streaming. Paste a stream URL, set an optional fallback image, and assign to any screen. Perfect for sports venues, event spaces, and hospitality.",
+        question: "Do I need to buy hardware from Onesign?",
+        answer: "Static, Video, and Pro work with any LG webOS smart TV (2018 model year or later). You can use existing screens, source your own, or buy through Onesign at trade price. Enterprise includes hardware sourcing and installation as part of the package.",
     },
     {
-        question: "How does multi-screen sync work?",
-        answer: "Enable sync on a screen set and all screens in that group will show the same slide at the same time. Each screen calculates its position from a shared clock — no cables or hardware needed. Available on Pro and Enterprise plans.",
+        question: "Is there a free trial?",
+        answer: "Not during the launch period. Launch pricing is itself the trial: Static at £30/mo is the lowest entry point in UK hospitality signage. Cancel within 30 days if it isn't working out, no penalty.",
     },
     {
-        question: "What playlist transitions are available?",
-        answer: "Onesign Display supports fade, cut, slide left, and slide right transitions with configurable duration. Create reusable playlists that update every screen using them when you make a change.",
+        question: "What's in the £250 self-serve setup?",
+        answer: "Account creation, screen pairing, one 45-minute remote walkthrough call, template selection, and 30-day priority go-live support. Doesn't include menu design or on-site visits.",
+    },
+    {
+        question: "What's in the £600 white-glove setup?",
+        answer: "Everything in self-serve setup plus on-site install visit (UK mainland), initial menu build using your existing artwork, two-hour staff training, content migration from your existing system, and 30-day priority go-live support.",
+    },
+    {
+        question: "What if I want a feature you don't have yet?",
+        answer: "Tell us. We're in launch and the roadmap is being shaped by what early customers actually need. Feature requests don't carry an SLA, but they go on a visible roadmap and we'll let you know when we're building.",
     },
 ];
 
-/* ------------------------------------------------------------------ */
-/*  FAQ Accordion (client island)                                      */
-/* ------------------------------------------------------------------ */
-
-function FAQItem({ question, answer }: { question: string; answer: string }) {
+function FAQItem({
+    question,
+    answer,
+    defaultOpen = false,
+}: {
+    question: string;
+    answer: string;
+    defaultOpen?: boolean;
+}) {
     return (
-        <details className="group border-b border-neutral-200 last:border-0">
-            <summary className="flex items-center justify-between cursor-pointer py-6 text-left">
+        <details
+            className="group border-b border-neutral-200 last:border-0"
+            open={defaultOpen}
+        >
+            <summary className="flex items-center justify-between cursor-pointer py-6 text-left list-none">
                 <span className="font-semibold text-neutral-950 pr-8">
                     {question}
                 </span>
                 <ChevronDown className="h-5 w-5 text-neutral-400 shrink-0 transition-transform duration-200 group-open:rotate-180" />
             </summary>
-            <div className="pb-6 text-sm text-neutral-500 leading-relaxed max-w-3xl">
+            <div className="pb-6 text-sm text-neutral-600 leading-relaxed max-w-3xl">
                 {answer}
             </div>
         </details>
@@ -149,144 +158,267 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
 export default function PricingPage() {
     return (
         <>
-            {/* ---- Hero ---- */}
-            <MarketingHero
-                headline="Simple, Monthly Pricing"
-                subhead="Every plan includes scheduling, unlimited content updates, and Onesign design support. No setup fees. No contracts. Cancel anytime."
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: jsonLd() }}
             />
 
-            {/* ---- Pricing Cards ---- */}
-            <SectionWrapper className="!pt-0">
-                <PricingCards tiers={tiers} />
-
-                <p className="text-center text-sm text-neutral-400 mt-8">
-                    All prices exclude VAT. Prices are per venue per month.
-                </p>
-            </SectionWrapper>
-
-            {/* ---- Design Included Explainer ---- */}
-            <SectionWrapper className="bg-neutral-50">
-                <div className="text-center max-w-2xl mx-auto mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                        What &ldquo;Design Included&rdquo; actually means
-                    </h2>
-                    <p className="text-neutral-500 text-lg leading-relaxed">
-                        Every plan includes professional menu design by the
-                        Onesign team. Here is exactly what that covers — and
-                        what it does not.
+            {/* ---- Page heading ---- */}
+            <SectionWrapper className="!pb-10 md:!pb-16">
+                <div className="text-center max-w-3xl mx-auto">
+                    <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
+                        Pricing
+                    </p>
+                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] text-neutral-950 mb-6">
+                        Launch pricing, ends 31 August 2026
+                    </h1>
+                    <p className="text-lg md:text-xl text-neutral-500 leading-relaxed">
+                        Four tiers for hospitality digital signage, with public
+                        launch rates while we iron out launch-period bugs
+                        alongside our first customers.
                     </p>
                 </div>
+            </SectionWrapper>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-                    <div className="bg-white p-8 rounded-2xl border border-neutral-200">
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <Check className="h-5 w-5 text-green-600" />
-                            What it includes
-                        </h3>
-                        <ul className="space-y-4">
-                            {[
-                                "Layouts, typography, spacing, and visual hierarchy",
-                                "Designer-built templates and systems",
-                                "Controlled flexibility for content updates",
-                                "Initial onboarding design session",
-                                "Brand-matched colour palettes and fonts",
-                                "Playlist layouts with professional transitions",
-                            ].map((item) => (
-                                <li
-                                    key={item}
-                                    className="flex gap-3 text-sm text-neutral-600"
-                                >
-                                    <Check className="h-4 w-4 text-green-600 shrink-0 mt-0.5" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
+            {/* ---- Launch banner ---- */}
+            <SectionWrapper className="!py-0">
+                <div className="relative rounded-3xl overflow-hidden border border-[#4e7e8c]/30 bg-gradient-to-br from-[#4e7e8c]/8 via-white to-[#4e7e8c]/5 p-8 md:p-12 shadow-sm">
+                    <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#4e7e8c]/10 blur-3xl pointer-events-none" />
+                    <div className="relative">
+                        <div className="flex flex-wrap items-center gap-3 mb-5">
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4e7e8c]/10 text-[#4e7e8c] text-xs font-bold uppercase tracking-wider">
+                                <Calendar className="h-3.5 w-3.5" />
+                                Public launch
+                            </span>
+                            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-neutral-200 text-neutral-700 text-xs font-semibold">
+                                <Clock className="h-3.5 w-3.5" />
+                                Ends 31 August 2026
+                            </span>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-neutral-950 mb-4 leading-tight">
+                            Launch pricing, ends 31 August 2026
+                        </h2>
+                        <p className="text-neutral-700 text-base md:text-lg leading-relaxed max-w-3xl">
+                            Onesign Display is in public launch. Until 31 August
+                            2026 we&apos;re charging launch rates while we iron
+                            out launch-period bugs alongside our first
+                            customers. Sign up before 31 August 2026 and lock
+                            launch pricing for 90 days from sign-up, or annual
+                            prepay to lock launch rates for 12 months. From 1
+                            September 2026, list prices step to standard rates
+                            for new customers.
+                        </p>
+                    </div>
+                </div>
+            </SectionWrapper>
+
+            {/* ---- Tier comparison + toggle ---- */}
+            <SectionWrapper>
+                <LaunchPricingTiers />
+            </SectionWrapper>
+
+            {/* ---- Setup fees ---- */}
+            <SectionWrapper className="bg-neutral-50">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-950">
+                            One-off setup fees
+                        </h2>
+                        <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto">
+                            Setup covers the labour to get you live. Not
+                            discounted during launch — these are real hours and
+                            they&apos;re the same on day one of launch as on
+                            day 365.
+                        </p>
                     </div>
 
-                    <div className="bg-white p-8 rounded-2xl border border-neutral-200">
-                        <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                            <X className="h-5 w-5 text-red-400" />
-                            What it does NOT mean
-                        </h3>
-                        <ul className="space-y-4">
-                            {[
-                                "Unlimited bespoke campaigns on demand",
-                                "Blank-canvas design tools for your team",
-                                "Replacing your professional designer or agency",
-                            ].map((item) => (
-                                <li
-                                    key={item}
-                                    className="flex gap-3 text-sm text-neutral-600"
-                                >
-                                    <X className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
-                                    {item}
-                                </li>
-                            ))}
-                        </ul>
-                        <p className="mt-8 text-sm text-neutral-400 italic">
-                            &ldquo;Design remains intentional. Onesign Display
-                            enforces it.&rdquo;
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-white p-8 rounded-2xl border border-neutral-200">
+                            <p className="text-3xl font-bold text-neutral-950 mb-1">
+                                £250
+                            </p>
+                            <p className="text-sm font-semibold text-[#4e7e8c] uppercase tracking-wider mb-4">
+                                Self-serve setup (Static, Video)
+                            </p>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Account creation, screen pairing, one 45-minute
+                                remote walkthrough call, template selection,
+                                and 30-day priority go-live support.
+                                Doesn&apos;t include menu design or on-site
+                                visits.
+                            </p>
+                        </div>
+
+                        <div className="bg-white p-8 rounded-2xl border border-neutral-200">
+                            <p className="text-3xl font-bold text-neutral-950 mb-1">
+                                £600
+                            </p>
+                            <p className="text-sm font-semibold text-[#4e7e8c] uppercase tracking-wider mb-4">
+                                White-glove setup (Pro, Enterprise)
+                            </p>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Everything in self-serve setup plus on-site
+                                install visit (UK mainland), initial menu build
+                                using your existing artwork, two-hour staff
+                                training, content migration from your existing
+                                system, and 30-day priority go-live support.
+                                Travel outside the North East may be quoted
+                                separately for unusually remote sites.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </SectionWrapper>
+
+            {/* ---- SLA & support ---- */}
+            <SectionWrapper>
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-12">
+                        <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
+                            Support commitment
                         </p>
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-950">
+                            What we commit to during launch period
+                        </h2>
+                        <p className="text-neutral-500 text-lg leading-relaxed max-w-2xl mx-auto">
+                            Launch pricing reflects the fact that real-world
+                            deployment will surface edge cases. To make that
+                            fair, we commit to the following until 31 August
+                            2026:
+                        </p>
+                    </div>
+
+                    <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                        <li className="bg-white p-6 rounded-2xl border border-neutral-200">
+                            <div className="h-10 w-10 rounded-lg bg-[#4e7e8c]/10 flex items-center justify-center mb-4">
+                                <AlertCircle className="h-5 w-5 text-[#4e7e8c]" />
+                            </div>
+                            <p className="font-bold text-neutral-950 mb-2">
+                                Critical bug response
+                            </p>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Acknowledged within 4 hours, fix or workaround
+                                within 48 hours.
+                            </p>
+                        </li>
+                        <li className="bg-white p-6 rounded-2xl border border-neutral-200">
+                            <div className="h-10 w-10 rounded-lg bg-[#4e7e8c]/10 flex items-center justify-center mb-4">
+                                <Clock className="h-5 w-5 text-[#4e7e8c]" />
+                            </div>
+                            <p className="font-bold text-neutral-950 mb-2">
+                                Cover hours
+                            </p>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Monday to Saturday, 8am to 8pm UK time. Sunday
+                                and outside-hours: best effort.
+                            </p>
+                        </li>
+                        <li className="bg-white p-6 rounded-2xl border border-neutral-200">
+                            <div className="h-10 w-10 rounded-lg bg-[#4e7e8c]/10 flex items-center justify-center mb-4">
+                                <ShieldCheck className="h-5 w-5 text-[#4e7e8c]" />
+                            </div>
+                            <p className="font-bold text-neutral-950 mb-2">
+                                Public status page
+                            </p>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                <a
+                                    href="https://status.onesigndisplay.com"
+                                    className="text-[#4e7e8c] hover:underline inline-flex items-center gap-1"
+                                    rel="noopener"
+                                >
+                                    status.onesigndisplay.com
+                                    <ExternalLink className="h-3 w-3" />
+                                </a>
+                                {" — check here first before reporting."}
+                            </p>
+                        </li>
+                    </ul>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+                            <h3 className="font-bold text-neutral-950 mb-3">
+                                What counts as a critical bug
+                            </h3>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Screens showing nothing despite being powered
+                                and online; screens showing wrong or stale
+                                content; login failures; Specials Studio
+                                crashes on publish; lost content; manifest API
+                                errors causing health-check failures across
+                                your fleet.
+                            </p>
+                        </div>
+                        <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+                            <h3 className="font-bold text-neutral-950 mb-3">
+                                What doesn&apos;t count as a critical bug
+                            </h3>
+                            <p className="text-sm text-neutral-600 leading-relaxed">
+                                Cosmetic UI issues; performance slowness that
+                                isn&apos;t failure; single-asset rendering
+                                quirks; feature gaps; third-party outages;
+                                customer-side issues (internet, hardware
+                                physical damage, content uploaded outside
+                                spec).
+                            </p>
+                        </div>
                     </div>
                 </div>
             </SectionWrapper>
 
             {/* ---- FAQ ---- */}
-            <SectionWrapper>
+            <SectionWrapper className="bg-neutral-50">
                 <div className="max-w-3xl mx-auto">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                            Frequently Asked Questions
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl md:text-4xl font-bold mb-4 text-neutral-950">
+                            Frequently asked questions
                         </h2>
                         <p className="text-neutral-500 text-lg leading-relaxed">
-                            Everything you need to know before getting started.
+                            Everything you need to know about launch pricing,
+                            cancellation, support, and what comes after.
                         </p>
                     </div>
 
-                    <div className="divide-y divide-neutral-200 border-t border-neutral-200">
-                        {faqs.map((faq) => (
-                            <FAQItem key={faq.question} {...faq} />
+                    <div className="divide-y divide-neutral-200 border-t border-b border-neutral-200 bg-white px-6 md:px-8 rounded-2xl">
+                        {FAQS.map((faq, i) => (
+                            <FAQItem
+                                key={faq.question}
+                                question={faq.question}
+                                answer={faq.answer}
+                                defaultOpen={i === 0}
+                            />
                         ))}
                     </div>
                 </div>
             </SectionWrapper>
 
-            {/* ---- Bottom CTA ---- */}
+            {/* ---- Closing CTA ---- */}
             <SectionWrapper dark>
                 <div className="text-center max-w-2xl mx-auto">
-                    <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                        Ready to See It in Action?
+                    <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
+                        Last chance for launch pricing
+                    </p>
+                    <h2 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">
+                        Launch ends 31 August 2026.
                     </h2>
-                    <p className="text-neutral-400 text-lg mb-10 leading-relaxed">
-                        Book a live demo and we will walk you through the
-                        platform with your own menus.
+                    <p className="text-neutral-300 text-lg mb-10 leading-relaxed">
+                        Sign up before then to lock launch pricing for 90 days,
+                        or annual prepay for 12 months at launch rates.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
                         <Link
-                            href="/contact"
-                            className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-base font-medium text-neutral-950 shadow-sm hover:bg-neutral-100 transition-colors"
+                            href="/auth/signup"
+                            className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 text-base font-semibold text-neutral-950 shadow-sm hover:bg-neutral-100 transition-colors"
                         >
-                            Book a Demo
+                            Start launch trial
                             <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-neutral-400">
-                        <a
-                            href="mailto:sales@onesignanddigital.com"
-                            className="inline-flex items-center gap-2 hover:text-white transition-colors"
+                        <Link
+                            href="/contact"
+                            className="inline-flex items-center justify-center rounded-lg border border-white/30 bg-white/5 px-8 py-4 text-base font-semibold text-white hover:bg-white/10 transition-colors"
                         >
-                            <Mail className="h-4 w-4" />
-                            sales@onesignanddigital.com
-                        </a>
-                        <a
-                            href="tel:01914876767"
-                            className="inline-flex items-center gap-2 hover:text-white transition-colors"
-                        >
-                            <Phone className="h-4 w-4" />
-                            0191 487 6767
-                        </a>
+                            Book a call
+                        </Link>
                     </div>
                 </div>
             </SectionWrapper>

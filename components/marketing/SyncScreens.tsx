@@ -48,9 +48,9 @@ export function SyncScreens() {
                     to { clip-path: inset(0 0 0 0); }
                 }
             `}</style>
-            <div className="flex items-center justify-center gap-4 md:gap-6">
+            <div className="flex items-center justify-center gap-2 sm:gap-4 md:gap-6 w-full max-w-full">
                 {[0, 1, 2].map((n) => (
-                    <div key={n} className="w-44 md:w-56 lg:w-64 aspect-video bg-neutral-900 rounded-lg relative overflow-hidden shadow-xl">
+                    <div key={n} className="w-[28vw] max-w-44 sm:w-40 md:w-56 lg:w-64 aspect-video bg-neutral-900 rounded-lg relative overflow-hidden shadow-xl">
                         <Image
                             src={SLIDES[current]}
                             alt={`Screen ${n + 1}`}

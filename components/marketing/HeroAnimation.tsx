@@ -24,7 +24,7 @@ export function HeroAnimation() {
     const iconDone = phase !== 'drawing'
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center w-full max-w-full">
             <style>{`
                 @keyframes heroDrawPath {
                     from { stroke-dashoffset: 1; }
@@ -46,13 +46,14 @@ export function HeroAnimation() {
                     animation: iconDone ? 'heroGlowPulse 3s ease-in-out infinite' : 'none',
                     filter: 'drop-shadow(0 0 12px rgba(149,218,248,0.3)) drop-shadow(0 0 40px rgba(36,84,91,0.5))',
                     position: 'relative',
-                    width: 160,
-                    height: 144,
+                    width: 'min(160px, 40vw)',
+                    aspectRatio: '292.79 / 264.11',
+                    maxWidth: '100%',
                 }}
             >
                 <svg
                     viewBox="0 0 292.79 264.11"
-                    style={{ width: 160, height: 'auto', position: 'absolute', inset: 0 }}
+                    style={{ width: '100%', height: 'auto', position: 'absolute', inset: 0 }}
                 >
                     <defs>
                         <filter id="hero-icon-glow">
@@ -95,8 +96,9 @@ export function HeroAnimation() {
                 alt="Onesign"
                 style={{
                     marginTop: 24,
-                    height: 50,
+                    height: 'clamp(34px, 12vw, 50px)',
                     width: 'auto',
+                    maxWidth: '100%',
                     objectFit: 'contain',
                     opacity: iconDone ? 1 : 0,
                     transform: iconDone ? 'translateY(0)' : 'translateY(6px)',
@@ -115,7 +117,7 @@ export function HeroAnimation() {
             >
                 <svg
                     viewBox="330 30 970 200"
-                    style={{ width: 340, height: 'auto' }}
+                    style={{ width: 'min(340px, 80vw)', maxWidth: '100%', height: 'auto' }}
                 >
                     <defs>
                         <filter id="hero-text-glow">
