@@ -74,12 +74,14 @@ describe('createSchedule', () => {
 
     // --- Time format validation ---
 
-    it('accepts "25:00" because regex only checks format not semantic validity', async () => {
-        // The pattern /^\d{2}:\d{2}(:\d{2})?$/ matches '25:00' — it checks format, not range
+    it('rejects "25:00" — shape alone is not enough, the hour must be real', async () => {
         const fd = makeFormData({ name: 'Lunch', startTime: '25:00', endTime: '14:00', days: ['1'] })
-        mockGetUser.mockResolvedValue({ data: { user: null } })
-        // Passes time validation, hits auth check next
-        await expect(createSchedule('store-1', fd)).rejects.toThrow('Unauthorized')
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('not a valid time of day')
+    })
+
+    it('rejects a minute value above 59', async () => {
+        const fd = makeFormData({ name: 'Lunch', startTime: '09:75', endTime: '14:00', days: ['1'] })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('not a valid time of day')
     })
 
     it('throws on invalid time format "abc"', async () => {
@@ -106,6 +108,39 @@ describe('createSchedule', () => {
 
     it('accepts valid time with seconds "09:30:00"', async () => {
         const fd = makeFormData({ name: 'Lunch', startTime: '09:30:00', endTime: '14:00:00', days: ['1'] })
+        mockGetUser.mockResolvedValue({ data: { user: null } })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('Unauthorized')
+    })
+
+    // --- Window shape ---
+
+    it('accepts an overnight window (21:00–02:00)', async () => {
+        // The resolver wraps these past midnight, so they must not be rejected
+        // here — this used to save happily and then never play.
+        const fd = makeFormData({ name: 'Late Night', startTime: '21:00', endTime: '02:00', days: ['5'] })
+        mockGetUser.mockResolvedValue({ data: { user: null } })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('Unauthorized')
+    })
+
+    it('rejects a zero-length window where start equals end', async () => {
+        const fd = makeFormData({ name: 'Nothing', startTime: '09:00', endTime: '09:00', days: ['1'] })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('cannot be the same')
+    })
+
+    it('rejects a zero-length window across mixed time precision', async () => {
+        const fd = makeFormData({ name: 'Nothing', startTime: '09:00', endTime: '09:00:00', days: ['1'] })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('cannot be the same')
+    })
+
+    // --- Priority ---
+
+    it('rejects a priority outside the selectable set', async () => {
+        const fd = makeFormData({ name: 'Lunch', startTime: '09:00', endTime: '14:00', days: ['1'], priority: '3' })
+        await expect(createSchedule('store-1', fd)).rejects.toThrow('Invalid priority')
+    })
+
+    it('accepts a selectable priority', async () => {
+        const fd = makeFormData({ name: 'Lunch', startTime: '09:00', endTime: '14:00', days: ['1'], priority: '1' })
         mockGetUser.mockResolvedValue({ data: { user: null } })
         await expect(createSchedule('store-1', fd)).rejects.toThrow('Unauthorized')
     })

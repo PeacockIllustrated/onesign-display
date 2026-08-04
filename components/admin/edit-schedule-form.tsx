@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { updateSchedule, deleteSchedule } from '@/app/actions/update-schedule'
+import { SCHEDULE_PRIORITIES, DEFAULT_SCHEDULE_PRIORITY } from '@/lib/schedules'
 import { useRouter } from 'next/navigation'
 import { Checkbox } from '@/components/ui/checkbox'
 
@@ -21,6 +22,7 @@ type Schedule = {
     start_time: string
     end_time: string
     days_of_week: number[]
+    priority?: number | null
 }
 
 export function EditScheduleForm({ schedule }: { schedule: Schedule }) {
@@ -95,12 +97,33 @@ export function EditScheduleForm({ schedule }: { schedule: Schedule }) {
                     <input
                         name="endTime"
                         type="time"
-                        defaultValue={schedule.start_time.split(':').length === 3 ? schedule.end_time : schedule.end_time + ':00'}
+                        defaultValue={schedule.end_time.split(':').length === 3 ? schedule.end_time : schedule.end_time + ':00'}
                         key={schedule.end_time}
                         className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black transition-colors"
                         required
                     />
                 </div>
+            </div>
+
+            <p className="text-xs text-zinc-500">
+                An end time earlier than the start time runs overnight &mdash;
+                e.g. 21:00 to 02:00 plays through to 2am the next morning.
+            </p>
+
+            <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Priority</label>
+                <select
+                    name="priority"
+                    defaultValue={schedule.priority ?? DEFAULT_SCHEDULE_PRIORITY}
+                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black transition-colors"
+                >
+                    {SCHEDULE_PRIORITIES.map(p => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                </select>
+                <p className="text-xs text-zinc-500 mt-1">
+                    Wins when two schedules cover the same moment.
+                </p>
             </div>
 
             <div className="pt-4 flex justify-between items-center border-t border-zinc-100 mt-6">
