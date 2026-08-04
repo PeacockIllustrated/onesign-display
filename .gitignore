@@ -50,3 +50,8 @@ webos-tv-keys.json
 
 # Claude Code worktree state (session-local, never committed)
 .claude/
+
+# Generated brochure assets — ~1.4 MB of base64 font data and layout preview
+# PNGs. Rebuild with `npm run docs:fonts` / `npm run docs:layout`.
+/docs/fonts.css
+/docs/layout-preview/
