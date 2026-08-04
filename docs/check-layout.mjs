@@ -16,11 +16,25 @@ const report = await p.evaluate(() =>
     const content = page.querySelector('.content') ?? page
     const footer = page.querySelector('.pg-footer')
 
-    // Deepest descendant bottom, relative to the page top.
+    // An element inside an overflow:hidden ancestor is visually clipped, so it
+    // cannot spill onto the sheet no matter what its box says. The cover's
+    // decorative rings sit deliberately past the page edge and would otherwise
+    // report a permanent false overflow.
+    // Stop at .page — the sheet's own overflow:hidden is what we are measuring
+    // against, so counting it would mark every element clipped.
+    const isClipped = el => {
+      for (let a = el.parentElement; a && a !== page; a = a.parentElement) {
+        const o = getComputedStyle(a)
+        if (o.overflow === 'hidden' || o.overflowY === 'hidden') return true
+      }
+      return false
+    }
+
+    // Deepest unclipped descendant bottom, relative to the page top.
     let lowest = 0
     for (const el of content.querySelectorAll('*')) {
       const r = el.getBoundingClientRect()
-      if (r.height > 0) lowest = Math.max(lowest, r.bottom - pageBox.top)
+      if (r.height > 0 && !isClipped(el)) lowest = Math.max(lowest, r.bottom - pageBox.top)
     }
 
     const limit = footer

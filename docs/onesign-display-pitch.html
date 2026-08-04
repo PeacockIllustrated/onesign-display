@@ -130,10 +130,25 @@
     .pg-footer { font-size: 8pt; }
     .pg-header .meta { font-size: 8.5pt; }
 
-    /* The cover logo is a flex child in a column, so the default `stretch`
-       blows it to full width and `object-fit: contain` then centres it.
-       Pin it left and let the intrinsic ratio do the rest. */
-    .cover .logo-main { align-self: flex-start; height: 14mm; margin-bottom: 20mm; }
+    /* ---- Cover -------------------------------------------------
+       The Onesign Display lockup (OD-Logo-Light) is the hero here, so it
+       runs large and carries the top third on its own. The logo is a flex
+       child in a column, where the default `stretch` would blow it to full
+       width and `object-fit: contain` would then centre it — pin it left
+       and let the intrinsic ratio do the rest.
+       ------------------------------------------------------------ */
+
+    .cover-content { justify-content: center; padding-top: 0; padding-bottom: 0; }
+
+    /* The lockup carries a wide transparent glow margin, so the visible mark
+       renders noticeably smaller than the box height. Size accordingly. */
+    .cover .logo-main {
+      align-self: flex-start;
+      height: 52mm;
+      width: auto;
+      margin-bottom: 18mm;
+    }
+
     .cover h1 { font-size: 46pt; }
     .cover .lead { font-size: 12pt; max-width: 128mm; }
     .cover-label { font-size: 9pt; }
@@ -141,26 +156,13 @@
     .cover-footer-contact .details { font-size: 8.5pt; }
     .cover-footer .client-label { font-size: 8pt; }
 
-    /* Three boards fanned across the lower cover — the whole pitch in one image. */
-    .cover-fan {
-      position: absolute;
-      right: 18mm;
-      bottom: 14mm;
-      display: flex;
-      align-items: flex-end;
-      gap: 5mm;
-      z-index: 1;
-    }
+    /* With the logo carrying the cover, the visual band is just the
+       decorative rings — give the lower sheet back to them. */
+    .cover-visual { flex: 0 0 22mm; }
 
-    .cover-fan .tv-bezel { box-shadow: 0 6mm 18mm rgba(0,0,0,0.35); }
-
-    .cover-fan .fan-label {
-      text-align: center;
-      font-size: 7.5pt;
-      letter-spacing: 0.14em;
-      color: rgba(255,255,255,0.4);
-      margin-top: 3mm;
-    }
+    /* The header lockup is two lines (wordmark over DISPLAY), so it needs
+       more height than the single-line parent mark it replaces. */
+    .pg-header .logo-sm { height: 9.5mm; }
 
     /* ---- Three-up menu-type columns ---- */
 
@@ -471,7 +473,7 @@
      ================================================================ -->
 <div class="page cover">
   <div class="cover-content">
-    <img class="logo-main" src="screenshots/onesign-logo-white.png" alt="Onesign">
+    <img class="logo-main" src="../public/assets/OD-Logo-Light.svg" alt="Onesign Display">
 
     <div class="cover-label">CAPABILITY OVERVIEW</div>
 
@@ -486,80 +488,10 @@
   <div class="cover-visual">
     <div class="cover-decoration"></div>
     <div class="cover-decoration-2"></div>
-
-    <div class="cover-fan">
-      <!-- FOOD -->
-      <div>
-        <div class="tv" style="width: 46mm;">
-          <div class="tv-bezel">
-            <div class="tv-screen" style="aspect-ratio: 16/9;">
-              <div class="mock-menu">
-                <div class="mock-menu-header">
-                  <div class="mock-menu-title">FOOD</div>
-                </div>
-                <div class="mock-menu-item"><span class="mock-menu-item-name">Panuozzo</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">9.50</span></div>
-                <div class="mock-menu-item"><span class="mock-menu-item-name">Focaccia</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">7.20</span></div>
-                <div class="mock-menu-item"><span class="mock-menu-item-name">Arancini</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">6.00</span></div>
-                <div class="mock-menu-item"><span class="mock-menu-item-name">Antipasti</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">8.40</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="fan-label">FOOD</div>
-      </div>
-
-      <!-- COFFEE -->
-      <div>
-        <div class="tv" style="width: 52mm;">
-          <div class="tv-bezel">
-            <div class="tv-screen" style="aspect-ratio: 16/9;">
-              <div class="mock-quad">
-                <div class="mock-quad-header"><div class="t">COFFEE &amp; DRINKS</div></div>
-                <div class="mock-quad-cell">
-                  <div class="h">HOT</div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Flat White</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">3.20</span></div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Cappuccino</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">3.30</span></div>
-                </div>
-                <div class="mock-quad-cell">
-                  <div class="h">COLD</div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Cold Brew</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">3.80</span></div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Iced Latte</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">3.60</span></div>
-                </div>
-                <div class="mock-quad-cell">
-                  <div class="h">EXTRAS</div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Oat Milk</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">0.40</span></div>
-                </div>
-                <div class="mock-quad-cell">
-                  <div class="h">DESSERTS</div>
-                  <div class="mock-menu-item"><span class="mock-menu-item-name">Tiramisu</span><span class="mock-menu-item-dots"></span><span class="mock-menu-item-price">5.50</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="fan-label">COFFEE</div>
-      </div>
-
-      <!-- PROMOTION -->
-      <div>
-        <div class="tv" style="width: 46mm;">
-          <div class="tv-bezel">
-            <div class="tv-screen" style="aspect-ratio: 16/9;">
-              <div class="mock-promo">
-                <div class="eyebrow">THIS WEEK</div>
-                <div class="big">Flat White<br>&amp; Pastry</div>
-                <div class="price">&pound;4.95</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="fan-label">PROMOTIONS</div>
-      </div>
-    </div>
   </div>
 
   <div class="cover-footer">
-    <span class="client-label">ONESIGN DISPLAY</span>
+    <span class="client-label">DIGITAL MENU STREAMING</span>
     <div class="cover-footer-contact">
       <div class="company">Onesign and Digital</div>
       <div class="details">D86 Princesway, Gateshead NE11 0TU<br>display.onesignanddigital.com &bull; 0191 487 6767</div>
@@ -573,7 +505,7 @@
 <div class="page bg-white">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -634,7 +566,7 @@
 <div class="page bg-cream">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -726,7 +658,7 @@
 <div class="page bg-white">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -829,7 +761,7 @@
 <div class="page bg-cream">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -904,7 +836,7 @@
 <div class="page bg-white">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -990,7 +922,7 @@
 <div class="page bg-cream">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -1072,7 +1004,7 @@
 <div class="page bg-white">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -1151,7 +1083,7 @@
 <div class="page bg-cream">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
@@ -1231,7 +1163,7 @@
 <div class="page bg-white">
   <div class="content">
     <div class="pg-header">
-      <img class="logo-sm" src="screenshots/onesign-logo.png" alt="Onesign">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
       <span class="meta">Capability Overview &mdash; Onesign Display</span>
     </div>
     <div class="accent-line"></div>
