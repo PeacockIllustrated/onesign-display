@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "docs:fonts": "node docs/build-fonts.mjs",
     "docs:layout": "node docs/check-layout.mjs docs/onesign-display-pitch.html docs/layout-preview",
     "docs:pitch": "node docs/render-pdf.mjs docs/onesign-display-pitch.html docs/Onesign-Display-Capability-Overview.pdf",
@@ -44,6 +46,7 @@
     "eslint-config-next": "16.0.10",
     "playwright": "^1.56.1",
     "tailwindcss": "^4",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.7"
   }
 }
