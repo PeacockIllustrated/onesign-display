@@ -340,6 +340,138 @@
       letter-spacing: 0.08em;
     }
 
+    /* ---- Two stacked feature blocks on one page ---- */
+
+    .split-block + .split-block {
+      margin-top: 7mm;
+      padding-top: 6mm;
+      border-top: 1px solid var(--border);
+    }
+
+    .split-head {
+      display: flex;
+      align-items: baseline;
+      gap: 4mm;
+      margin-bottom: 3mm;
+    }
+
+    .split-head h3 {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 17pt;
+      color: var(--navy);
+    }
+
+    .split-head .tag {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--teal);
+    }
+
+    .split-body {
+      display: flex;
+      gap: 8mm;
+      align-items: flex-start;
+    }
+
+    .split-body .col-text { flex: 1; }
+    .split-body .col-visual { flex: 1; }
+
+    .split-body p {
+      font-size: 10pt;
+      color: var(--mid);
+      line-height: 1.6;
+      margin-bottom: 3mm;
+    }
+
+    /* ---- Synced wall: three panels showing the same frame ---- */
+
+    .sync-wall {
+      display: flex;
+      gap: 2.5mm;
+      align-items: flex-end;
+    }
+
+    .sync-wall .tv { flex: 1; }
+
+    .sync-panel {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(140deg, #23303a 0%, #14202a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      text-align: center;
+    }
+
+    .sync-panel .t {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 5pt;
+      color: var(--teal-light);
+      letter-spacing: 0.08em;
+    }
+
+    .sync-panel .s {
+      font-size: 3pt;
+      color: rgba(255,255,255,0.4);
+      margin-top: 0.8mm;
+      letter-spacing: 0.1em;
+    }
+
+    .sync-tick {
+      text-align: center;
+      font-size: 7.5pt;
+      color: var(--teal);
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      margin-top: 3mm;
+    }
+
+    /* ---- Live stream panel ---- */
+
+    .live-panel {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(150deg, #2e4450 0%, #101b22 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .live-badge {
+      position: absolute;
+      top: 2mm;
+      left: 2mm;
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      background: #c0392b;
+      color: white;
+      font-size: 3.2pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      padding: 0.6mm 1.6mm;
+      border-radius: 0.6mm;
+    }
+
+    .live-badge::before {
+      content: '';
+      width: 1.1mm;
+      height: 1.1mm;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .live-panel .label {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 6pt;
+      color: rgba(255,255,255,0.85);
+      letter-spacing: 0.06em;
+    }
+
     /* ---- Status / monitoring strip ---- */
 
     .status-grid {
@@ -880,8 +1012,8 @@
           <div class="feat-val">Full-motion promos alongside stills</div>
         </div>
         <div class="feat-row">
-          <div class="feat-key">Live streams</div>
-          <div class="feat-val">HLS or DASH feeds with a fallback image</div>
+          <div class="feat-key">Orientation</div>
+          <div class="feat-val">Portrait totems and landscape boards from one library</div>
         </div>
       </div>
 
@@ -917,7 +1049,128 @@
 </div>
 
 <!-- ================================================================
-     PAGE 7 — RELIABILITY
+     PAGE 7 — SYNC + LIVE STREAMS
+     ================================================================ -->
+<div class="page bg-white">
+  <div class="content">
+    <div class="pg-header">
+      <img class="logo-sm" src="../public/assets/OD-Logo-Dark.svg" alt="Onesign Display">
+      <span class="meta">Capability Overview &mdash; Onesign Display</span>
+    </div>
+    <div class="accent-line"></div>
+
+    <div class="section-num">06</div>
+
+    <h2 class="page-title">Screen Walls<br>and Live Feeds</h2>
+
+    <p class="body-text" style="margin-bottom: 6mm;">
+      Two capabilities for venues doing more than a single board on a single wall.
+    </p>
+
+    <!-- ── SYNCHRONISED SCREENS ── -->
+    <div class="split-block">
+      <div class="split-head">
+        <span class="tag">01</span>
+        <h3>Screens That Change Together</h3>
+      </div>
+
+      <div class="split-body">
+        <div class="col-text">
+          <p>
+            Put a run of screens into a set and they behave as one. Every panel shows
+            the same content and changes at the same instant &mdash; so a bank of boards
+            above a counter flips cleanly, rather than one panel at a time, a second apart.
+          </p>
+          <p>
+            They hold that all day on their own. Nothing to press, and no drifting apart
+            by closing time.
+          </p>
+          <ul class="type-list" style="margin-top: 0;">
+            <li>Group any screens in a location into a set</li>
+            <li>Add or remove a screen and the set re-balances</li>
+            <li>Works for stills and video alike</li>
+          </ul>
+        </div>
+
+        <div class="col-visual">
+          <div class="sync-wall">
+            <div class="tv">
+              <div class="tv-bezel">
+                <div class="tv-screen" style="aspect-ratio: 16/9;">
+                  <div class="sync-panel"><div class="t">TODAY&rsquo;S SPECIALS</div><div class="s">SERVED 12&ndash;3</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="tv">
+              <div class="tv-bezel">
+                <div class="tv-screen" style="aspect-ratio: 16/9;">
+                  <div class="sync-panel"><div class="t">TODAY&rsquo;S SPECIALS</div><div class="s">SERVED 12&ndash;3</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="tv">
+              <div class="tv-bezel">
+                <div class="tv-screen" style="aspect-ratio: 16/9;">
+                  <div class="sync-panel"><div class="t">TODAY&rsquo;S SPECIALS</div><div class="s">SERVED 12&ndash;3</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="sync-tick">ALL THREE, SAME FRAME, SAME MOMENT</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LIVE STREAMS ── -->
+    <div class="split-block">
+      <div class="split-head">
+        <span class="tag">02</span>
+        <h3>Live Feeds on the Same Screens</h3>
+      </div>
+
+      <div class="split-body">
+        <div class="col-text">
+          <p>
+            A screen can carry a live feed instead of a menu &mdash; sport in the bar,
+            a news or corporate channel in a waiting area, a camera from elsewhere on
+            site. It is treated like any other content, so you can schedule it: menus
+            through the day, the match from seven.
+          </p>
+          <ul class="type-list" style="margin-top: 0;">
+            <li>Audio on or off, per feed</li>
+            <li>Backup image shows if the feed drops</li>
+            <li>Reconnects by itself when it returns</li>
+            <li>Schedules like any other content</li>
+          </ul>
+        </div>
+
+        <div class="col-visual">
+          <div class="tv" style="width: 100%;">
+            <div class="tv-bezel">
+              <div class="tv-screen" style="aspect-ratio: 16/9;">
+                <div class="live-panel">
+                  <span class="live-badge">LIVE</span>
+                  <span class="label">MATCHDAY</span>
+                </div>
+              </div>
+            </div>
+            <div class="tv-stand-neck"></div>
+            <div class="tv-stand-base"></div>
+          </div>
+          <span class="caption" style="margin-top: 3mm;">A live feed, scheduled like any board</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <span>display.onesignanddigital.com</span>
+    <span>7</span>
+  </div>
+</div>
+
+<!-- ================================================================
+     PAGE 8 — RELIABILITY
      ================================================================ -->
 <div class="page bg-cream">
   <div class="content">
@@ -927,7 +1180,7 @@
     </div>
     <div class="accent-line"></div>
 
-    <div class="section-num">06</div>
+    <div class="section-num">07</div>
 
     <h2 class="page-title">Every Screen.<br>Always On.</h2>
 
@@ -978,8 +1231,8 @@
         <p>Layered defences against TV sleep, screensavers and power-saving &mdash; the recurring failure of cheap signage.</p>
       </div>
       <div class="benefit-card">
-        <h4>Synchronised walls</h4>
-        <p>Screens grouped into a set change together, so a row of boards flips as one rather than drifting apart.</p>
+        <h4>Updates land straight away</h4>
+        <p>Change a price or swap a board and screens pick it up on their next check &mdash; no restart, no visit to site.</p>
       </div>
       <div class="benefit-card">
         <h4>No black frames</h4>
@@ -994,12 +1247,12 @@
 
   <div class="pg-footer">
     <span>display.onesignanddigital.com</span>
-    <span>7</span>
+    <span>8</span>
   </div>
 </div>
 
 <!-- ================================================================
-     PAGE 8 — DASHBOARD / MULTI-SITE
+     PAGE 9 — DASHBOARD / MULTI-SITE
      ================================================================ -->
 <div class="page bg-white">
   <div class="content">
@@ -1009,7 +1262,7 @@
     </div>
     <div class="accent-line"></div>
 
-    <div class="section-num">07</div>
+    <div class="section-num">08</div>
 
     <h2 class="page-title">One Dashboard,<br>Every Location</h2>
 
@@ -1073,12 +1326,12 @@
 
   <div class="pg-footer">
     <span>display.onesignanddigital.com</span>
-    <span>8</span>
+    <span>9</span>
   </div>
 </div>
 
 <!-- ================================================================
-     PAGE 9 — HARDWARE
+     PAGE 10 — HARDWARE
      ================================================================ -->
 <div class="page bg-cream">
   <div class="content">
@@ -1088,7 +1341,7 @@
     </div>
     <div class="accent-line"></div>
 
-    <div class="section-num">08</div>
+    <div class="section-num">09</div>
 
     <h2 class="page-title">Getting It<br>On the Wall</h2>
 
@@ -1153,12 +1406,12 @@
 
   <div class="pg-footer">
     <span>display.onesignanddigital.com</span>
-    <span>9</span>
+    <span>10</span>
   </div>
 </div>
 
 <!-- ================================================================
-     PAGE 10 — PRICING + CTA
+     PAGE 11 — PRICING + CTA
      ================================================================ -->
 <div class="page bg-white">
   <div class="content">
@@ -1168,7 +1421,7 @@
     </div>
     <div class="accent-line"></div>
 
-    <div class="section-num">09</div>
+    <div class="section-num">10</div>
 
     <h2 class="page-title" style="margin-bottom: 1mm; font-size: 24pt;">Plans Built Around Your Sites</h2>
 
@@ -1244,7 +1497,7 @@
 
   <div class="pg-footer">
     <span>&copy; 2026 Onesign &amp; Digital</span>
-    <span>10</span>
+    <span>11</span>
   </div>
 </div>
 
