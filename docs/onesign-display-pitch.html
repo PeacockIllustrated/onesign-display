@@ -61,6 +61,27 @@
       letter-spacing: 0.1em;
     }
 
+    /* Plans are shown as tiers, not rates — the number comes from the quoting
+       team once screen count, sites and hardware are known. Sits in the slot
+       .price-amount would otherwise occupy so card rhythm is unchanged. */
+    .price-quote {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 10.5pt;
+      color: var(--teal);
+      line-height: 1.2;
+      padding-bottom: 1mm;
+      border-bottom: 1.5px solid rgba(78, 126, 140, 0.25);
+    }
+
+    .price-quote span {
+      display: block;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 7pt;
+      font-weight: 400;
+      color: var(--light);
+      margin-top: 0.8mm;
+    }
+
     .banner h3 { font-size: 15pt; }
 
     .step h4 { font-size: 10pt; }
@@ -1217,17 +1238,20 @@
 
     <div class="section-num">09</div>
 
-    <h2 class="page-title" style="margin-bottom: 1mm; font-size: 24pt;">Simple, Monthly Pricing</h2>
+    <h2 class="page-title" style="margin-bottom: 1mm; font-size: 24pt;">Plans Built Around Your Sites</h2>
 
     <p class="body-text" style="margin-bottom: 2mm;">
-      Every plan includes scheduling, unlimited content updates, and Onesign design
-      support. No setup fees. No contracts. Cancel anytime.
+      Every plan is a simple monthly subscription that includes scheduling, unlimited
+      content updates, and Onesign design support. No setup fees. No contracts.
+      Cancel anytime. Your figure depends on how many screens and sites you run and
+      whether we supply the hardware &mdash; so our quoting team will put together a
+      proper number once we have seen your setup.
     </p>
 
     <div class="pricing-grid">
       <div class="price-card">
         <div class="price-plan-name">Onesign Static</div>
-        <div class="price-amount">&pound;39<span>/mo per screen</span></div>
+        <div class="price-quote">Quoted monthly<span>Entry tier</span></div>
         <div class="price-desc">Single-site cafes and static image menus</div>
         <ul class="price-features">
           <li>Up to 5 screens</li>
@@ -1241,7 +1265,7 @@
 
       <div class="price-card featured">
         <div class="price-plan-name">Onesign Video</div>
-        <div class="price-amount">&pound;59<span>/mo per screen</span></div>
+        <div class="price-quote">Quoted monthly<span>Most popular tier</span></div>
         <div class="price-desc">Daily specials, rotating menus and video content</div>
         <ul class="price-features">
           <li>Up to 5 screens</li>
@@ -1255,7 +1279,7 @@
 
       <div class="price-card">
         <div class="price-plan-name">Onesign Pro</div>
-        <div class="price-amount">&pound;89<span>/mo per screen</span></div>
+        <div class="price-quote">Quoted monthly<span>Multi-site tier</span></div>
         <div class="price-desc">Multi-site businesses with premium needs</div>
         <ul class="price-features">
           <li>Unlimited screens</li>
@@ -1273,10 +1297,12 @@
     </div>
 
     <div class="cta-section" style="margin-top: 2mm; padding: 6mm 10mm;">
-      <h3 style="margin-bottom: 2mm;">Ready to See It in Action?</h3>
+      <h3 style="margin-bottom: 2mm;">Let&rsquo;s Get You a Number</h3>
       <p style="margin-bottom: 2mm;">
-        We will set a screen up live, put your own menu on it, and show you how long a
-        price change actually takes. Bring a menu and we will build the board.
+        Tell us how many screens and sites you are covering and our quoting team will
+        price it properly &mdash; software, design and hardware if you need it. We will
+        also set a screen up live with your own menu on it, so you can see exactly how
+        long a price change takes.
       </p>
       <div class="cta-email">sales@onesignanddigital.com</div>
       <div class="cta-details">0191 487 6767 &bull; display.onesignanddigital.com</div>
