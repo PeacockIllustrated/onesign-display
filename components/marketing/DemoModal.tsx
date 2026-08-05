@@ -9,10 +9,10 @@ interface DemoModalProps {
 }
 
 const PLAN_OPTIONS = [
-    { id: 'static', name: 'Onesign Static', price: '£39', description: 'Single-location cafés' },
-    { id: 'video', name: 'Onesign Video', price: '£59', description: 'Daily specials & rotating menus', popular: true },
-    { id: 'pro', name: 'Onesign Pro', price: '£89', description: 'QSRs & multi-screen venues' },
-    { id: 'enterprise', name: 'Onesign Enterprise', price: 'POA', description: 'Franchise groups' },
+    { id: 'static', name: 'Onesign Static', description: 'Single-location cafés' },
+    { id: 'video', name: 'Onesign Video', description: 'Daily specials & rotating menus', popular: true },
+    { id: 'pro', name: 'Onesign Pro', description: 'QSRs & multi-screen venues' },
+    { id: 'enterprise', name: 'Onesign Enterprise', description: 'Franchise groups' },
 ];
 
 export function DemoModal({ isOpen, onClose }: DemoModalProps) {
@@ -159,7 +159,6 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                                                 <Check className="h-4 w-4 text-neutral-950 shrink-0" />
                                             )}
                                         </div>
-                                        <p className="text-lg font-bold text-neutral-950 mt-2">{plan.price}</p>
                                     </button>
                                 ))}
                             </div>

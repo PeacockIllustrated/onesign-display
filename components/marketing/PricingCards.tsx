@@ -5,7 +5,6 @@ import clsx from "clsx";
 interface PricingTier {
     name: string;
     description: string;
-    price: string;
     features: string[];
     notIncluded?: string[];
     cta: string;
@@ -41,18 +40,6 @@ export function PricingCards({ tiers }: { tiers: PricingTier[] }) {
                         <p className={clsx("text-xs leading-relaxed min-h-[40px]", tier.popular ? "text-neutral-400" : "text-neutral-500")}>
                             {tier.description}
                         </p>
-                    </div>
-
-                    <div className="mb-6">
-                        <div className="flex items-baseline">
-                            <span className="text-3xl font-bold">{tier.price}</span>
-                            {tier.price !== "POA" && (
-                                <span className={clsx("text-xs ml-1", tier.popular ? "text-neutral-400" : "text-neutral-500")}>/ venue</span>
-                            )}
-                        </div>
-                        {/* Hacky way to inject the secondary price line if present in the price string or passed separately. 
-                             Actually, looking at the request, the price line has complex text like "(or £29 + £120 one-off)".
-                             I should probably just let 'price' range be string and handle formatting. */ }
                     </div>
 
                     <ul className="flex-1 space-y-3 mb-8">

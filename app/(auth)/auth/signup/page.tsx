@@ -7,7 +7,7 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { signup } from './actions'
 import { cn } from '@/lib/utils'
-import { SELF_SERVE_PLANS, PLAN_PRICES, getPlanShortName, type PlanCode } from '@/lib/slate/plans'
+import { SELF_SERVE_PLANS, getPlanShortName, type PlanCode } from '@/lib/slate/plans'
 
 const PLAN_DESCRIPTIONS: Record<string, string> = {
     static_design: 'Static image menus, up to 5 screens',
@@ -139,9 +139,6 @@ function SignupForm() {
                                             <span className="text-sm font-medium text-zinc-900">
                                                 {getPlanShortName(code)}
                                             </span>
-                                            <span className="text-sm font-semibold text-zinc-900">
-                                                &pound;{PLAN_PRICES[code]}/mo
-                                            </span>
                                         </div>
                                         <p className="text-xs text-zinc-500 mt-0.5">
                                             {PLAN_DESCRIPTIONS[code]}
@@ -151,7 +148,7 @@ function SignupForm() {
                             ))}
                         </div>
                         <p className="text-xs text-zinc-400 mt-1">
-                            Need enterprise?{' '}
+                            Need enterprise, or a quote?{' '}
                             <Link href="/contact" className="text-zinc-600 hover:underline">
                                 Contact sales
                             </Link>

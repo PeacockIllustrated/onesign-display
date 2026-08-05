@@ -6,9 +6,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Digital Menu Board Pricing — Onesign Display",
+    title: "Digital Menu Board Plans — Onesign Display",
     description:
-        "Simple monthly pricing. Every plan includes scheduling, unlimited updates, and Onesign design included.",
+        "Every plan includes scheduling, unlimited updates, and Onesign design included. Get in touch for a quote tailored to your venue.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -19,7 +19,6 @@ const tiers = [
     {
         name: "Onesign Static",
         description: "Single-location cafes and static image menus",
-        price: "\u00A339",
         features: [
             "Up to 5 screens",
             "Static image menus",
@@ -28,13 +27,12 @@ const tiers = [
             "Screen status monitoring",
         ],
         notIncluded: ["Video playback", "Specials Studio", "Live streams", "Multi-screen sync"],
-        cta: "Get Started",
+        cta: "Get a Quote",
         href: "/contact",
     },
     {
         name: "Onesign Video",
         description: "Daily specials, rotating menus, and video content",
-        price: "\u00A359",
         popular: true,
         features: [
             "Everything in Static, plus:",
@@ -44,13 +42,12 @@ const tiers = [
             "Design package included",
         ],
         notIncluded: ["4K asset support", "Multi-screen sync", "Live streams"],
-        cta: "Get Started",
+        cta: "Get a Quote",
         href: "/contact",
     },
     {
         name: "Onesign Pro",
         description: "Multi-location businesses with premium needs",
-        price: "\u00A389",
         features: [
             "Everything in Video, plus:",
             "Unlimited screens",
@@ -61,13 +58,12 @@ const tiers = [
             "Priority onboarding",
             "Multi-location dashboards",
         ],
-        cta: "Get Started",
+        cta: "Get a Quote",
         href: "/contact",
     },
     {
         name: "Onesign Enterprise",
         description: "Franchise groups and multi-location chains",
-        price: "POA",
         features: [
             "Multi-location management",
             "Centralised brand governance",
@@ -101,8 +97,8 @@ const faqs = [
         answer: "Pro and Enterprise plans support unlimited locations with centralised management. Push content to every site from one dashboard, or let individual venues manage their own specials.",
     },
     {
-        question: "What does the price cover?",
-        answer: "The monthly price is per venue and includes the software platform, scheduling, unlimited content updates, and initial design setup. Hardware is not included but we can advise on the best options for your space.",
+        question: "What does a plan cover?",
+        answer: "Plans are billed monthly per venue and include the software platform, scheduling, unlimited content updates, and initial design setup. Hardware is not included but we can advise on the best options for your space. Get in touch and we will put together a quote for your setup.",
     },
     {
         question: "How long does setup take?",
@@ -151,8 +147,8 @@ export default function PricingPage() {
         <>
             {/* ---- Hero ---- */}
             <MarketingHero
-                headline="Simple, Monthly Pricing"
-                subhead="Every plan includes scheduling, unlimited content updates, and Onesign design support. No setup fees. No contracts. Cancel anytime."
+                headline="Plans Built Around Your Venue"
+                subhead="Every plan includes scheduling, unlimited content updates, and Onesign design support. No setup fees. No contracts. Cancel anytime. Talk to us and we will quote for your setup."
             />
 
             {/* ---- Pricing Cards ---- */}
@@ -160,7 +156,11 @@ export default function PricingPage() {
                 <PricingCards tiers={tiers} />
 
                 <p className="text-center text-sm text-neutral-400 mt-8">
-                    All prices exclude VAT. Prices are per venue per month.
+                    Plans are billed monthly per venue.{" "}
+                    <Link href="/contact" className="text-neutral-600 underline hover:text-neutral-950">
+                        Get in touch for a quote
+                    </Link>{" "}
+                    tailored to your screens and locations.
                 </p>
             </SectionWrapper>
 

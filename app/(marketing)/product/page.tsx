@@ -131,7 +131,7 @@ export default function ProductPage() {
                 headline="How Onesign Display Works"
                 subhead="From kitchen to screen in four simple steps. Menu boards that run themselves."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
-                secondaryCta={{ href: "/pricing", label: "View Pricing" }}
+                secondaryCta={{ href: "/pricing", label: "View Plans" }}
             >
                 <Image
                     src="/marketing/hero-player-tv.png"
@@ -650,7 +650,7 @@ export default function ProductPage() {
                         href="/pricing"
                         className="inline-flex items-center justify-center rounded-lg border border-white/20 px-8 py-4 text-base font-medium text-white hover:bg-white/10 transition-colors"
                     >
-                        View Pricing
+                        View Plans
                     </Link>
                 </div>
             </SectionWrapper>

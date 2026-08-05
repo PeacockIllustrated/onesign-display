@@ -79,7 +79,7 @@ export default function StudioPage() {
                 headline="Today's Special? Done in 30 Seconds"
                 subhead="No design skills required. No blank canvas. No agency wait. Just fill in the blanks and hit publish."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
-                secondaryCta={{ href: "/pricing", label: "View Pricing" }}
+                secondaryCta={{ href: "/pricing", label: "View Plans" }}
             />
 
             {/* ---- How It Works ---- */}
@@ -261,7 +261,7 @@ export default function StudioPage() {
                         href="/pricing"
                         className="inline-flex items-center justify-center rounded-lg border border-neutral-700 px-8 py-4 text-base font-medium text-white hover:bg-neutral-800 transition-colors"
                     >
-                        View Pricing
+                        View Plans
                     </Link>
                 </div>
             </SectionWrapper>

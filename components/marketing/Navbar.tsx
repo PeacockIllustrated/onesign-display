@@ -8,7 +8,7 @@ import { Logo } from "@/components/marketing/Logo";
 const navLinks = [
     { label: "Product", href: "/product" },
     { label: "Studio", href: "/studio" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "Plans", href: "/pricing" },
     { label: "Contact", href: "/contact" },
 ];
 
