@@ -11,13 +11,52 @@ export const unclesPalette = {
   creamSoft: 'rgba(232, 221, 199, 0.78)',
 } as const
 
-export const unclesFontsLink =
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:wght@300;400;500;600&display=swap'
+// Fonts are self-hosted from our own origin (public/fonts/menus). They used to
+// come from Google Fonts, which made every live menu board quietly dependent on
+// reaching a third party: when a venue's connection dropped, the stylesheet
+// request failed and the board fell back to system fonts. Screens keep playing
+// from their cached manifest in that situation, so the typography was the only
+// thing that broke — silently, and on the customer-facing side.
+//
+// Google serves both families as variable fonts, so one file per family/style
+// covers the 400–600 range the themes use. See public/fonts/menus/README.md.
+
+const LATIN =
+  'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, ' +
+  'U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, ' +
+  'U+2212, U+2215, U+FEFF, U+FFFD'
+
+const LATIN_EXT =
+  'U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, ' +
+  'U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, ' +
+  'U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF'
+
+function fontFace(family: string, style: 'normal' | 'italic', file: string, range: string): string {
+  return (
+    '@font-face{' +
+    `font-family:'${family}';` +
+    `font-style:${style};` +
+    'font-weight:400 600;' +
+    'font-display:swap;' +
+    `src:url(/fonts/menus/${file}) format('woff2');` +
+    `unicode-range:${range};` +
+    '}'
+  )
+}
+
+export const unclesFontFaceCss = [
+  fontFace('Cormorant Garamond', 'normal', 'cormorant-garamond-latin.woff2', LATIN),
+  fontFace('Cormorant Garamond', 'normal', 'cormorant-garamond-latin-ext.woff2', LATIN_EXT),
+  fontFace('Cormorant Garamond', 'italic', 'cormorant-garamond-italic-latin.woff2', LATIN),
+  fontFace('Cormorant Garamond', 'italic', 'cormorant-garamond-italic-latin-ext.woff2', LATIN_EXT),
+  fontFace('Inter', 'normal', 'inter-latin.woff2', LATIN),
+  fontFace('Inter', 'normal', 'inter-latin-ext.woff2', LATIN_EXT),
+].join('')
 
 export const csp =
-  "default-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com data:; " +
-  "style-src 'unsafe-inline' https://fonts.googleapis.com; " +
-  "font-src https://fonts.gstatic.com; " +
+  "default-src 'self' data:; " +
+  "style-src 'unsafe-inline'; " +
+  "font-src 'self'; " +
   "img-src 'self' data: https:; " +
   "script-src 'none';"
 
