@@ -197,14 +197,29 @@ Building the demo surfaces four genuine issues in the HTML-menu path — the are
 
 | # | Issue | Evidence | Fix |
 |---|---|---|---|
-| 1 | **Menu edits take up to 60s to reach a screen** | `POLL_INTERVAL_MS = 60000` (`player/[token]/page.tsx:486`) | Supabase Realtime subscription on `refresh_version` with poll as fallback → ~1–2s. Needed for the demo *and* for real service use. |
+| 1 | ~~**Menu edits take up to 60s to reach a screen**~~ ✅ **fixed** | `POLL_INTERVAL_MS` was 60s. The poll already hit the lightweight `/api/player/refresh` version check — the latency was purely the interval. | Poll interval dropped to 10s (limiter raised 6→15/min to match); the full manifest is still only fetched when `should_refresh` is true, so per-screen load stays trivial. Worst-case propagation is now ~10s. A Realtime push channel remains the eventual upgrade; the poll stays as its fallback. |
 | 2 | ~~**A render failure blanks the board**~~ ✅ **fixed** | `saveAndRenderMenu` wrote `rendered_html: result.html`, which is `null` on failure; the manifest then omits `html_menu` and the screen falls through to nothing, because content resolution is an else-if chain already committed to the menu branch | A failed render now leaves `content_json` and `rendered_html` untouched, records `render_error`, and returns the error to the editor — the last good menu keeps playing. `createMenu` throws rather than creating a menu that would blank a screen. |
-| 3 | **Menu swaps flash** | `<HtmlSlide>` swaps `srcDoc` directly (`page.tsx:1370`); no A/B crossfade as playlists have | Preload the new HTML in a hidden iframe, crossfade on load — reuse the existing A/B layer pattern. |
+| 3 | ~~**Menu swaps flash**~~ ✅ **fixed** | `<HtmlSlide>` swapped `srcDoc` in place — a blank beat on every mid-service price change | Rebuilt as two persistent iframe slots: the incoming document loads hidden and crossfades in (400ms) only once parsed, with rapid-successive-update races handled. Same layering idea as the playlist A/B system. |
 | 4 | ~~**Menus depend on Google Fonts at render time**~~ ✅ **fixed** | Theme shell preconnected to `fonts.googleapis.com` / `fonts.gstatic.com` and loaded Cormorant Garamond + Inter over the wire. The theme CSP pinned `font-src` to `fonts.gstatic.com` only, so a self-hosted fallback was not merely absent but *forbidden*. A venue outage silently dropped customer-facing menus to system fonts while the screen otherwise kept playing. | Both families are now self-hosted from `public/fonts/menus` (6 variable-font files, 272 KB, one-year immutable cache) and the CSP is `font-src 'self'`. Verified in Chromium with every external host blocked: fonts load, zero CSP violations, zero external requests. |
 
-Recommend fixing #1 and #3 as part of the demo build — it needs both anyway. #2 and #4 are done.
+All four are now fixed on this branch.
 
-> **Note:** the repo has 14 test files and a `vitest.config.ts`, but `vitest` is not in `package.json` and there is no CI workflow, so none of them have been running. 11 tests currently fail on `main` for unrelated pre-existing reasons (`player-ping`, and two other API suites). Worth deciding whether to adopt them properly — declaring `vitest`, adding a `test` script, and wiring CI — or drop them.
+> **Test suite status:** `vitest` is now a declared devDependency with `npm test` / `npm run test:watch` scripts, and the whole suite passes (174 tests). The 11 pre-existing failures were repaired: the ping tests had drifted behind the route's status-transition logic, the stream-manifest tests were leaking the route's per-screen cache between cases (fixed with unique screen ids per test), and the user-management tests were *correct* — the action was leaking raw DB error strings to the client, which is now fixed in the action. CI wiring remains open.
+
+---
+
+## Demo build status (first working cut — `/demo`)
+
+Implemented, verified end-to-end in Chromium (`scripts/demo-e2e.mjs`):
+
+- **Scene** — placeholder venue wall + floor; **Edit layout** mode with mount/drag/resize/rotate/delete; positions stored as wall fractions; drop or load a **reference photo** as the backdrop at any time (positions survive the swap). Layout + all state persist in localStorage.
+- **The USB journey** — a mounted display walks the real provisioning arc: dead panel → `NO SIGNAL · HDMI 1` → *Insert Onesign USB* → boot splash → **pairing code on the TV** → claimed from the phone (name + set) → "Connected — waiting for content" → content live. A paired stick auto-resumes through power cuts, exactly like the webOS app's stored-token flow. *(Note: the demo models code-on-TV claiming — Chromecast-style — where today's TV app asks the installer to type the token. The `pairing_code` column already exists on `display_screens`; recommend adopting the demo's flow as the real onboarding.)*
+- **ScreenSurface** — a faithful mini-player: manifest fetch against the driver with last-known-good cache "on the stick", exponential backoff, OFFLINE·cached badge with retry countdown, instant-on from cache, push-refresh on `refresh_version` bumps, poll as backstop. Playlist position computed by the **real `computeSyncPosition()`** driven by the virtual clock; menus render in scaled `srcdoc` iframes from the **real `renderMenu()`** via `/api/demo/render-menu`.
+- **Control phone** — draggable/collapsible, always on its own "mobile data": pair screens, assign menus/playlists, move screens between sets mid-cycle, per-set **Sync toggle**, menu editors for both Uncle's themes (names + prices) with save-and-publish through the real render pipeline (a failed render keeps the last good version live — same semantics as the fixed production action), and an Activity feed timestamped by the virtual clock.
+- **Presenter bar** — virtual clock (1×/60×/600×), venue-wifi cut (W), edit layout (E), **Quick start** (empty room → provisioned 3+1 in one click, for recovery mid-pitch), Reset.
+- **Proven beats** (all asserted in the E2E): synced wall; **power-cut a synced screen → boots → rejoins on the correct frame**; phone price edit → real render → live on the counter screen; venue-wifi cut → all screens keep playing cached content under honest OFFLINE badges while the phone stays fully operational.
+
+Still to come: the reference-image scene pass (Phase 2 proper), scheduling/daypart beats on the time-warp, break-it panel as a first-class UI, evidence panel, full 3D room (Phase 5).
 
 ---
 
