@@ -1,25 +1,24 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { parseScheduleForm } from '@/lib/schedules'
 import { revalidatePath } from 'next/cache'
 
 export async function updateSchedule(scheduleId: string, formData: FormData) {
     const supabase = await createClient()
 
-    const name = formData.get('name') as string
-    const startTime = formData.get('startTime') as string
-    const endTime = formData.get('endTime') as string
-    const days = formData.getAll('days').map(d => parseInt(d as string))
-
-    if (!scheduleId || !name || !startTime || !endTime || days.length === 0) {
+    if (!scheduleId) {
         throw new Error('Missing required fields')
     }
+
+    const { name, startTime, endTime, days, priority } = parseScheduleForm(formData)
 
     const { error } = await supabase.from('display_schedules').update({
         name,
         start_time: startTime,
         end_time: endTime,
-        days_of_week: days
+        days_of_week: days,
+        priority
     }).eq('id', scheduleId)
 
     if (error) {

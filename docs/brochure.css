@@ -1,0 +1,1246 @@
+/* ============================================================
+       ONESIGN DISPLAY — PRODUCT OVERVIEW BROCHURE
+       Design system based on Onesign brand guidelines
+       ============================================================ */
+
+    :root {
+      --navy:       #2C5F6B;
+      --navy-deep:  #1B3F48;
+      --teal:       #4E7E8C;
+      --teal-light: #6A9BAA;
+      --cream:      #F8F6F2;
+      --white:      #FFFFFF;
+      --dark:       #1A1D21;
+      --mid:        #4A5568;
+      --light:      #94A3B8;
+      --border:     #E2E8F0;
+      --sidebar-bg: #111318;
+      --card-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--dark);
+      font-size: 10pt;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Gilroy-Bold', 'DM Sans', sans-serif;
+      font-weight: 400;
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+    }
+
+    /* ---- Page Layout ---- */
+
+    .page {
+      width: 210mm;
+      height: 297mm;
+      position: relative;
+      overflow: hidden;
+      page-break-after: always;
+    }
+
+    .content {
+      padding: 28mm 22mm 20mm 22mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .bg-white  { background: var(--white); }
+    .bg-cream  { background: var(--cream); }
+
+    /* ---- Page Header ---- */
+
+    .pg-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2mm;
+      padding-bottom: 3mm;
+    }
+
+    .pg-header .logo-sm {
+      height: 7mm;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .pg-header .meta {
+      margin-left: auto;
+      font-size: 7.5pt;
+      color: var(--light);
+      letter-spacing: 0.04em;
+    }
+
+    .accent-line {
+      height: 2px;
+      background: linear-gradient(90deg, #4E7E8C, rgba(78, 126, 140, 0));
+      margin-bottom: 6mm;
+    }
+
+    /* ---- Page Footer ---- */
+
+    .pg-footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 22mm;
+      right: 22mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 3mm;
+      font-size: 7pt;
+      color: var(--light);
+    }
+
+    /* ---- Section Number Watermark ---- */
+
+    .section-num {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 54pt;
+      color: var(--teal);
+      opacity: 0.12;
+      position: absolute;
+      top: 24mm;
+      right: 22mm;
+      line-height: 1;
+    }
+
+    /* ---- Typography ---- */
+
+    .page-title {
+      font-size: 26pt;
+      color: var(--navy);
+      margin-bottom: 4mm;
+      line-height: 1.1;
+    }
+
+    .page-subtitle {
+      font-size: 14pt;
+      color: var(--navy);
+      margin-bottom: 4mm;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-weight: 400;
+    }
+
+    .body-text {
+      font-size: 9.5pt;
+      line-height: 1.65;
+      color: var(--mid);
+      max-width: 145mm;
+    }
+
+    .body-text + .body-text { margin-top: 3mm; }
+
+    /* ---- Bullets ---- */
+
+    .bullets {
+      list-style: none;
+      padding: 0;
+      margin: 4mm 0;
+    }
+
+    .bullets li {
+      position: relative;
+      padding-left: 5mm;
+      margin-bottom: 2.5mm;
+      font-size: 9pt;
+      line-height: 1.5;
+      color: var(--mid);
+    }
+
+    .bullets li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 2.2mm;
+      width: 2mm;
+      height: 2mm;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    /* ---- Callout Box ---- */
+
+    .callout {
+      background: var(--cream);
+      border-left: 3px solid var(--teal);
+      padding: 5mm 6mm;
+      border-radius: 0 6px 6px 0;
+      margin: 5mm 0;
+      font-size: 9.5pt;
+      font-weight: 500;
+      color: var(--dark);
+      line-height: 1.55;
+    }
+
+    .bg-cream .callout { background: var(--white); }
+
+    /* ---- Banner ---- */
+
+    .banner {
+      background: var(--navy);
+      color: white;
+      padding: 4mm 6mm;
+      border-radius: 5px;
+      margin: 5mm 0;
+    }
+
+    .banner h3 {
+      font-size: 13pt;
+      color: white;
+    }
+
+    /* ---- Challenge Sidebar ---- */
+
+    .challenge-layout {
+      display: flex;
+      gap: 6mm;
+      flex: 1;
+    }
+
+    .challenge-sidebar {
+      width: 48mm;
+      background: var(--navy);
+      border-radius: 6px;
+      padding: 7mm 6mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .challenge-sidebar h2 {
+      font-size: 22pt;
+      color: white;
+      line-height: 1.1;
+    }
+
+    .challenge-sidebar p {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.6);
+      margin-top: 3mm;
+      line-height: 1.5;
+    }
+
+    .challenge-main {
+      flex: 1;
+    }
+
+    /* ---- Benefits Grid ---- */
+
+    .benefits {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4mm;
+    }
+
+    .benefit-card {
+      padding: 2.5mm 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .benefit-card h4 {
+      font-size: 10pt;
+      color: var(--navy);
+      margin-bottom: 1.5mm;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-weight: 400;
+    }
+
+    .benefit-card p {
+      font-size: 8.5pt;
+      color: var(--mid);
+      line-height: 1.5;
+    }
+
+    /* ---- CTA Section ---- */
+
+    .cta-section {
+      background: var(--navy);
+      border-radius: 8px;
+      padding: 10mm 12mm;
+      text-align: center;
+      color: white;
+      margin-top: 5mm;
+    }
+
+    .cta-section h3 {
+      font-size: 16pt;
+      color: white;
+      margin-bottom: 3mm;
+    }
+
+    .cta-section p {
+      font-size: 9pt;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      margin-bottom: 4mm;
+    }
+
+    .cta-email {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 13pt;
+      color: var(--teal-light);
+      margin: 3mm 0 2mm;
+    }
+
+    .cta-details {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ---- Two-Up Layout ---- */
+
+    .two-up {
+      display: flex;
+      gap: 8mm;
+      justify-content: center;
+      align-items: flex-start;
+      margin-top: 5mm;
+    }
+
+    .two-up .col {
+      flex: 1;
+      text-align: center;
+    }
+
+    .caption {
+      display: block;
+      font-size: 7.5pt;
+      color: var(--light);
+      font-style: italic;
+      margin-top: 3mm;
+      text-align: center;
+    }
+
+    /* ---- Sidebar Layout ---- */
+
+    .sidebar-layout {
+      display: flex;
+      gap: 6mm;
+      flex: 1;
+      margin-top: 4mm;
+    }
+
+    .sidebar-text-col {
+      flex: 1;
+      padding-right: 4mm;
+    }
+
+    .sidebar-img-col {
+      width: 50%;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      border-left: 2px solid var(--teal);
+      padding-left: 5mm;
+    }
+
+    /* ---- Feature Tags ---- */
+
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2mm;
+      margin: 4mm 0;
+    }
+
+    .feature-tag {
+      display: inline-block;
+      background: rgba(78, 126, 140, 0.1);
+      color: var(--navy);
+      font-size: 7.5pt;
+      font-weight: 600;
+      padding: 1.5mm 3mm;
+      border-radius: 3px;
+      border: 1px solid rgba(78, 126, 140, 0.25);
+    }
+
+    /* ============================================================
+       DEVICE MOCKUPS — Laptop & TV
+       ============================================================ */
+
+    /* ---- Laptop Frame ---- */
+
+    .laptop {
+      display: inline-block;
+      position: relative;
+    }
+
+    .laptop-body {
+      background: #2d2d2d;
+      border-radius: 5mm 5mm 0 0;
+      padding: 2mm 2mm 0 2mm;
+      position: relative;
+    }
+
+    .laptop-camera {
+      width: 1.5mm;
+      height: 1.5mm;
+      background: #555;
+      border-radius: 50%;
+      margin: 0 auto 1.5mm;
+    }
+
+    .laptop-screen {
+      background: #f9fafb;
+      border-radius: 1px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .laptop-base {
+      height: 2.5mm;
+      background: linear-gradient(to bottom, #4a4a4a, #6a6a6a);
+      border-radius: 0 0 1mm 1mm;
+      margin: 0;
+    }
+
+    .laptop-foot {
+      height: 1.5mm;
+      background: #888;
+      border-radius: 0 0 2mm 2mm;
+      margin: 0 -3mm;
+    }
+
+    .laptop.small .laptop-body { padding: 1.5mm 1.5mm 0; border-radius: 3mm 3mm 0 0; }
+    .laptop.small .laptop-camera { width: 1mm; height: 1mm; margin-bottom: 1mm; }
+    .laptop.small .laptop-base { height: 2mm; }
+    .laptop.small .laptop-foot { height: 1mm; margin: 0 -2mm; }
+
+    /* ---- Phone Frame ---- */
+
+    .phone {
+      display: inline-block;
+      position: relative;
+    }
+
+    .phone-body {
+      background: #1a1a1a;
+      border-radius: 8mm;
+      padding: 3mm 2mm;
+      position: relative;
+      box-shadow: 0 2mm 10mm rgba(0,0,0,0.15), 0 0.5mm 3mm rgba(0,0,0,0.08);
+    }
+
+    .phone-notch {
+      width: 12mm;
+      height: 1.5mm;
+      background: #1a1a1a;
+      border-radius: 0 0 2mm 2mm;
+      margin: -1mm auto 1.5mm;
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone-screen {
+      background: #f9fafb;
+      border-radius: 4mm;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .phone-home {
+      width: 10mm;
+      height: 1mm;
+      background: #444;
+      border-radius: 1mm;
+      margin: 2mm auto 0;
+    }
+
+    /* ---- TV Frame ---- */
+
+    .tv {
+      display: inline-block;
+      position: relative;
+    }
+
+    .tv-bezel {
+      background: #1a1a1a;
+      border-radius: 2mm;
+      padding: 1.5mm;
+      box-shadow: 0 4mm 15mm rgba(0,0,0,0.12), 0 1mm 4mm rgba(0,0,0,0.06);
+    }
+
+    .tv-screen {
+      background: #0d0d0d;
+      border-radius: 0.5mm;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .tv-stand-neck {
+      width: 4mm;
+      height: 3mm;
+      background: #333;
+      margin: 0 auto;
+    }
+
+    .tv-stand-base {
+      width: 18mm;
+      height: 1.5mm;
+      background: linear-gradient(to bottom, #444, #555);
+      margin: 0 auto;
+      border-radius: 0 0 1mm 1mm;
+    }
+
+    /* ============================================================
+       MOCK UI COMPONENTS — Miniature App Representations
+       ============================================================ */
+
+    .mock-app {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* -- Sidebar -- */
+    .mock-sidebar {
+      background: var(--sidebar-bg);
+      display: flex;
+      flex-direction: column;
+      padding: 2mm 1.5mm;
+      flex-shrink: 0;
+    }
+
+    .mock-sidebar .mock-logo {
+      width: 70%;
+      height: 2mm;
+      background: rgba(255,255,255,0.8);
+      border-radius: 0.5mm;
+      margin: 0 auto 2.5mm;
+    }
+
+    .mock-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      padding: 1mm 1.5mm;
+      border-radius: 1mm;
+      margin-bottom: 0.5mm;
+      font-size: 3.5pt;
+      color: rgba(255,255,255,0.4);
+      white-space: nowrap;
+    }
+
+    .mock-nav-item.active {
+      background: rgba(61, 178, 140, 0.15);
+      color: var(--teal);
+    }
+
+    .mock-nav-dot {
+      width: 1.2mm;
+      height: 1.2mm;
+      border-radius: 0.3mm;
+      flex-shrink: 0;
+    }
+
+    .mock-nav-item.active .mock-nav-dot { background: var(--teal); }
+    .mock-nav-item .mock-nav-dot { background: rgba(255,255,255,0.3); }
+
+    .mock-sidebar-footer {
+      margin-top: auto;
+      padding: 1mm;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mock-avatar {
+      width: 2.5mm;
+      height: 2.5mm;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    /* -- Main Content Area -- */
+    .mock-main {
+      flex: 1;
+      background: #f3f4f6;
+      padding: 2.5mm 3mm;
+      overflow: hidden;
+    }
+
+    .mock-heading {
+      font-size: 4.5pt;
+      font-weight: 700;
+      color: var(--dark);
+      margin-bottom: 1mm;
+    }
+
+    .mock-subheading {
+      font-size: 3pt;
+      color: var(--light);
+      margin-bottom: 2mm;
+    }
+
+    /* -- Cards -- */
+    .mock-card-grid {
+      display: grid;
+      gap: 1.5mm;
+    }
+
+    .mock-card {
+      background: white;
+      border-radius: 1.5mm;
+      padding: 2mm;
+      box-shadow: 0 0.3mm 1mm rgba(0,0,0,0.06);
+    }
+
+    .mock-card-title {
+      font-size: 3.5pt;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5mm;
+    }
+
+    .mock-card-meta {
+      font-size: 2.5pt;
+      color: var(--light);
+    }
+
+    .mock-card-badge {
+      display: inline-block;
+      font-size: 2pt;
+      padding: 0.3mm 1mm;
+      border-radius: 0.5mm;
+      background: rgba(61, 178, 140, 0.12);
+      color: var(--teal);
+      font-weight: 600;
+      margin-top: 0.5mm;
+    }
+
+    /* -- Media Grid -- */
+    .mock-media-grid {
+      display: grid;
+      gap: 1.2mm;
+    }
+
+    .mock-media-thumb {
+      border-radius: 1mm;
+      aspect-ratio: 16/10;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mock-media-thumb .mock-play {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2.5mm;
+      height: 2.5mm;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mock-media-thumb .mock-play::after {
+      content: '';
+      width: 0;
+      height: 0;
+      border-left: 1mm solid white;
+      border-top: 0.6mm solid transparent;
+      border-bottom: 0.6mm solid transparent;
+      margin-left: 0.3mm;
+    }
+
+    .mock-media-name {
+      font-size: 2.5pt;
+      color: var(--mid);
+      margin-top: 0.5mm;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    /* -- Upload Button -- */
+    .mock-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5mm;
+      background: var(--teal);
+      color: white;
+      font-size: 3pt;
+      font-weight: 600;
+      padding: 0.8mm 2mm;
+      border-radius: 1mm;
+    }
+
+    .mock-btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5mm;
+      background: white;
+      color: var(--dark);
+      font-size: 3pt;
+      font-weight: 500;
+      padding: 0.8mm 2mm;
+      border-radius: 1mm;
+      border: 0.5px solid var(--border);
+    }
+
+    /* -- Schedule Timeline -- */
+    .mock-schedule-row {
+      display: flex;
+      align-items: center;
+      gap: 1mm;
+      margin-bottom: 1mm;
+    }
+
+    .mock-schedule-label {
+      font-size: 2.5pt;
+      color: var(--mid);
+      width: 5mm;
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .mock-schedule-bar {
+      height: 3mm;
+      border-radius: 0.8mm;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 1mm;
+      font-size: 2.5pt;
+      color: white;
+      font-weight: 600;
+    }
+
+    /* -- Day Selector -- */
+    .mock-days {
+      display: flex;
+      gap: 0.8mm;
+      margin-bottom: 2mm;
+    }
+
+    .mock-day {
+      width: 3mm;
+      height: 3mm;
+      border-radius: 50%;
+      font-size: 2pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+    }
+
+    .mock-day.on  { background: var(--teal); color: white; }
+    .mock-day.off { background: #e5e7eb; color: var(--light); }
+
+    /* -- Screen Preview -- */
+    .mock-preview {
+      background: #111;
+      border-radius: 1mm;
+      aspect-ratio: 16/9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .mock-preview-badge {
+      position: absolute;
+      top: 1mm;
+      right: 1mm;
+      font-size: 2pt;
+      padding: 0.3mm 1mm;
+      border-radius: 0.5mm;
+      background: rgba(61, 178, 140, 0.9);
+      color: white;
+      font-weight: 600;
+    }
+
+    /* -- Specials Editor -- */
+    .mock-editor-split {
+      display: flex;
+      gap: 1.5mm;
+      flex: 1;
+    }
+
+    .mock-editor-form {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1mm;
+    }
+
+    .mock-field-label {
+      font-size: 2.5pt;
+      font-weight: 600;
+      color: var(--mid);
+    }
+
+    .mock-field-input {
+      background: white;
+      border: 0.5px solid var(--border);
+      border-radius: 0.8mm;
+      padding: 0.8mm 1.2mm;
+      font-size: 3pt;
+      color: var(--dark);
+    }
+
+    .mock-editor-canvas {
+      flex: 1.2;
+      background: #111;
+      border-radius: 1.5mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2mm;
+    }
+
+    /* -- TV Menu Content -- */
+    .mock-menu {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #1a3a2a 0%, #0d2318 100%);
+      padding: 3mm;
+      display: flex;
+      flex-direction: column;
+      color: white;
+    }
+
+    .mock-menu-header {
+      text-align: center;
+      margin-bottom: 2mm;
+      padding-bottom: 1.5mm;
+      border-bottom: 0.5px solid rgba(255,255,255,0.15);
+    }
+
+    .mock-menu-title {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 5pt;
+      letter-spacing: 0.08em;
+      color: var(--teal-light);
+    }
+
+    .mock-menu-subtitle {
+      font-size: 2.5pt;
+      color: rgba(255,255,255,0.5);
+      margin-top: 0.5mm;
+    }
+
+    .mock-menu-section {
+      margin-bottom: 2mm;
+    }
+
+    .mock-menu-section-title {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 3.5pt;
+      color: var(--teal-light);
+      margin-bottom: 1mm;
+      letter-spacing: 0.05em;
+    }
+
+    .mock-menu-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.5mm 0;
+      font-size: 2.8pt;
+    }
+
+    .mock-menu-item-name {
+      color: rgba(255,255,255,0.85);
+    }
+
+    .mock-menu-item-dots {
+      flex: 1;
+      border-bottom: 0.5px dotted rgba(255,255,255,0.15);
+      margin: 0 1mm;
+      min-width: 3mm;
+    }
+
+    .mock-menu-item-price {
+      color: var(--teal-light);
+      font-weight: 600;
+    }
+
+    .mock-menu-footer {
+      margin-top: auto;
+      text-align: center;
+      font-size: 2pt;
+      color: rgba(255,255,255,0.3);
+      padding-top: 1mm;
+      border-top: 0.5px solid rgba(255,255,255,0.08);
+    }
+
+    /* ============================================================
+       PRICING CARDS
+       ============================================================ */
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3mm;
+      margin: 2mm 0;
+    }
+
+    .price-card {
+      border: 1px solid var(--border);
+      border-radius: 2mm;
+      padding: 3.5mm;
+      background: white;
+      position: relative;
+    }
+
+    .price-card.featured {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 1px var(--teal);
+    }
+
+    .price-card.featured::after {
+      content: 'POPULAR';
+      position: absolute;
+      top: -1.5mm;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2pt;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      background: var(--teal);
+      color: white;
+      padding: 0.3mm 2mm;
+      border-radius: 1mm;
+    }
+
+    .price-plan-name {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 9pt;
+      color: var(--navy);
+      margin-bottom: 0.5mm;
+    }
+
+    .price-amount {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 16pt;
+      color: var(--dark);
+      line-height: 1.2;
+    }
+
+    .price-amount span {
+      font-size: 7pt;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--light);
+      font-weight: 400;
+    }
+
+    .price-desc {
+      font-size: 6.5pt;
+      color: var(--light);
+      margin: 1.5mm 0 2.5mm;
+      line-height: 1.4;
+    }
+
+    .price-features {
+      list-style: none;
+      padding: 0;
+    }
+
+    .price-features li {
+      font-size: 6.5pt;
+      color: var(--mid);
+      padding: 0.8mm 0;
+      padding-left: 3.5mm;
+      position: relative;
+      line-height: 1.3;
+    }
+
+    .price-features li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 6pt;
+    }
+
+    .price-features li.no::before {
+      content: '—';
+      color: var(--light);
+    }
+
+    .price-amount.blank {
+      border-bottom: 1.5px dashed var(--light);
+      display: inline-block;
+      min-width: 18mm;
+      height: 5mm;
+      margin-bottom: 1mm;
+    }
+
+    .price-features li.blank {
+      border-bottom: 1px dashed #ddd;
+      min-height: 3.5mm;
+      padding-left: 0;
+    }
+
+    .price-features li.blank::before {
+      content: '';
+    }
+
+    .capabilities-card {
+      grid-column: 1 / -1;
+      border: 1.5px solid var(--navy);
+      border-radius: 2mm;
+      padding: 3.5mm 5mm;
+      background: #f8fafb;
+      margin-top: 1mm;
+    }
+
+    .capabilities-card h4 {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 9pt;
+      color: var(--navy);
+      margin-bottom: 2mm;
+    }
+
+    .capabilities-list {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1mm 4mm;
+      list-style: none;
+      padding: 0;
+    }
+
+    .capabilities-list li {
+      font-size: 6.5pt;
+      color: var(--mid);
+      padding: 0.5mm 0;
+      padding-left: 3.5mm;
+      position: relative;
+      line-height: 1.3;
+    }
+
+    .capabilities-list li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: var(--teal);
+      font-weight: 700;
+      font-size: 6pt;
+    }
+
+    .chris-note {
+      margin-top: 2mm;
+      padding: 2mm 3mm;
+      background: #fffbe6;
+      border: 1px dashed #d4a017;
+      border-radius: 1.5mm;
+      font-size: 6.5pt;
+      color: #5a4a00;
+      line-height: 1.5;
+    }
+
+    /* ============================================================
+       COVER PAGE
+       ============================================================ */
+
+    .cover {
+      background: linear-gradient(160deg, var(--navy) 0%, var(--navy-deep) 55%, #0F2A30 100%);
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover-content {
+      padding: 18mm 22mm 0 22mm;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cover .logo-main {
+      height: 12mm;
+      width: auto;
+      object-fit: contain;
+      margin-bottom: 16mm;
+    }
+
+    .cover-label {
+      font-size: 8pt;
+      letter-spacing: 0.15em;
+      color: var(--teal);
+      font-weight: 600;
+      margin-bottom: 5mm;
+      display: flex;
+      align-items: center;
+      gap: 3mm;
+    }
+
+    .cover-label::before {
+      content: '';
+      display: block;
+      width: 8mm;
+      height: 1.5px;
+      background: var(--teal);
+    }
+
+    .cover h1 {
+      font-size: 42pt;
+      line-height: 1.05;
+      margin-bottom: 8mm;
+      max-width: 130mm;
+    }
+
+    .cover .lead {
+      font-size: 10.5pt;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.7;
+      max-width: 120mm;
+    }
+
+    .cover-visual {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      padding: 0 22mm 0 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover-decoration {
+      position: absolute;
+      right: -20mm;
+      bottom: -30mm;
+      width: 120mm;
+      height: 120mm;
+      border: 2px solid rgba(61, 178, 140, 0.08);
+      border-radius: 50%;
+    }
+
+    .cover-decoration-2 {
+      position: absolute;
+      right: -5mm;
+      bottom: -15mm;
+      width: 80mm;
+      height: 80mm;
+      border: 2px solid rgba(61, 178, 140, 0.05);
+      border-radius: 50%;
+    }
+
+    .cover-footer {
+      padding: 6mm 22mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .cover-footer .client-label {
+      font-size: 7pt;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .cover-footer-contact {
+      text-align: right;
+    }
+
+    .cover-footer-contact .company {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .cover-footer-contact .details {
+      font-size: 7pt;
+      color: rgba(255,255,255,0.35);
+      margin-top: 1mm;
+    }
+
+    /* ---- Specials card on cover ---- */
+    .cover-mini-tv {
+      position: absolute;
+      right: 22mm;
+      bottom: 15mm;
+    }
+
+    /* ---- Stat row ---- */
+    .stat-row {
+      display: flex;
+      gap: 6mm;
+      margin: 4mm 0;
+    }
+
+    .stat-item {
+      text-align: center;
+      flex: 1;
+    }
+
+    .stat-value {
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 22pt;
+      color: var(--teal);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 7.5pt;
+      color: var(--mid);
+      margin-top: 1mm;
+    }
+
+    /* ---- How It Works Steps ---- */
+    .steps {
+      display: flex;
+      gap: 3mm;
+      margin: 4mm 0;
+    }
+
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 3mm 2mm;
+    }
+
+    .step-num {
+      width: 6mm;
+      height: 6mm;
+      border-radius: 50%;
+      background: var(--teal);
+      color: white;
+      font-family: 'Gilroy-Bold', sans-serif;
+      font-size: 8pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 2mm;
+    }
+
+    .step h4 {
+      font-size: 8pt;
+      color: var(--navy);
+      margin-bottom: 1mm;
+    }
+
+    .step p {
+      font-size: 7pt;
+      color: var(--mid);
+      line-height: 1.4;
+    }
+
+    .step-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--border);
+      font-size: 12pt;
+      flex-shrink: 0;
+      padding-top: 4mm;
+    }

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createSchedule } from '@/app/actions/create-schedule'
+import { SCHEDULE_PRIORITIES, DEFAULT_SCHEDULE_PRIORITY } from '@/lib/schedules'
 import { X, Calendar, Clock } from 'lucide-react'
 
 const DAYS = [
@@ -110,6 +111,27 @@ export function CreateScheduleButton({ stores }: { stores: { id: string, name: s
                                         required
                                     />
                                 </div>
+                            </div>
+
+                            <p className="text-xs text-zinc-500 -mt-2">
+                                An end time earlier than the start time runs overnight &mdash;
+                                e.g. 21:00 to 02:00 plays through to 2am the next morning.
+                            </p>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                <select
+                                    name="priority"
+                                    defaultValue={DEFAULT_SCHEDULE_PRIORITY}
+                                    className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black"
+                                >
+                                    {SCHEDULE_PRIORITIES.map(p => (
+                                        <option key={p.value} value={p.value}>{p.label}</option>
+                                    ))}
+                                </select>
+                                <p className="text-xs text-zinc-500 mt-1">
+                                    Wins when two schedules cover the same moment.
+                                </p>
                             </div>
 
                             <div className="pt-2">
