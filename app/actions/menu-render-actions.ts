@@ -23,6 +23,14 @@ export async function createMenu(clientId: string, name: string, themeKey: strin
 
   const initial = renderMenu(themeKey, theme.defaultContent)
 
+  // A theme that cannot render its own default content is broken. Fail here
+  // rather than create a menu with no rendered HTML, which would blank any
+  // screen it was later assigned to.
+  if (!initial.html) {
+    console.error(`Theme "${themeKey}" failed to render its default content:`, initial.error)
+    throw new Error(`Theme "${themeKey}" could not be rendered`)
+  }
+
   const { data, error } = await supabase
     .from('display_html_menus')
     .insert({
@@ -31,8 +39,8 @@ export async function createMenu(clientId: string, name: string, themeKey: strin
       theme_key: themeKey,
       content_json: theme.defaultContent as object,
       rendered_html: initial.html,
-      rendered_at: initial.html ? new Date().toISOString() : null,
-      render_error: initial.error,
+      rendered_at: new Date().toISOString(),
+      render_error: null,
     })
     .select('id')
     .single()
@@ -60,13 +68,28 @@ export async function saveAndRenderMenu(menuId: string, contentJson: unknown) {
 
   const result = renderMenu(existing.theme_key, contentJson)
 
+  // A failed render must never reach the screens. Writing result.html straight
+  // through would store null, and the player manifest omits html_menu when
+  // rendered_html is empty — with no fallback, because content resolution is an
+  // else-if chain that has already committed to the menu branch. The board goes
+  // black. So on failure: leave content_json and rendered_html untouched, record
+  // why, and report back to the editor. The last good menu keeps playing.
+  if (!result.html) {
+    await supabase
+      .from('display_html_menus')
+      .update({ render_error: result.error, updated_at: new Date().toISOString() })
+      .eq('id', menuId)
+
+    return { rendered: false, error: result.error }
+  }
+
   const { error: updateError } = await supabase
     .from('display_html_menus')
     .update({
       content_json: contentJson as object,
       rendered_html: result.html,
-      rendered_at: result.html ? new Date().toISOString() : null,
-      render_error: result.error,
+      rendered_at: new Date().toISOString(),
+      render_error: null,
       updated_at: new Date().toISOString(),
     })
     .eq('id', menuId)
@@ -78,5 +101,5 @@ export async function saveAndRenderMenu(menuId: string, contentJson: unknown) {
 
   await bumpScreensReferencingMenu(menuId)
   revalidatePath(`/app/menus/${menuId}`)
-  return { rendered: !!result.html, error: result.error }
+  return { rendered: true, error: null }
 }

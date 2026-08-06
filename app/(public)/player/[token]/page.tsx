@@ -208,6 +208,8 @@ function VideoSlide({
 // and scale via CSS transform (contain or cover) so any screen resolution
 // gets a faithful render — letterboxing on non-16:9 displays is correct.
 
+const HTML_SWAP_FADE_MS = 400
+
 function HtmlSlide({
     html,
     fitMode,
@@ -216,6 +218,55 @@ function HtmlSlide({
     fitMode: 'contain' | 'cover'
 }) {
     const [scale, setScale] = useState(() => computeScale(fitMode))
+
+    // Two persistent iframe slots (same pattern as the playlist A/B layers).
+    // An updated menu loads into the hidden slot and crossfades in only once
+    // its document has parsed — swapping srcDoc in place would blank the
+    // board for a beat every time a price changes mid-service.
+    const [slots, setSlots] = useState<{ a: string | null; b: string | null; active: 'a' | 'b' }>(
+        () => ({ a: html, b: null, active: 'a' }),
+    )
+    const promoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+    // Route a new document into the hidden slot. This is React's
+    // "adjust state when a prop changes" pattern (setState during render
+    // with a prop snapshot) — deliberately not an effect.
+    const [seenHtml, setSeenHtml] = useState(html)
+    if (html !== seenHtml) {
+        setSeenHtml(html)
+        setSlots((cur) => {
+            if (cur[cur.active] === html) return cur
+            const other = cur.active === 'a' ? 'b' : 'a'
+            if (cur[other] === html) return cur // already loading it
+            return { ...cur, [other]: html }
+        })
+    }
+
+    const handleLoad = (slot: 'a' | 'b') => {
+        setSlots((cur) => {
+            // Only promote the hidden slot, and only if it still holds the
+            // latest html (rapid successive updates reuse the same slot).
+            if (slot === cur.active || cur[slot] !== html) return cur
+            const old = cur.active
+            const oldDoc = cur[old]
+            if (promoteTimerRef.current) clearTimeout(promoteTimerRef.current)
+            promoteTimerRef.current = setTimeout(() => {
+                // After the fade, release the old document — but only if the
+                // slot still holds it (a rapid follow-up update may already
+                // be loading there).
+                setSlots((s) =>
+                    s.active === slot && s[old] === oldDoc ? { ...s, [old]: null } : s,
+                )
+            }, HTML_SWAP_FADE_MS + 100)
+            return { ...cur, active: slot }
+        })
+    }
+
+    useEffect(() => {
+        return () => {
+            if (promoteTimerRef.current) clearTimeout(promoteTimerRef.current)
+        }
+    }, [])
 
     useEffect(() => {
         let raf = 0
@@ -232,30 +283,51 @@ function HtmlSlide({
         }
     }, [fitMode])
 
-    return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
+    const layer = (slot: 'a' | 'b') => {
+        const doc = slots[slot]
+        if (doc === null) return null
+        const isActive = slots.active === slot
+        return (
             <div
+                className="absolute inset-0 flex items-center justify-center overflow-hidden"
                 style={{
-                    width: '1920px',
-                    height: '1080px',
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'center center',
-                    flexShrink: 0,
+                    opacity: isActive ? 1 : 0,
+                    transition: `opacity ${HTML_SWAP_FADE_MS}ms ease`,
+                    zIndex: isActive ? 2 : 1,
                 }}
             >
-                <iframe
-                    srcDoc={html}
-                    // No allow-scripts: themes are pure CSS for the trial.
-                    // allow-same-origin lets the iframe load Google Fonts.
-                    sandbox="allow-same-origin"
-                    // tabIndex=-1 keeps the iframe out of the TV remote's focus
-                    // ring so smart-TV browsers don't draw a focus outline
-                    // around the menu when the user presses OK to init.
-                    tabIndex={-1}
-                    style={{ width: '1920px', height: '1080px', border: 0, display: 'block', outline: 'none' }}
-                    title="HTML menu"
-                />
+                <div
+                    style={{
+                        width: '1920px',
+                        height: '1080px',
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'center center',
+                        flexShrink: 0,
+                    }}
+                >
+                    <iframe
+                        srcDoc={doc}
+                        onLoad={() => handleLoad(slot)}
+                        // No allow-scripts: themes are pure CSS for the trial.
+                        // allow-same-origin lets the iframe fetch same-origin
+                        // subresources (self-hosted /fonts/menus files).
+                        sandbox="allow-same-origin"
+                        // tabIndex=-1 keeps the iframe out of the TV remote's focus
+                        // ring so smart-TV browsers don't draw a focus outline
+                        // around the menu when the user presses OK to init.
+                        tabIndex={-1}
+                        style={{ width: '1920px', height: '1080px', border: 0, display: 'block', outline: 'none' }}
+                        title="HTML menu"
+                    />
+                </div>
             </div>
+        )
+    }
+
+    return (
+        <div className="absolute inset-0 bg-black overflow-hidden">
+            {layer('a')}
+            {layer('b')}
         </div>
     )
 }
@@ -483,7 +555,13 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     useEffect(() => { manifestRef.current = manifest }, [manifest])
     useEffect(() => { activeLayerRef.current = activeLayer }, [activeLayer])
 
-    const POLL_INTERVAL_MS = 60000 // 60s — content changes detected via refresh_version, not poll speed
+    // 10s — the poll hits the lightweight /api/player/refresh version check,
+    // not the full manifest, so this is cheap: the manifest is only fetched
+    // when should_refresh comes back true. Drops worst-case propagation of a
+    // phone-side edit from ~60s to ~10s, which is the difference between
+    // "did it work?" and "there it is" when changing a price mid-service.
+    // (A push channel can replace this later; the poll stays as fallback.)
+    const POLL_INTERVAL_MS = 10000
     const HEARTBEAT_INTERVAL_MS = 60000
     const MAX_RETRY_DELAY_MS = 120000
 

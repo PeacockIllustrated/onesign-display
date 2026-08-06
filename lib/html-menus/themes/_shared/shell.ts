@@ -1,16 +1,16 @@
 import 'server-only'
-import { csp, unclesFontsLink } from './brand'
+import { csp, unclesFontFaceCss } from './brand'
 
 export type ShellOptions = {
   title: string
   css: string
   body: string
-  fontsLink?: string
+  fontFaceCss?: string
   cspOverride?: string
 }
 
 export function wrapDocument(opts: ShellOptions): string {
-  const fontsLink = opts.fontsLink ?? unclesFontsLink
+  const fontFaceCss = opts.fontFaceCss ?? unclesFontFaceCss
   const cspValue = opts.cspOverride ?? csp
   return (
     '<!DOCTYPE html>' +
@@ -20,10 +20,7 @@ export function wrapDocument(opts: ShellOptions): string {
     `<meta name="viewport" content="width=1920, initial-scale=1">` +
     `<meta http-equiv="Content-Security-Policy" content="${escapeAttr(cspValue)}">` +
     `<title>${escapeText(opts.title)}</title>` +
-    `<link rel="preconnect" href="https://fonts.googleapis.com">` +
-    `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">` +
-    `<link href="${escapeAttr(fontsLink)}" rel="stylesheet">` +
-    `<style>${opts.css}</style>` +
+    `<style>${fontFaceCss}${opts.css}</style>` +
     '</head>' +
     `<body>${opts.body}</body>` +
     '</html>'

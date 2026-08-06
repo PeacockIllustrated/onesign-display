@@ -31,20 +31,38 @@ function makeRequest(body: Record<string, any>) {
 }
 
 /**
- * The ping route calls:
- *   supabase.from('display_screens').update({...}).eq('player_token', token)
- *
- * Unlike the other routes, this chain does NOT end with .single().
- * The terminal value is the awaited result of .eq() (the last chain link).
+ * The ping route now does three things (status-transition detection):
+ *   1. from('display_screens').select(...).eq('player_token', token).maybeSingle()
+ *   2. from('display_screens').update({...}).eq('id', screen.id)   → awaited { error }
+ *   3. on offline→online transition: from('display_screen_events').insert({...})
  */
-function buildMockClient(updateResult: { error: any } = { error: null }) {
-    const eqMock = vi.fn().mockResolvedValue(updateResult)
-    const updateMock = vi.fn().mockReturnValue({ eq: eqMock })
-    const fromMock = vi.fn().mockReturnValue({ update: updateMock })
+function buildMockClient(opts: {
+    screen?: { id: string; last_seen_at: string | null; current_status: string | null } | null
+    updateError?: any
+} = {}) {
+    const screen =
+        opts.screen === undefined
+            ? { id: 'scr-1', last_seen_at: null, current_status: null }
+            : opts.screen
+
+    const maybeSingleMock = vi.fn().mockResolvedValue({ data: screen, error: null })
+    const selectEqMock = vi.fn().mockReturnValue({ maybeSingle: maybeSingleMock })
+    const selectMock = vi.fn().mockReturnValue({ eq: selectEqMock })
+
+    const updateEqMock = vi.fn().mockResolvedValue({ error: opts.updateError ?? null })
+    const updateMock = vi.fn().mockReturnValue({ eq: updateEqMock })
+
+    const insertMock = vi.fn().mockResolvedValue({ error: null })
+
+    const fromMock = vi.fn().mockReturnValue({
+        select: selectMock,
+        update: updateMock,
+        insert: insertMock,
+    })
 
     return {
         from: fromMock,
-        _mocks: { fromMock, updateMock, eqMock },
+        _mocks: { fromMock, selectMock, selectEqMock, maybeSingleMock, updateMock, updateEqMock, insertMock },
     }
 }
 
@@ -113,7 +131,7 @@ describe('POST /api/player/ping', () => {
     // ----- Successful ping --------------------------------------------
 
     it('returns 200 { success: true } on valid ping', async () => {
-        const client = buildMockClient({ error: null })
+        const client = buildMockClient()
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         const res = await POST(makeRequest({ token: 'valid-token' }))
@@ -122,8 +140,8 @@ describe('POST /api/player/ping', () => {
         expect(body.success).toBe(true)
     })
 
-    it('updates last_seen_at with current ISO timestamp', async () => {
-        const client = buildMockClient({ error: null })
+    it('updates last_seen_at with current ISO timestamp and marks the screen online', async () => {
+        const client = buildMockClient()
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         const before = new Date().toISOString()
@@ -135,19 +153,21 @@ describe('POST /api/player/ping', () => {
         expect(updateCall).toHaveProperty('last_seen_at')
         expect(updateCall.last_seen_at >= before).toBe(true)
         expect(updateCall.last_seen_at <= after).toBe(true)
+        expect(updateCall.current_status).toBe('online')
     })
 
-    it('filters by player_token in the eq call', async () => {
-        const client = buildMockClient({ error: null })
+    it('looks up by player_token, then updates by screen id', async () => {
+        const client = buildMockClient()
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         await POST(makeRequest({ token: 'specific-token' }))
 
-        expect(client._mocks.eqMock).toHaveBeenCalledWith('player_token', 'specific-token')
+        expect(client._mocks.selectEqMock).toHaveBeenCalledWith('player_token', 'specific-token')
+        expect(client._mocks.updateEqMock).toHaveBeenCalledWith('id', 'scr-1')
     })
 
     it('queries the display_screens table', async () => {
-        const client = buildMockClient({ error: null })
+        const client = buildMockClient()
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         await POST(makeRequest({ token: 'valid-token' }))
@@ -155,10 +175,49 @@ describe('POST /api/player/ping', () => {
         expect(client.from).toHaveBeenCalledWith('display_screens')
     })
 
+    // ----- Status transitions -------------------------------------------
+
+    it('logs an online event when a screen comes back after a gap', async () => {
+        const client = buildMockClient({
+            screen: { id: 'scr-1', last_seen_at: null, current_status: 'offline' },
+        })
+        ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
+
+        await POST(makeRequest({ token: 'valid-token' }))
+
+        expect(client.from).toHaveBeenCalledWith('display_screen_events')
+        expect(client._mocks.insertMock).toHaveBeenCalledWith(
+            expect.objectContaining({ screen_id: 'scr-1', event_type: 'online' }),
+        )
+    })
+
+    it('does not log an event when the screen was already online recently', async () => {
+        const client = buildMockClient({
+            screen: {
+                id: 'scr-1',
+                last_seen_at: new Date().toISOString(),
+                current_status: 'online',
+            },
+        })
+        ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
+
+        await POST(makeRequest({ token: 'valid-token' }))
+
+        expect(client._mocks.insertMock).not.toHaveBeenCalled()
+    })
+
     // ----- Error handling -----------------------------------------------
 
+    it('returns 404 when no screen matches the token', async () => {
+        const client = buildMockClient({ screen: null })
+        ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
+
+        const res = await POST(makeRequest({ token: 'unknown-token' }))
+        expect(res.status).toBe(404)
+    })
+
     it('returns 500 when supabase update fails', async () => {
-        const client = buildMockClient({ error: { message: 'DB down' } })
+        const client = buildMockClient({ updateError: { message: 'DB down' } })
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         const res = await POST(makeRequest({ token: 'valid-token' }))

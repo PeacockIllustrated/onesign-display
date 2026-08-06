@@ -109,8 +109,9 @@ describe('GET /api/player/refresh', () => {
 
         await GET(makeRequest({ token: 'tk-123' }))
 
+        // 15/min: players poll every 10s plus headroom for reconnect bursts.
         expect(rateLimit).toHaveBeenCalledWith('player-refresh', 'tk-123', {
-            maxRequests: 6,
+            maxRequests: 15,
             windowMs: 60000,
         })
     })
