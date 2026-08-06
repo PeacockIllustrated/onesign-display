@@ -21,7 +21,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
     }
 
-    const limited = rateLimit('player-refresh', token, { maxRequests: 6, windowMs: 60000 })
+    // Players poll every 10s (6/min) — allow headroom for reconnect bursts
+    // and the extra fetch a should_refresh=true round triggers.
+    const limited = rateLimit('player-refresh', token, { maxRequests: 15, windowMs: 60000 })
     if (limited) {
         return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
     }

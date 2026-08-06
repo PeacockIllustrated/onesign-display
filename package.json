@@ -11,7 +11,9 @@
     "lg:verify": "node scripts/verify-lg-submission.mjs",
     "lg:package": "ares-package webos-app -o dist/",
     "tv:pair": "python scripts/tv-pair.py",
-    "tv:keepalive": "python scripts/tv-keepalive.py"
+    "tv:keepalive": "python scripts/tv-keepalive.py",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -40,6 +42,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
     "tailwindcss": "^4",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^3.2.7"
   }
 }

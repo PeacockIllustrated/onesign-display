@@ -39,6 +39,15 @@ const DEFAULT_SCREEN = {
     screen_set: null,
 }
 
+// The manifest route keeps a module-level per-screen cache keyed by
+// (screen.id, refresh_version). Tests sharing one screen id would serve each
+// other cached manifests, so every buildStreamMockClient() call gets a fresh
+// screen id unless a test passes one explicitly.
+let screenSeq = 0
+function freshScreen() {
+    return { ...DEFAULT_SCREEN, id: `screen-stream-test-${++screenSeq}` }
+}
+
 const DEFAULT_PLAN = { status: 'active', video_enabled: true }
 
 const DEFAULT_STREAM = {
@@ -75,7 +84,7 @@ function buildStreamMockClient(opts: {
     schedules?: any
 }) {
     const {
-        screen = DEFAULT_SCREEN,
+        screen = freshScreen(),
         plan = DEFAULT_PLAN,
         streamId = 'stream-001',
         stream = DEFAULT_STREAM,
@@ -218,7 +227,8 @@ describe('GET /api/player/manifest — Stream support', () => {
     })
 
     it('preserves standard manifest fields with stream content', async () => {
-        const client = buildStreamMockClient({})
+        // Explicit screen: this test asserts the id, and no other test uses it.
+        const client = buildStreamMockClient({ screen: DEFAULT_SCREEN })
         ;(createAdminClient as ReturnType<typeof vi.fn>).mockResolvedValue(client)
 
         const res = await GET(makeRequest({ token: 'test-token' }))

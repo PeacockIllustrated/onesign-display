@@ -47,7 +47,8 @@ export async function createUserForClient(clientId: string, email: string, name:
         if (authError.message.includes('already been registered')) {
             return { error: 'A user with this email already exists.' }
         }
-        return { error: `Failed to create user: ${authError.message}` }
+        // Generic message only — raw provider/DB errors must not reach the client.
+        return { error: 'Failed to create user. Please try again.' }
     }
 
     if (!newUser.user) return { error: 'Failed to create user' }
@@ -64,7 +65,8 @@ export async function createUserForClient(clientId: string, email: string, name:
         // Rollback auth user
         await adminClient.auth.admin.deleteUser(newUser.user.id)
         console.error('[UserCreation] Profile error:', profileError.message)
-        return { error: `Failed to create profile: ${profileError.message}` }
+        // Generic message only — raw DB errors must not reach the client.
+        return { error: 'Failed to create user profile. Please try again.' }
     }
 
     revalidatePath(`/app/clients/${clientId}`)
