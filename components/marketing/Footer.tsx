@@ -25,7 +25,7 @@ export function Footer() {
                     <div className="sm:col-span-2 lg:col-span-1">
                         <Link href="/" className="inline-block mb-5">
                             <Image
-                                src="/brand/onedesign-screens-logo-reversed.svg"
+                                src="/brand/onedesign-screens-logo-reversed-solid.svg"
                                 alt="Onedesign Screens"
                                 width={130}
                                 height={44}

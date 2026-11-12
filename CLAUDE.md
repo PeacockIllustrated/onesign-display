@@ -27,7 +27,9 @@ Prefer `od-*` colours for anything new.
 
 ## Logo
 
-- Inline, animatable: `components/brand/ScreensLockup.tsx` (`reversed` for dark grounds, `animate` for the pop-in).
+- The logo is the dot-pixel lockup: "screens" built from halftone dots in the crew colours.
+- Inline, animatable: `components/brand/ScreensLockup.tsx` (`reversed` for dark grounds, `animate` grows the dots in, `variant="solid"` for small sizes).
+- Under about 56px tall the dots turn to texture, so use the `-solid` files (portal sidebar, navbar, footer).
 - Static files: `public/brand/onedesign-screens-logo.svg` (light grounds), `-reversed.svg` (dark), `onedesign-screens-icon*.svg` (app tile).
 - Splashes (`components/SplashScreen.tsx`, `components/portal/DashboardSplash.tsx`) both use `components/brand/BrandSplash.tsx`.
 
