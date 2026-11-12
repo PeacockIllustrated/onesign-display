@@ -6,10 +6,10 @@ export default function UserGuidePage() {
         <div className="max-w-4xl mx-auto py-8 space-y-12">
             <div className="space-y-4">
                 <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 border-b pb-4">
-                    Onesign Display User Guide
+                    Onedesign Screens User Guide
                 </h1>
                 <p className="text-lg text-zinc-600">
-                    Welcome to Onesign Display. This platform allows you to manage digital content across your physical screen network with precision.
+                    Welcome to Onedesign Screens. This platform allows you to manage digital content across your physical screen network with precision.
                 </p>
             </div>
 
@@ -35,13 +35,13 @@ export default function UserGuidePage() {
                 </div>
                 <div className="prose prose-zinc max-w-none text-zinc-600">
                     <p>
-                        Understanding the Onesign Display hierarchy is key to managing your network effectively:
+                        Understanding the Onedesign Screens hierarchy is key to managing your network effectively:
                     </p>
                     <ul className="list-disc pl-5 space-y-2 mt-2">
                         <li><strong>Clients:</strong> The top-level tenants using the system. Each client has its own media, stores, and screens.</li>
                         <li><strong>Stores:</strong> Physical locations (e.g., "Downtown Branch"). All screens belong to a store. Timezones are set at the store level.</li>
                         <li><strong>Screen Sets:</strong> Logical groups of screens within a store (e.g., "Menu Boards", "Window Displays"). This helps organize devices.</li>
-                        <li><strong>Screens:</strong> The actual physical displays running the Onesign Display Player.</li>
+                        <li><strong>Screens:</strong> The actual physical displays running the Screens Player.</li>
                     </ul>
                 </div>
             </section>
@@ -104,7 +104,7 @@ export default function UserGuidePage() {
                 </div>
                 <div className="prose prose-zinc max-w-none text-zinc-600">
                     <p>
-                        The <strong>Onesign Player</strong> turns any web-capable device into a digital sign.
+                        The <strong>Screens Player</strong> turns any web-capable device into a digital sign.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                         <div className="bg-zinc-50 p-4 rounded-lg">
@@ -160,7 +160,7 @@ export default function UserGuidePage() {
             </section>
 
             <div className="pt-8 border-t border-zinc-200 text-center text-zinc-400 text-sm">
-                <p>&copy; {new Date().getFullYear()} Onesign Display. All rights reserved.</p>
+                <p>&copy; {new Date().getFullYear()} Onedesign Screens. All rights reserved.</p>
             </div>
         </div>
     )

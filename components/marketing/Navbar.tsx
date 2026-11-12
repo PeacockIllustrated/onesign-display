@@ -20,7 +20,7 @@ export function Navbar() {
             <div className="w-full max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
                 {/* Logo */}
                 <Link href="/" className="flex items-center">
-                    <Logo width={90} />
+                    <Logo width={122} height={48} />
                 </Link>
 
                 {/* Desktop nav */}

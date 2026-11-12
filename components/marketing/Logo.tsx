@@ -11,8 +11,8 @@ export function Logo({ className, width = 140, height = 48 }: LogoProps) {
     return (
         <div className={clsx("relative flex items-center", className)}>
             <Image
-                src="/assets/OD-Logo-Dark.svg"
-                alt="Onesign Display"
+                src="/brand/onedesign-screens-logo-solid.svg"
+                alt="Onedesign Screens"
                 width={width}
                 height={height}
                 className="object-contain"

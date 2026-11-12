@@ -7,7 +7,7 @@ export function EmptyScreenPreview() {
                 {/* Assuming I can reuse the Logo component I made, but it's in components/marketing. 
              Ideally I should move Logo to components/ui or similar to share it. 
              For now, I'll just use a text placeholder or duplicate the image usage if imports are tricky cross-domain (they shouldn't be). */}
-                <img src="/assets/OD-Logo-Light.svg" alt="Onesign Display" className="h-14 w-auto" />
+                <img src="/brand/onedesign-screens-logo-reversed.svg" alt="Onedesign Screens" className="h-14 w-auto" />
             </div>
             <p className="text-sm font-mono tracking-widest uppercase">System Online</p>
             <p className="text-xs opacity-50 mt-1">Waiting for content</p>

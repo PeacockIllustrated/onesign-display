@@ -4,7 +4,7 @@ import { createStream } from '@/app/actions/stream-actions'
 import Link from 'next/link'
 
 export const metadata = {
-    title: 'New Stream — Onesign Display',
+    title: 'New Stream — Onedesign Screens',
     description: 'Add a live HLS or DASH stream to your digital signage.',
 }
 

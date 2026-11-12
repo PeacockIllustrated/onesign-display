@@ -1,7 +1,7 @@
 'use client'
 
 /**
- * TUTORIAL WIZARD — Interactive walkthrough for Onesign Display
+ * TUTORIAL WIZARD — Interactive walkthrough for Onedesign Screens
  *
  * NOTE TO FUTURE DEVELOPERS / CLAUDE:
  * When adding new features to the app, update the TUTORIAL_STEPS array
@@ -32,9 +32,9 @@ interface TutorialStep {
 
 const TUTORIAL_STEPS: TutorialStep[] = [
     {
-        title: 'Welcome to Onesign Display',
+        title: 'Welcome to Onedesign Screens',
         icon: Sparkles,
-        content: 'Onesign Display streams your menus to every screen in your business. Upload content, schedule dayparts, and manage every location from one dashboard.',
+        content: 'Onedesign Screens streams your menus to every screen in your business. Upload content, schedule dayparts, and manage every location from one dashboard.',
         tip: 'This tutorial covers every feature. Use the arrows to navigate or press Escape to close.',
     },
     {
@@ -57,7 +57,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     {
         title: 'Screens & Players',
         icon: Monitor,
-        content: 'Each screen represents a physical display running the Onesign Player. When you add a screen, it generates a unique token. Open the player URL on your TV or PC and tap to start streaming.',
+        content: 'Each screen represents a physical display running the Screens Player. When you add a screen, it generates a unique token. Open the player URL on your TV or PC and tap to start streaming.',
         tip: 'The player works on any device with a web browser — Smart TVs, Fire Sticks, PCs, Android boxes.',
     },
     {
@@ -86,7 +86,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     {
         title: 'Scheduling',
         icon: Calendar,
-        content: 'Schedules control when content appears. Set up dayparts like "Breakfast 6am-11am" and "Lunch 11am-3pm" — each with different menus. Onesign handles transitions automatically.',
+        content: 'Schedules control when content appears. Set up dayparts like "Breakfast 6am-11am" and "Lunch 11am-3pm" — each with different menus. Onedesign handles transitions automatically.',
         tip: 'Schedules are timezone-aware. Each store uses its own local time, so a "Lunch" schedule at 12pm works correctly across time zones.',
     },
     {
@@ -109,7 +109,7 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     {
         title: 'Player Features',
         icon: Play,
-        content: 'The Onesign Player is built for reliability. It auto-refreshes when content changes, caches content for offline playback, keeps screens awake, and hides the cursor during playback.',
+        content: 'The Screens Player is built for reliability. It auto-refreshes when content changes, caches content for offline playback, keeps screens awake, and hides the cursor during playback.',
         tip: 'If WiFi drops, screens keep playing their last known content until connectivity is restored.',
     },
     {

@@ -4,8 +4,8 @@ import { ScreenPreviewFrame } from "@/components/marketing/ScreenPreviewFrame";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: 'Menu Templates — Onesign Display',
-    description: 'Pre-built digital menu layouts designed by the Onesign Display team.',
+    title: 'Menu Templates — Onedesign Screens',
+    description: 'Pre-built digital menu layouts designed by the Onedesign Screens team.',
 };
 
 export default function TemplatesPage() {
