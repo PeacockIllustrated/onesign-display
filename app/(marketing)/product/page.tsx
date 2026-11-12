@@ -42,7 +42,7 @@ import {
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "How Onesign Display works",
+    title: "How Onedesign Screens works",
     description:
         "From kitchen to screen in four simple steps. Menu boards that run themselves.",
 };
@@ -128,14 +128,14 @@ export default function ProductPage() {
             {/* ====================================================== */}
             <MarketingHero
                 pill="Product Walkthrough"
-                headline="How Onesign Display Works"
+                headline="How Onedesign Screens Works"
                 subhead="From kitchen to screen in four simple steps. Menu boards that run themselves."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
                 secondaryCta={{ href: "/pricing", label: "View Plans" }}
             >
                 <Image
                     src="/marketing/hero-player-tv.png"
-                    alt="Onesign Display player running fullscreen on a TV"
+                    alt="Onedesign Screens player running fullscreen on a TV"
                     width={2752}
                     height={1536}
                     className="w-full h-full object-cover"
@@ -183,7 +183,7 @@ export default function ProductPage() {
                     {/* Image — right */}
                     <DesktopScreenshot
                         src="/marketing/screenshot-dashboard.png"
-                        alt="Onesign Display admin dashboard showing clients overview"
+                        alt="Onedesign Screens admin dashboard showing clients overview"
                         priority
                     />
                 </div>
@@ -288,7 +288,7 @@ export default function ProductPage() {
                     <div className="flex justify-center">
                         <PhoneScreenshot
                             src="/marketing/screenshot-schedules-mobile.png"
-                            alt="Mobile schedule editor for Onesign Display"
+                            alt="Mobile schedule editor for Onedesign Screens"
                         />
                     </div>
                 </div>
@@ -357,7 +357,7 @@ export default function ProductPage() {
                         <ul className="space-y-4">
                             <FeatureItem
                                 icon={Sparkles}
-                                text="Beautiful templates — designed by Onesign, on-brand every time"
+                                text="Beautiful templates — designed by Onedesign, on-brand every time"
                             />
                             <FeatureItem
                                 icon={Check}
@@ -383,7 +383,7 @@ export default function ProductPage() {
                             A fullscreen, always-on web app that turns any
                             screen into a digital menu board. TVs, PCs, Fire
                             Sticks &mdash; if it has a browser, it can run
-                            Onesign.
+                            Onedesign.
                         </p>
                         <p className="text-lg text-neutral-400 mb-8 leading-relaxed">
                             Pair a screen with a token, and content starts
@@ -414,9 +414,9 @@ export default function ProductPage() {
                     <div>
                         <LaptopCarousel
                             slides={[
-                                { src: '/marketing/hero-player-tv.png', alt: 'Onesign player running fullscreen — always on, zero maintenance' },
-                                { src: '/marketing/hero-neon.jpeg', alt: 'Onesign branded content on a live display' },
-                                { src: '/marketing/hero-gold.png', alt: 'Premium Onesign display content' },
+                                { src: '/marketing/hero-player-tv.png', alt: 'Onedesign player running fullscreen — always on, zero maintenance' },
+                                { src: '/marketing/hero-neon.jpeg', alt: 'Onedesign branded content on a live display' },
+                                { src: '/marketing/hero-gold.png', alt: 'Premium Onedesign display content' },
                             ]}
                             interval={4000}
                         />
@@ -635,7 +635,7 @@ export default function ProductPage() {
                     Ready to See It in Action?
                 </h2>
                 <p className="text-neutral-400 mb-10 max-w-xl mx-auto text-lg leading-relaxed">
-                    Book a 15-minute walkthrough and see how Onesign Display can
+                    Book a 15-minute walkthrough and see how Onedesign Screens can
                     simplify menu management for your team.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">

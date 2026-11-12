@@ -5,7 +5,7 @@ import { createPlaylist } from '@/app/actions/playlist-actions'
 import { ClientSelector } from '@/components/portal/client-selector'
 
 export const metadata = {
-    title: 'Playlists — Onesign Display',
+    title: 'Playlists — Onedesign Screens',
     description: 'Manage your content playlists for digital menu boards.',
 }
 

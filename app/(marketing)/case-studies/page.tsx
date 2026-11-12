@@ -7,7 +7,7 @@ export default function CaseStudiesPage() {
         <>
             <MarketingHero
                 headline="Proven at Scale"
-                subhead="See how leading brands use Onesign Display to protect their image and streamline operations."
+                subhead="See how leading brands use Onedesign Screens to protect their image and streamline operations."
             />
 
             <SectionWrapper>
@@ -33,7 +33,7 @@ export default function CaseStudiesPage() {
                     <CaseStudyTile
                         client="Urban Pizza"
                         metric="0"
-                        description="Design incidents reported since switching to Onesign."
+                        description="Design incidents reported since switching to Onedesign."
                         href="#"
                     />
                 </div>

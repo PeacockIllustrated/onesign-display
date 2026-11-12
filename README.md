@@ -1,6 +1,6 @@
-# Onesign Display
+# Onedesign Screens
 
-Digital menu streaming platform by Onesign & Digital.
+Digital menu streaming platform by Onedesign Studios.
 
 Stream menus to screens, schedule dayparts, and update prices from one dashboard.
 
@@ -22,4 +22,4 @@ Stream menus to screens, schedule dayparts, and update prices from one dashboard
 4. `npm run dev`
 
 ## Contact
-sales@onesignanddigital.com · 0191 487 6767
+studio@onedesignstudios.com · 0191 487 6767

@@ -6,9 +6,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Digital Menu Board Plans — Onesign Display",
+    title: "Digital Menu Board Plans — Onedesign Screens",
     description:
-        "Every plan includes scheduling, unlimited updates, and Onesign design included. Get in touch for a quote tailored to your venue.",
+        "Every plan includes scheduling, unlimited updates, and studio design included. Get in touch for a quote tailored to your venue.",
 };
 
 /* ------------------------------------------------------------------ */
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const tiers = [
     {
-        name: "Onesign Static",
+        name: "Screens Static",
         description: "Single-location cafes and static image menus",
         features: [
             "Up to 5 screens",
@@ -31,7 +31,7 @@ const tiers = [
         href: "/contact",
     },
     {
-        name: "Onesign Video",
+        name: "Screens Video",
         description: "Daily specials, rotating menus, and video content",
         popular: true,
         features: [
@@ -46,7 +46,7 @@ const tiers = [
         href: "/contact",
     },
     {
-        name: "Onesign Pro",
+        name: "Screens Pro",
         description: "Multi-location businesses with premium needs",
         features: [
             "Everything in Video, plus:",
@@ -62,7 +62,7 @@ const tiers = [
         href: "/contact",
     },
     {
-        name: "Onesign Enterprise",
+        name: "Screens Enterprise",
         description: "Franchise groups and multi-location chains",
         features: [
             "Multi-location management",
@@ -90,7 +90,7 @@ const faqs = [
     },
     {
         question: "Who designs the menus?",
-        answer: "Every plan includes initial professional design by the Onesign team. You update content; we handle the layouts. Pro and Enterprise plans include ongoing design support.",
+        answer: "Every plan includes initial professional design by the Onedesign team. You update content; we handle the layouts. Pro and Enterprise plans include ongoing design support.",
     },
     {
         question: "What about multi-location?",
@@ -114,7 +114,7 @@ const faqs = [
     },
     {
         question: "What playlist transitions are available?",
-        answer: "Onesign Display supports fade, cut, slide left, and slide right transitions with configurable duration. Create reusable playlists that update every screen using them when you make a change.",
+        answer: "Onedesign Screens supports fade, cut, slide left, and slide right transitions with configurable duration. Create reusable playlists that update every screen using them when you make a change.",
     },
 ];
 
@@ -148,7 +148,7 @@ export default function PricingPage() {
             {/* ---- Hero ---- */}
             <MarketingHero
                 headline="Plans Built Around Your Venue"
-                subhead="Every plan includes scheduling, unlimited content updates, and Onesign design support. No setup fees. No contracts. Cancel anytime. Talk to us and we will quote for your setup."
+                subhead="Every plan includes scheduling, unlimited content updates, and studio design support. No setup fees. No contracts. Cancel anytime. Talk to us and we will quote for your setup."
             />
 
             {/* ---- Pricing Cards ---- */}
@@ -172,7 +172,7 @@ export default function PricingPage() {
                     </h2>
                     <p className="text-neutral-500 text-lg leading-relaxed">
                         Every plan includes professional menu design by the
-                        Onesign team. Here is exactly what that covers — and
+                        Onedesign team. Here is exactly what that covers — and
                         what it does not.
                     </p>
                 </div>
@@ -224,7 +224,7 @@ export default function PricingPage() {
                             ))}
                         </ul>
                         <p className="mt-8 text-sm text-neutral-400 italic">
-                            &ldquo;Design remains intentional. Onesign Display
+                            &ldquo;Design remains intentional. Onedesign Screens
                             enforces it.&rdquo;
                         </p>
                     </div>
@@ -274,11 +274,11 @@ export default function PricingPage() {
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-8 text-sm text-neutral-400">
                         <a
-                            href="mailto:sales@onesignanddigital.com"
+                            href="mailto:studio@onedesignstudios.com"
                             className="inline-flex items-center gap-2 hover:text-white transition-colors"
                         >
                             <Mail className="h-4 w-4" />
-                            sales@onesignanddigital.com
+                            studio@onedesignstudios.com
                         </a>
                         <a
                             href="tel:01914876767"

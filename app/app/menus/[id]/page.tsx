@@ -5,7 +5,7 @@ import { MenuEditorShell } from '@/components/menus/MenuEditorShell'
 import { renameMenu } from '@/app/actions/menu-actions'
 
 export const metadata = {
-  title: 'Edit Menu — Onesign Display',
+  title: 'Edit Menu — Onedesign Screens',
 }
 
 export default async function MenuEditPage({ params }: { params: Promise<{ id: string }> }) {

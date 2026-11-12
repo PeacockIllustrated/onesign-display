@@ -9,10 +9,10 @@ interface DemoModalProps {
 }
 
 const PLAN_OPTIONS = [
-    { id: 'static', name: 'Onesign Static', description: 'Single-location cafés' },
-    { id: 'video', name: 'Onesign Video', description: 'Daily specials & rotating menus', popular: true },
-    { id: 'pro', name: 'Onesign Pro', description: 'QSRs & multi-screen venues' },
-    { id: 'enterprise', name: 'Onesign Enterprise', description: 'Franchise groups' },
+    { id: 'static', name: 'Screens Static', description: 'Single-location cafés' },
+    { id: 'video', name: 'Screens Video', description: 'Daily specials & rotating menus', popular: true },
+    { id: 'pro', name: 'Screens Pro', description: 'QSRs & multi-screen venues' },
+    { id: 'enterprise', name: 'Screens Enterprise', description: 'Franchise groups' },
 ];
 
 export function DemoModal({ isOpen, onClose }: DemoModalProps) {
@@ -74,7 +74,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-neutral-950">Book a Demo</h2>
-                            <p className="text-sm text-neutral-500">See Onesign Display in action</p>
+                            <p className="text-sm text-neutral-500">See Onedesign Screens in action</p>
                         </div>
                     </div>
                     <button

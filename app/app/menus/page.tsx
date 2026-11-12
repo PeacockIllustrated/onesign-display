@@ -5,7 +5,7 @@ import { ClientSelector } from '@/components/portal/client-selector'
 import { deleteMenu } from '@/app/actions/menu-actions'
 
 export const metadata = {
-  title: 'HTML Menus — Onesign Display',
+  title: 'HTML Menus — Onedesign Screens',
   description: 'Editable themed menus rendered to your screens as HTML.',
 }
 

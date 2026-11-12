@@ -8,9 +8,9 @@ interface UpgradeGateProps {
 }
 
 export function UpgradeGate({
-    title = "Feature Included in Onesign Video",
+    title = "Feature Included in Screens Video",
     description = "This feature requires a plan upgrade. Access designer-approved templates, video support, and more.",
-    minPlan = "Onesign Video"
+    minPlan = "Screens Video"
 }: UpgradeGateProps) {
     return (
         <div className="flex flex-col items-center justify-center p-8 text-center bg-zinc-100 border border-dashed border-zinc-300 rounded-lg h-full min-h-[300px]">

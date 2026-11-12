@@ -99,8 +99,8 @@ export function NeverSleepGuard({ active }: { active: boolean }) {
 
         try {
             navigator.mediaSession.metadata = new MediaMetadata({
-                title: 'Onesign Display',
-                artist: 'Onesign & Digital',
+                title: 'Onedesign Screens',
+                artist: 'Onedesign Studios',
                 album: 'Live Signage',
             })
             navigator.mediaSession.playbackState = 'playing'

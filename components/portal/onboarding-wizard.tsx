@@ -91,7 +91,7 @@ export function OnboardingWizard({ clientName }: { clientName: string }) {
                             <span className="text-white text-lg font-bold">1</span>
                         </div>
                         <h2 className="text-xl font-bold text-zinc-900">
-                            Welcome to Onesign Display
+                            Welcome to Onedesign Screens
                         </h2>
                         <p className="text-sm text-zinc-500">
                             Hi! Let&apos;s get <span className="font-medium text-zinc-700">{clientName}</span> set up.

@@ -5,7 +5,7 @@ import { ClientSelector } from '@/components/portal/client-selector'
 import { deleteStream } from '@/app/actions/stream-actions'
 
 export const metadata = {
-    title: 'Live Streams — Onesign Display',
+    title: 'Live Streams — Onedesign Screens',
     description: 'Manage live HLS/DASH streams for your digital signage screens.',
 }
 
