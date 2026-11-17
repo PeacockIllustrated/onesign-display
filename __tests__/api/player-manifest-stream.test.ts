@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // ---------------------------------------------------------------------------
@@ -149,9 +149,18 @@ function buildStreamMockClient(opts: {
 // ---------------------------------------------------------------------------
 
 describe('GET /api/player/manifest — Stream support', () => {
+    // The route keeps a 60s in-memory manifest cache per screen. Move the
+    // clock on two minutes per test so one test's response isn't served to the next.
+    let clock = Date.now()
     beforeEach(() => {
         vi.clearAllMocks()
         ;(rateLimit as ReturnType<typeof vi.fn>).mockReturnValue(null)
+        clock += 120_000
+        vi.useFakeTimers({ toFake: ['Date'] })
+        vi.setSystemTime(clock)
+    })
+    afterEach(() => {
+        vi.useRealTimers()
     })
 
     // ----- Stream resolved ------------------------------------------------

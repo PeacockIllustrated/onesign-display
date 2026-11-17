@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
     }
 
     // Security headers — skip X-Frame-Options for player routes (may be embedded)
-    const isPlayerRoute = request.nextUrl.pathname.startsWith('/player')
+    const isPlayerRoute = request.nextUrl.pathname.startsWith('/player') || request.nextUrl.pathname === '/pair'
 
     supabaseResponse.headers.set('X-Content-Type-Options', 'nosniff')
     supabaseResponse.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')

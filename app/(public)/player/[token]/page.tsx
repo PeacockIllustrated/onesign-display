@@ -451,6 +451,40 @@ function StreamSlide({
 
 // ── Main Player ──────────────────────────────────────────────
 
+// ── Network probe ───────────────────────────────────────────
+// A tiny same-origin request with a timeout. Used before any forced reload
+// so we never reload into a browser error page while the venue is offline.
+async function probeNetwork(timeoutMs = 8000): Promise<boolean> {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null
+    try {
+        const res = await fetch(`/api/player/clock?probe=${Date.now()}`, { cache: 'no-store', signal: ctrl?.signal })
+        return res.ok
+    } catch {
+        return false
+    } finally {
+        if (timer) clearTimeout(timer)
+    }
+}
+
+// ── Player info for the heartbeat ───────────────────────────
+// Lets the portal show which browser each screen runs, so struggling TVs
+// can be spotted (and swapped for a Screens Player box) before the client
+// notices. The server parses the user agent; we add what only the device knows.
+function getPlayerInfo() {
+    if (typeof navigator === 'undefined') return null
+    const nav = navigator as Navigator & { deviceMemory?: number }
+    return {
+        ua: nav.userAgent.slice(0, 400),
+        screen: typeof screen !== 'undefined' ? `${screen.width}x${screen.height}` : null,
+        dpr: typeof window !== 'undefined' ? window.devicePixelRatio : null,
+        memory_gb: nav.deviceMemory ?? null,
+        cores: nav.hardwareConcurrency ?? null,
+        offline_cache: 'serviceWorker' in nav ? Boolean(nav.serviceWorker.controller) : false,
+        wake_lock: 'wakeLock' in nav,
+    }
+}
+
 export default function PlayerPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params)
     const [manifest, setManifest] = useState<Manifest | null>(null)
@@ -723,6 +757,27 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [manifest?.fetched_at, token])
 
+    // ── Offline cache (service worker) ───────────────────────
+    // Registers /player/sw.js and hands it the current media list, so the
+    // screen keeps playing (and survives a reload) when the venue goes offline.
+    useEffect(() => {
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+        navigator.serviceWorker.register('/player/sw.js', { scope: '/player/' }).catch((err) => {
+            console.warn('[Player] Offline cache unavailable:', err?.message ?? err)
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!manifest || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+        const urls = new Set<string>()
+        if (manifest.media?.url) urls.add(manifest.media.url)
+        manifest.playlist?.items.forEach((item) => { if (item.url) urls.add(item.url) })
+        if (manifest.stream?.fallback_url) urls.add(manifest.stream.fallback_url)
+        navigator.serviceWorker.ready
+            .then((reg) => reg.active?.postMessage({ type: 'cache-media', urls: Array.from(urls) }))
+            .catch(() => {})
+    }, [manifest])
+
     // Polling + heartbeat
     useEffect(() => {
         fetchData()
@@ -750,7 +805,12 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             fetch('/api/player/ping', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, viewport: `${window.innerWidth}x${window.innerHeight}`, display_type: 'unknown' })
+                body: JSON.stringify({
+                    token,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`,
+                    display_type: 'unknown',
+                    player: getPlayerInfo(),
+                })
             }).then((res) => {
                 if (res?.ok) lastHealthyNetworkRef.current = Date.now()
             }).catch(() => {})
@@ -930,6 +990,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     //   - heartbeat /api/player/ping
     //   - URL refresh /api/player/manifest (every 12hr)
     const lastHealthyNetworkRef = useRef(Date.now())
+    const reloadProbeRef = useRef(false)
     useEffect(() => {
         if (manifest?.fetched_at) lastHealthyNetworkRef.current = Date.now()
     }, [manifest?.fetched_at])
@@ -939,13 +1000,26 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         const STALE_THRESHOLD_MS = 15 * 60 * 1000
         const timer = setInterval(() => {
             const sinceHealthy = Date.now() - lastHealthyNetworkRef.current
-            if (sinceHealthy > STALE_THRESHOLD_MS) {
+            if (sinceHealthy <= STALE_THRESHOLD_MS || reloadProbeRef.current) return
+            // Only reload when the network is actually up. If the venue's
+            // Wi-Fi is down, a reload lands on the TV's own "no connection"
+            // page, and most TV browsers never retry it — the screen stays
+            // blank until someone power-cycles it. Staying put keeps the last
+            // menu on screen; the online handler and polls resume on their own.
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+            reloadProbeRef.current = true
+            probeNetwork().then((up) => {
+                reloadProbeRef.current = false
+                if (!up) {
+                    console.warn('[Player] No network for a while — staying on cached content')
+                    return
+                }
                 console.warn(
-                    `[Player] No successful network call in ${Math.round(sinceHealthy / 60000)}min — ` +
-                    `JS likely hung, forcing reload`
+                    `[Player] Network is up but no successful call in ${Math.round(sinceHealthy / 60000)}min — ` +
+                    `player likely wedged, reloading`
                 )
                 location.reload()
-            }
+            })
         }, 60_000)
         return () => clearInterval(timer)
     }, [isPlaying])

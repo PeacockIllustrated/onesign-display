@@ -15,6 +15,7 @@ const TYPE_LABELS: Record<string, string> = {
     manifest_fetch_failed: 'Manifest fetch failed',
     playback_started: 'Started playback',
     content_assigned: 'Content reassigned',
+    offline_alert: 'Offline alert emailed',
 }
 
 export function eventLabel(eventType: string): string {

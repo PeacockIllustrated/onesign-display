@@ -41,3 +41,14 @@ These still say "onesign" on purpose; changing them breaks live screens or data:
 - `localStorage` keys `onesign_*` (player tokens, manifest cache, onboarding)
 - The `onesign-display.vercel.app` domain and the `webos-app/` LG wrapper (its LG store submission is in progress)
 - `app/invoice/chez-frites` (issued under the Onesign & Digital name)
+
+## Player reliability
+
+- **Screens Player box** (Android stick + Fully Kiosk, `docs/android-stick-setup.md`) is the standard; TV browsers are best effort.
+- Pairing: TVs open `/pair` and show a short code; the portal's screen page claims it (`app/api/player/pair`, `app/actions/pair-screen.ts`, table `display_pairing_codes`).
+- Offline: `public/player/sw.js` caches the player and its media; the player posts its media list to it. The "no network" watchdog only reloads when a probe says the network is up.
+- Heartbeats carry a device report saved to `display_screens.player_info` (shown on the screen page).
+- Video uploads are checked in the browser (`lib/media/check-video.ts`) and warn about HEVC, ProRes, 4K, high bitrate and .mov.
+- Offline email alerts (`lib/screen-alerts.ts`) run from the screen-status cron when `RESEND_API_KEY`, `SCREEN_ALERT_EMAIL` and `SCREEN_ALERT_FROM` are set.
+- Migration `supabase/migrations/20261117_player_reliability.sql` must be applied for pairing and device reports.
+- Tests: `npm test` (Vitest).

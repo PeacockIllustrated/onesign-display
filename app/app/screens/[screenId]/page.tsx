@@ -6,6 +6,9 @@ import { MediaPicker } from '@/components/portal/media-picker'
 import { EmptyScreenPreview } from '@/components/portal/empty-screen-preview'
 import { ScreenSettingsForm } from '@/components/admin/screen-settings-form'
 import { ScreenEventTimeline } from '@/components/portal/screen-event-timeline'
+import { PairScreenForm } from '@/components/portal/pair-screen-form'
+import { ScreenDeviceCard } from '@/components/portal/screen-device-card'
+import { headers } from 'next/headers'
 import { ListVideo, Radio, Volume2, VolumeX, LayoutTemplate } from 'lucide-react'
 
 export default async function ScreenDetailPage({ params }: { params: Promise<{ screenId: string }> }) {
@@ -34,6 +37,10 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
         .single()
 
     if (!screen) return notFound()
+
+    const host = (await headers()).get('host') ?? 'onesign-display.vercel.app'
+    const pairUrl = `${host}/pair`
+    const canPair = role?.role === 'super_admin' || role?.role === 'client_admin'
 
     // Get active content (media or playlist)
     const activeContent = Array.isArray(screen.display_screen_content)
@@ -292,8 +299,10 @@ export default async function ScreenDetailPage({ params }: { params: Promise<{ s
                     </div>
                 </div>
 
-                {/* Right Column: Settings + Activity */}
+                {/* Right Column: Pairing + Device + Settings + Activity */}
                 <div className="space-y-6">
+                    {canPair && <PairScreenForm screenId={screenId} pairUrl={pairUrl} />}
+                    <ScreenDeviceCard info={(screen as any).player_info ?? null} />
                     <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-6">
                         <h3 className="text-lg font-medium text-gray-900 mb-4">Settings</h3>
 
