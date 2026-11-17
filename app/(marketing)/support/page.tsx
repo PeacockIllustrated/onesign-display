@@ -4,9 +4,9 @@ import { Mail, Phone, MapPin, Clock, Tv, Wifi, Key, RotateCw } from "lucide-reac
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Support — Onesign Display",
+    title: "Support — Onedesign Screens",
     description:
-        "Get help with Onesign Display. Contact options, setup guides, troubleshooting, and frequently asked questions.",
+        "Get help with Onedesign Screens. Contact options, setup guides, troubleshooting, and frequently asked questions.",
 };
 
 export default function SupportPage() {
@@ -176,7 +176,7 @@ export default function SupportPage() {
                         />
                         <FaqItem
                             icon={<Tv className="h-5 w-5 text-[#4e7e8c]" />}
-                            question="Which TVs does Onesign Display support?"
+                            question="Which TVs does Onedesign Screens support?"
                             answer={
                                 <>
                                     Any LG TV running webOS 4.0 or later. We

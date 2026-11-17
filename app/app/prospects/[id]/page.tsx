@@ -7,10 +7,10 @@ import { format } from 'date-fns'
 import { Mail, Building2, Monitor, MessageSquare, Calendar, ArrowLeft } from 'lucide-react'
 
 const PLAN_LABELS: Record<string, { name: string; price: string }> = {
-    static: { name: 'Onesign Static', price: '£39' },
-    video: { name: 'Onesign Video', price: '£59' },
-    pro: { name: 'Onesign Pro', price: '£89' },
-    enterprise: { name: 'Onesign Enterprise', price: 'POA' },
+    static: { name: 'Screens Static', price: '£39' },
+    video: { name: 'Screens Video', price: '£59' },
+    pro: { name: 'Screens Pro', price: '£89' },
+    enterprise: { name: 'Screens Enterprise', price: 'POA' },
 }
 
 export default async function ProspectDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -150,7 +150,7 @@ export default async function ProspectDetailPage({ params }: { params: Promise<{
             {/* Actions */}
             <div className="flex gap-3">
                 <a
-                    href={`mailto:${prospect.email}?subject=Re: Your Onesign Display Demo Request`}
+                    href={`mailto:${prospect.email}?subject=Re: Your Onedesign Screens Demo Request`}
                     className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 transition-colors"
                 >
                     <Mail className="h-4 w-4" />

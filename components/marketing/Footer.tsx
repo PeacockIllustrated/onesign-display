@@ -25,8 +25,8 @@ export function Footer() {
                     <div className="sm:col-span-2 lg:col-span-1">
                         <Link href="/" className="inline-block mb-5">
                             <Image
-                                src="/assets/OD-Logo-Light.svg"
-                                alt="Onesign Display"
+                                src="/brand/onedesign-screens-logo-reversed-solid.svg"
+                                alt="Onedesign Screens"
                                 width={130}
                                 height={44}
                                 className="object-contain"
@@ -35,7 +35,7 @@ export function Footer() {
                         <p className="text-sm text-neutral-400 leading-relaxed mb-4">
                             Your brand on every screen.
                             <br />
-                            Managed by Onesign.
+                            Managed by Onedesign.
                         </p>
                         <p className="text-xs text-neutral-500 leading-relaxed">
                             D86, Princesway North
@@ -84,11 +84,11 @@ export function Footer() {
                         <ul className="flex flex-col gap-3">
                             <li>
                                 <a
-                                    href="mailto:sales@onesignanddigital.com"
+                                    href="mailto:studio@onedesignstudios.com"
                                     className="flex items-start gap-2.5 text-sm text-neutral-400 hover:text-white transition-colors"
                                 >
                                     <Mail size={16} className="mt-0.5 shrink-0" />
-                                    sales@onesignanddigital.com
+                                    studio@onedesignstudios.com
                                 </a>
                             </li>
                             <li>
@@ -116,7 +116,7 @@ export function Footer() {
 
                 {/* Bottom bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-2 pt-6 text-xs text-neutral-500">
-                    <span>&copy; 2026 Onesign &amp; Digital</span>
+                    <span>&copy; 2026 Onedesign Studios</span>
                     <span>Digital menu streaming platform</span>
                 </div>
             </div>

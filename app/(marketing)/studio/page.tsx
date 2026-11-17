@@ -7,7 +7,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Specials Studio — Onesign Display",
+    title: "Specials Studio — Onedesign Screens",
     description:
         "Create eye-catching daily specials in 30 seconds. No design skills required.",
 };
@@ -20,7 +20,7 @@ const steps = [
     {
         icon: LayoutTemplate,
         title: "Pick a Template",
-        description: "Choose from professionally designed layouts built by the Onesign team.",
+        description: "Choose from professionally designed layouts built by the Onedesign team.",
     },
     {
         icon: PenLine,
@@ -50,7 +50,7 @@ const benefits = [
         icon: Palette,
         title: "Always on-brand",
         description:
-            "Every special matches your brand identity. Fonts, colours, and layout are locked in by the Onesign team.",
+            "Every special matches your brand identity. Fonts, colours, and layout are locked in by the Onedesign team.",
     },
     {
         icon: Camera,
@@ -159,7 +159,7 @@ export default function StudioPage() {
                     <h2 className="text-3xl md:text-4xl font-bold mb-4">
                         Your team focuses on food.
                         <br />
-                        Onesign handles the design.
+                        Onedesign handles the design.
                     </h2>
                     <p className="text-neutral-500 text-lg leading-relaxed">
                         By removing design tools from the equation, we eliminate

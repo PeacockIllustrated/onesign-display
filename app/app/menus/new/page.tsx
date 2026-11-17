@@ -5,7 +5,7 @@ import { listThemes } from '@/lib/html-menus/registry'
 import { createMenu } from '@/app/actions/menu-render-actions'
 
 export const metadata = {
-  title: 'New HTML Menu — Onesign Display',
+  title: 'New HTML Menu — Onedesign Screens',
 }
 
 export default async function NewMenuPage({ searchParams }: { searchParams: Promise<{ clientId?: string }> }) {

@@ -67,7 +67,7 @@ export default async function SpecialsListPage({ searchParams }: { searchParams:
                 </div>
                 <div className="flex-1 flex items-center justify-center">
                     <UpgradeGate
-                        title="Specials Studio Included in Onesign Video"
+                        title="Specials Studio Included in Screens Video"
                         description="Unlock our powerful drag-and-drop editor with designer-approved templates."
                     />
                 </div>

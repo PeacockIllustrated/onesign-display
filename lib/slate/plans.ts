@@ -75,20 +75,20 @@ export const SELF_SERVE_PLANS: PlanCode[] = [
 
 export function getPlanShortName(code: string): string {
     switch (code) {
-        case 'static_design': return 'Onesign Static';
-        case 'video_design_system': return 'Onesign Video';
-        case 'pro_managed': return 'Onesign Pro';
-        case 'enterprise': return 'Onesign Enterprise';
+        case 'static_design': return 'Screens Static';
+        case 'video_design_system': return 'Screens Video';
+        case 'pro_managed': return 'Screens Pro';
+        case 'enterprise': return 'Screens Enterprise';
         default: return code;
     }
 }
 
 export function getPlanDisplayName(code: string): string {
     switch (code) {
-        case 'static_design': return 'Onesign Static + Menu Design';
-        case 'video_design_system': return 'Onesign Video + Design System';
-        case 'pro_managed': return 'Onesign Pro + Managed';
-        case 'enterprise': return 'Onesign Enterprise';
+        case 'static_design': return 'Screens Static + Menu Design';
+        case 'video_design_system': return 'Screens Video + Design System';
+        case 'pro_managed': return 'Screens Pro + Managed';
+        case 'enterprise': return 'Screens Enterprise';
         default: return code;
     }
 }

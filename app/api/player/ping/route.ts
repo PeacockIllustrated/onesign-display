@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { rateLimit } from '@/lib/rate-limit'
+import { describeDevice } from '@/lib/player/describe-device'
 
 const OFFLINE_GAP_MS = 3 * 60 * 1000
 
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     } catch {
         return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
-    const { token, display_type, viewport } = body ?? {}
+    const { token, display_type, viewport, player } = body ?? {}
 
     if (!token || typeof token !== 'string' || token.length > 255) {
         return NextResponse.json({ error: 'Missing or invalid token' }, { status: 400 })
@@ -51,6 +52,29 @@ export async function POST(request: NextRequest) {
 
     if (updateError) {
         return NextResponse.json({ error: 'Failed to record ping' }, { status: 500 })
+    }
+
+    // Best-effort device report. Kept as its own update so that a database
+    // without the player_info column (migration not yet applied) can never
+    // break the heartbeat, which drives online/offline status.
+    if (player && typeof player === 'object') {
+        const ua = typeof player.ua === 'string' ? player.ua.slice(0, 400) : null
+        const info = {
+            ...describeDevice(ua),
+            ua,
+            viewport: typeof viewport === 'string' ? viewport.slice(0, 20) : null,
+            screen: typeof player.screen === 'string' ? player.screen.slice(0, 20) : null,
+            memory_gb: typeof player.memory_gb === 'number' ? player.memory_gb : null,
+            cores: typeof player.cores === 'number' ? player.cores : null,
+            offline_cache: player.offline_cache === true,
+            wake_lock: player.wake_lock === true,
+            reported_at: now.toISOString(),
+        }
+        const { error: infoError } = await supabase
+            .from('display_screens')
+            .update({ player_info: info })
+            .eq('id', screen.id)
+        if (infoError) console.warn('[ping] player_info not saved:', infoError.message)
     }
 
     if (isTransition) {

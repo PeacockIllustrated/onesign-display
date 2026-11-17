@@ -71,8 +71,8 @@ export default async function ActivatePage() {
 
                 <p className="text-xs text-zinc-400 text-center">
                     Need help? Contact{' '}
-                    <a href="mailto:sales@onesignanddigital.com" className="text-zinc-600 hover:underline">
-                        sales@onesignanddigital.com
+                    <a href="mailto:studio@onedesignstudios.com" className="text-zinc-600 hover:underline">
+                        studio@onedesignstudios.com
                     </a>
                 </p>
             </div>

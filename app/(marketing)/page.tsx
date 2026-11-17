@@ -39,7 +39,7 @@ import {
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Stream your menus. Schedule your day. — Onesign Display",
+    title: "Stream your menus. Schedule your day. — Onedesign Screens",
     description:
         "The digital menu platform built for busy hospitality teams. Update prices, swap specials, and schedule content in seconds.",
 };
@@ -154,7 +154,7 @@ export default function MarketingHome() {
                 variant="dark"
                 pill="Digital Menu Streaming Platform"
                 headline="Digital Menus That Run Themselves"
-                subhead="Upload your menus, set your schedule, and walk away. Onesign Display streams the right content to every screen — breakfast, lunch, dinner — automatically."
+                subhead="Upload your menus, set your schedule, and walk away. Onedesign Screens streams the right content to every screen — breakfast, lunch, dinner — automatically."
                 primaryCta={{ href: "/contact", label: "Book a Demo" }}
                 secondaryCta={{ href: "/product", label: "See How It Works" }}
                 above={<HeroAnimation />}
@@ -189,7 +189,7 @@ export default function MarketingHome() {
                     <div className="lg:pt-14">
                         <div className="rounded-2xl border border-[#4e7e8c]/20 bg-[#4e7e8c]/5 p-8 md:p-10">
                             <p className="text-sm font-semibold uppercase tracking-widest text-[#4e7e8c] mb-4">
-                                The Onesign way
+                                The Onedesign way
                             </p>
                             <h3 className="text-2xl md:text-3xl font-bold text-neutral-950 mb-6 leading-tight">
                                 Upload. Assign. Schedule. Walk&nbsp;away.
@@ -284,7 +284,7 @@ export default function MarketingHome() {
                         <PhoneFrame>
                             <Image
                                 src="/marketing/screenshot-schedules-mobile.png"
-                                alt="Onesign Display mobile schedule editor showing daypart time slots"
+                                alt="Onedesign Screens mobile schedule editor showing daypart time slots"
                                 width={750}
                                 height={1624}
                                 className="w-full h-auto"
@@ -302,7 +302,7 @@ export default function MarketingHome() {
                         </h2>
                         <p className="text-neutral-500 text-lg leading-relaxed mb-8">
                             Define your dayparts once — breakfast at 6am, lunch
-                            at 11, dinner at 5 — and Onesign switches content
+                            at 11, dinner at 5 — and Onedesign switches content
                             automatically. No staff involvement needed.
                         </p>
                         <ul className="space-y-4">
@@ -354,7 +354,7 @@ export default function MarketingHome() {
                             Every Screen. Always&nbsp;On.
                         </h2>
                         <p className="text-neutral-500 text-lg leading-relaxed mb-8">
-                            The Onesign player runs in any browser on any
+                            The Onedesign player runs in any browser on any
                             device. It auto-refreshes content, recovers from
                             network drops, and stays awake — so your menus never
                             go dark.
@@ -403,8 +403,8 @@ export default function MarketingHome() {
                     <div>
                         <LaptopCarousel
                             slides={[
-                                { src: '/marketing/hero-player-tv.png', alt: 'Onesign Display player running fullscreen — always on, zero maintenance' },
-                                { src: '/marketing/hero-neon.jpeg', alt: 'Onesign branded content streaming on a display' },
+                                { src: '/marketing/hero-player-tv.png', alt: 'Onedesign Screens player running fullscreen — always on, zero maintenance' },
+                                { src: '/marketing/hero-neon.jpeg', alt: 'Onedesign branded content streaming on a display' },
                             ]}
                             interval={5000}
                         />
@@ -494,7 +494,7 @@ export default function MarketingHome() {
                         Multi-Screen Sync. No Extra&nbsp;Hardware.
                     </h2>
                     <p className="text-neutral-500 text-lg leading-relaxed mb-12 max-w-2xl">
-                        Got three menu boards behind the counter? Onesign
+                        Got three menu boards behind the counter? Onedesign
                         Display keeps them all in sync — every slide, every
                         transition, at the same time. No HDMI splitters, no
                         mini PCs, no extra hardware. Just your existing screens
@@ -582,7 +582,7 @@ export default function MarketingHome() {
                     </h2>
                     <p className="text-neutral-500 text-lg mb-10 leading-relaxed">
                         Book a 15-minute demo and we&apos;ll show you how
-                        Onesign Display can replace your USB sticks with a
+                        Onedesign Screens can replace your USB sticks with a
                         system that actually runs itself.
                     </p>
 
@@ -604,7 +604,7 @@ export default function MarketingHome() {
                         </span>
                         <span className="inline-flex items-center gap-2">
                             <Mail className="h-4 w-4" />
-                            sales@onesignanddigital.com
+                            studio@onedesignstudios.com
                         </span>
                     </div>
                 </div>

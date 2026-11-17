@@ -106,7 +106,7 @@ describe('POST /api/demo-request', () => {
             name: 'Jo Smith',
             email: 'jo@test.com',
             company: 'Acme Ltd',
-            plan: 'Onesign Pro',
+            plan: 'Screens Pro',
             screens: '3',
             message: 'Interested in a demo',
         }))

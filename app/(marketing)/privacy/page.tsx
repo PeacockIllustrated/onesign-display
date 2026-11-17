@@ -3,9 +3,9 @@ import { SectionWrapper } from "@/components/marketing/SectionWrapper";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Privacy Policy — Onesign Display",
+    title: "Privacy Policy — Onedesign Screens",
     description:
-        "How Onesign & Digital collects, uses, and protects data for the Onesign Display digital signage platform.",
+        "How Onedesign Studios collects, uses, and protects data for the Onedesign Screens digital signage platform.",
 };
 
 const LAST_UPDATED = "11 May 2026";
@@ -15,18 +15,18 @@ export default function PrivacyPage() {
         <>
             <MarketingHero
                 headline="Privacy Policy"
-                subhead={`How we handle data for the Onesign Display platform. Last updated ${LAST_UPDATED}.`}
+                subhead={`How we handle data for the Onedesign Screens platform. Last updated ${LAST_UPDATED}.`}
             />
 
             <SectionWrapper>
                 <div className="max-w-3xl mx-auto [&_h2]:text-3xl [&_h2]:font-bold [&_h2]:tracking-tight [&_h2]:mt-12 [&_h2]:mb-4 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:tracking-tight [&_h3]:mt-8 [&_h3]:mb-3 [&_p]:text-neutral-700 [&_p]:leading-relaxed [&_p]:mb-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ul]:space-y-2 [&_li]:text-neutral-700 [&_li]:leading-relaxed [&_a]:text-[#4e7e8c] hover:[&_a]:underline">
                     <h2>Who we are</h2>
                     <p>
-                        Onesign Display is operated by{" "}
-                        <strong>Onesign &amp; Digital</strong>, a sign-making and
-                        digital signage company based in Gateshead, United Kingdom.
+                        Onedesign Screens is operated by{" "}
+                        <strong>Onedesign Studios</strong>, the design studio of One Group
+                        (alongside OneSign), based in Gateshead, United Kingdom.
                         We are the data controller for any personal data processed
-                        through the Onesign Display platform.
+                        through the Onedesign Screens platform.
                     </p>
                     <p>
                         <strong>Registered address:</strong> D86, Princesway North,
@@ -42,7 +42,7 @@ export default function PrivacyPage() {
                     <h2>What this policy covers</h2>
                     <p>
                         This policy describes how we collect, use, store, and
-                        share information when you use the Onesign Display
+                        share information when you use the Onedesign Screens
                         platform — including the web admin portal at
                         onesign-display.vercel.app, the player application
                         running on your screens, and our LG webOS Content Store
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
                     <h2>Information we collect</h2>
 
                     <h3>Account information</h3>
-                    <p>When you sign up for an Onesign Display account we collect:</p>
+                    <p>When you sign up for a Onedesign Screens account we collect:</p>
                     <ul>
                         <li>Your name and business name</li>
                         <li>Your email address</li>
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
                     <p>We process data under the following lawful bases:</p>
                     <ul>
                         <li>
-                            <strong>Contract</strong> — to deliver the Onesign
+                            <strong>Contract</strong> — to deliver the Onedesign
                             Display service you have subscribed to, including
                             displaying your content on your screens, handling
                             billing, and providing support
@@ -235,7 +235,7 @@ export default function PrivacyPage() {
 
                     <h2>Children</h2>
                     <p>
-                        Onesign Display is a business service. We do not knowingly
+                        Onedesign Screens is a business service. We do not knowingly
                         collect data from anyone under 18 years of age.
                     </p>
 

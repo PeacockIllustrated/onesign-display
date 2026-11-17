@@ -4,7 +4,7 @@ import { updateStream } from '@/app/actions/stream-actions'
 import Link from 'next/link'
 
 export const metadata = {
-    title: 'Edit Stream — Onesign Display',
+    title: 'Edit Stream — Onedesign Screens',
     description: 'Update a live HLS or DASH stream configuration.',
 }
 

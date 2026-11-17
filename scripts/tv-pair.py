@@ -18,10 +18,13 @@ import websockets
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KEYS_FILE = os.path.join(ROOT, "webos-tv-keys.json")
 
-TVS = [
-    {"name": "screen1", "host": "192.168.0.39", "pin": "ZXK692SH"},
-    {"name": "screen2", "host": "192.168.0.99", "pin": "49Q0E2Z3"},
-]
+# TV addresses and IP Control PINs live in webos-tvs.json (gitignored), e.g.
+#   [{"name": "screen1", "host": "192.168.0.39", "pin": "ABCD1234"}]
+TVS_FILE = os.path.join(ROOT, "webos-tvs.json")
+if not os.path.exists(TVS_FILE):
+    sys.exit(f"Missing {TVS_FILE}. Create it with each TV's name, host and IP Control PIN.")
+with open(TVS_FILE) as f:
+    TVS = json.load(f)
 
 # Standard webOS pairing manifest — declares which permissions we want.
 MANIFEST = {

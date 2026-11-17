@@ -41,22 +41,87 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Martian Mono';
+  src: url('/fonts/MartianMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/*
+ * Onedesign brand (see one-design repo DESIGN.md).
+ * Paper and ink do the talking; the pop colours are the crew, one per service.
+ */
 :root {
+  --od-paper: #f3efe6;
+  --od-paper-hi: #fbf8f1;
+  --od-paper-lo: #ebe5d8;
+  --od-line: #d6cfbf;
+  --od-ink: #23282b;
+  --od-ink-2: #3b4246;
+  --od-muted: #6d6a62;
+  --od-night: #161b1f;
+  --od-mustard: #e9b44c;
+  --od-coral: #e07a5f;
+  --od-raspberry: #cf5c78;
+  --od-orange: #f2a65a;
+  --od-teal: #4e7e8c;
+  --od-sky: #a8c3ca;
+  --od-brick: #b9573f;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: var(--od-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: 'Gilroy', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono: var(--font-geist-mono);
+  --font-mono: 'Martian Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Brand colours as Tailwind utilities: bg-od-ink, text-od-mustard, ... */
+  --color-od-paper: #f3efe6;
+  --color-od-paper-hi: #fbf8f1;
+  --color-od-paper-lo: #ebe5d8;
+  --color-od-line: #d6cfbf;
+  --color-od-ink: #23282b;
+  --color-od-ink-2: #3b4246;
+  --color-od-muted: #6d6a62;
+  --color-od-night: #161b1f;
+  --color-od-mustard: #e9b44c;
+  --color-od-coral: #e07a5f;
+  --color-od-raspberry: #cf5c78;
+  --color-od-orange: #f2a65a;
+  --color-od-teal: #4e7e8c;
+  --color-od-sky: #a8c3ca;
+  --color-od-brick: #b9573f;
+}
+
+/*
+ * Onedesign has no pure greys: every neutral leans warm towards paper or
+ * ink-blue towards the ink. Re-point the zinc / gray / neutral scales the app
+ * already uses so the whole portal and site pick up the brand without
+ * touching each component.
+ */
+@theme {
+  --color-zinc-50: #fbf8f1;  --color-gray-50: #fbf8f1;  --color-neutral-50: #fbf8f1;
+  --color-zinc-100: #f3efe6; --color-gray-100: #f3efe6; --color-neutral-100: #f3efe6;
+  --color-zinc-200: #ebe5d8; --color-gray-200: #ebe5d8; --color-neutral-200: #ebe5d8;
+  --color-zinc-300: #d6cfbf; --color-gray-300: #d6cfbf; --color-neutral-300: #d6cfbf;
+  --color-zinc-400: #a39d90; --color-gray-400: #a39d90; --color-neutral-400: #a39d90;
+  --color-zinc-500: #6d6a62; --color-gray-500: #6d6a62; --color-neutral-500: #6d6a62;
+  --color-zinc-600: #4f5356; --color-gray-600: #4f5356; --color-neutral-600: #4f5356;
+  --color-zinc-700: #3b4246; --color-gray-700: #3b4246; --color-neutral-700: #3b4246;
+  --color-zinc-800: #2d3336; --color-gray-800: #2d3336; --color-neutral-800: #2d3336;
+  --color-zinc-900: #23282b; --color-gray-900: #23282b; --color-neutral-900: #23282b;
+  --color-zinc-950: #161b1f; --color-gray-950: #161b1f; --color-neutral-950: #161b1f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: var(--od-night);
+    --foreground: var(--od-paper);
   }
 }
 

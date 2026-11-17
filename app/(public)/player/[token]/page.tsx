@@ -5,6 +5,7 @@ import { NeverSleepGuard } from '@/components/player/never-sleep-guard'
 import { useSyncEngine } from '@/hooks/use-sync-engine'
 import { SyncDebugOverlay } from '@/components/player/sync-debug-overlay'
 import Hls from 'hls.js'
+import { ScreensLockup } from '@/components/brand/ScreensLockup'
 
 type StreamData = {
     id: string
@@ -450,6 +451,40 @@ function StreamSlide({
 
 // ── Main Player ──────────────────────────────────────────────
 
+// ── Network probe ───────────────────────────────────────────
+// A tiny same-origin request with a timeout. Used before any forced reload
+// so we never reload into a browser error page while the venue is offline.
+async function probeNetwork(timeoutMs = 8000): Promise<boolean> {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null
+    try {
+        const res = await fetch(`/api/player/clock?probe=${Date.now()}`, { cache: 'no-store', signal: ctrl?.signal })
+        return res.ok
+    } catch {
+        return false
+    } finally {
+        if (timer) clearTimeout(timer)
+    }
+}
+
+// ── Player info for the heartbeat ───────────────────────────
+// Lets the portal show which browser each screen runs, so struggling TVs
+// can be spotted (and swapped for a Screens Player box) before the client
+// notices. The server parses the user agent; we add what only the device knows.
+function getPlayerInfo() {
+    if (typeof navigator === 'undefined') return null
+    const nav = navigator as Navigator & { deviceMemory?: number }
+    return {
+        ua: nav.userAgent.slice(0, 400),
+        screen: typeof screen !== 'undefined' ? `${screen.width}x${screen.height}` : null,
+        dpr: typeof window !== 'undefined' ? window.devicePixelRatio : null,
+        memory_gb: nav.deviceMemory ?? null,
+        cores: nav.hardwareConcurrency ?? null,
+        offline_cache: 'serviceWorker' in nav ? Boolean(nav.serviceWorker.controller) : false,
+        wake_lock: 'wakeLock' in nav,
+    }
+}
+
 export default function PlayerPage({ params }: { params: Promise<{ token: string }> }) {
     const { token } = use(params)
     const [manifest, setManifest] = useState<Manifest | null>(null)
@@ -722,6 +757,27 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         }
     }, [manifest?.fetched_at, token])
 
+    // ── Offline cache (service worker) ───────────────────────
+    // Registers /player/sw.js and hands it the current media list, so the
+    // screen keeps playing (and survives a reload) when the venue goes offline.
+    useEffect(() => {
+        if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+        navigator.serviceWorker.register('/player/sw.js', { scope: '/player/' }).catch((err) => {
+            console.warn('[Player] Offline cache unavailable:', err?.message ?? err)
+        })
+    }, [])
+
+    useEffect(() => {
+        if (!manifest || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+        const urls = new Set<string>()
+        if (manifest.media?.url) urls.add(manifest.media.url)
+        manifest.playlist?.items.forEach((item) => { if (item.url) urls.add(item.url) })
+        if (manifest.stream?.fallback_url) urls.add(manifest.stream.fallback_url)
+        navigator.serviceWorker.ready
+            .then((reg) => reg.active?.postMessage({ type: 'cache-media', urls: Array.from(urls) }))
+            .catch(() => {})
+    }, [manifest])
+
     // Polling + heartbeat
     useEffect(() => {
         fetchData()
@@ -749,7 +805,12 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
             fetch('/api/player/ping', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token, viewport: `${window.innerWidth}x${window.innerHeight}`, display_type: 'unknown' })
+                body: JSON.stringify({
+                    token,
+                    viewport: `${window.innerWidth}x${window.innerHeight}`,
+                    display_type: 'unknown',
+                    player: getPlayerInfo(),
+                })
             }).then((res) => {
                 if (res?.ok) lastHealthyNetworkRef.current = Date.now()
             }).catch(() => {})
@@ -929,6 +990,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     //   - heartbeat /api/player/ping
     //   - URL refresh /api/player/manifest (every 12hr)
     const lastHealthyNetworkRef = useRef(Date.now())
+    const reloadProbeRef = useRef(false)
     useEffect(() => {
         if (manifest?.fetched_at) lastHealthyNetworkRef.current = Date.now()
     }, [manifest?.fetched_at])
@@ -938,13 +1000,26 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
         const STALE_THRESHOLD_MS = 15 * 60 * 1000
         const timer = setInterval(() => {
             const sinceHealthy = Date.now() - lastHealthyNetworkRef.current
-            if (sinceHealthy > STALE_THRESHOLD_MS) {
+            if (sinceHealthy <= STALE_THRESHOLD_MS || reloadProbeRef.current) return
+            // Only reload when the network is actually up. If the venue's
+            // Wi-Fi is down, a reload lands on the TV's own "no connection"
+            // page, and most TV browsers never retry it — the screen stays
+            // blank until someone power-cycles it. Staying put keeps the last
+            // menu on screen; the online handler and polls resume on their own.
+            if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+            reloadProbeRef.current = true
+            probeNetwork().then((up) => {
+                reloadProbeRef.current = false
+                if (!up) {
+                    console.warn('[Player] No network for a while — staying on cached content')
+                    return
+                }
                 console.warn(
-                    `[Player] No successful network call in ${Math.round(sinceHealthy / 60000)}min — ` +
-                    `JS likely hung, forcing reload`
+                    `[Player] Network is up but no successful call in ${Math.round(sinceHealthy / 60000)}min — ` +
+                    `player likely wedged, reloading`
                 )
                 location.reload()
-            }
+            })
         }, 60_000)
         return () => clearInterval(timer)
     }, [isPlaying])
@@ -1137,7 +1212,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
     // ── Loading / Start screens ──────────────────────────────
 
     if (!manifest && !error) return (
-        <div className="bg-black text-white h-screen flex items-center justify-center">Loading Onesign...</div>
+        <div className="bg-black text-white h-screen flex items-center justify-center">Loading Onedesign Screens...</div>
     )
 
     if (!isPlaying) return (
@@ -1167,52 +1242,19 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
                     </svg>
                 </div>
-                <h1 className="text-2xl font-bold tracking-widest uppercase mb-2 text-center">Onesign Display</h1>
+                <h1 className="text-2xl font-bold tracking-widest uppercase mb-2 text-center">Onedesign Screens</h1>
                 <p className="text-gray-400 text-sm text-center">Tap screen or press any remote button to start</p>
             </div>
 
-            {/* OD icon animation — appears after play shrinks */}
+            {/* Onedesign Screens lockup — appears after play shrinks */}
             {initPhase !== 'idle' && (
                 <div
                     style={{
-                        filter: initPhase === 'fill' ? 'drop-shadow(0 0 12px rgba(149,218,248,0.7)) drop-shadow(0 0 30px rgba(36,84,91,0.9))' : 'drop-shadow(0 0 6px rgba(149,218,248,0.4)) drop-shadow(0 0 18px rgba(36,84,91,0.6))',
-                        transition: 'filter 400ms ease, opacity 400ms ease',
+                        transition: 'opacity 400ms ease',
                         opacity: initPhase === 'done' ? 0 : 1,
                     }}
                 >
-                    <svg viewBox="0 0 292.79 264.11" style={{ width: 100, height: 'auto' }}>
-                        <defs>
-                            <filter id="player-icon-glow">
-                                <feGaussianBlur stdDeviation="3" result="blur" />
-                                <feFlood floodColor="#95daf8" floodOpacity="0.7" />
-                                <feComposite in2="blur" operator="in" />
-                                <feComposite in="SourceGraphic" />
-                            </filter>
-                        </defs>
-                        <path
-                            d="M251.54,227.11c25.61-23.24,38.42-54.89,38.42-94.93s-12.77-71.62-38.33-94.71C226.09,14.38,191.09,2.83,146.6,2.83S66.86,14.36,41.25,37.48C15.64,60.57,2.83,92.14,2.83,132.18s12.88,71.69,38.62,94.93c22.1,19.93,51.03,31.31,86.84,34.14,3.98.31,7.4-2.79,7.4-6.78v-93.78c0-3.76-3.05-6.8-6.8-6.8H61.96c-3.76,0-6.8-3.05-6.8-6.8v-39.44c0-3.76,3.05-6.8,6.8-6.8h0c24.97,0,43.96-4.2,56.95-12.62,11.77-7.62,19.79-19.43,24.05-35.43.79-2.96,3.49-5.01,6.56-5.01h51.04c3.76,0,6.8,3.05,6.8,6.8v188.34c0,4.88,5,8.18,9.49,6.26,13.03-5.56,24.59-12.9,34.69-22.07"
-                            fill="none"
-                            stroke="#95daf8"
-                            strokeWidth="5.67"
-                            strokeMiterlimit="10"
-                            pathLength={1}
-                            strokeDasharray={1}
-                            strokeDashoffset={1}
-                            filter="url(#player-icon-glow)"
-                            style={{
-                                animation: 'playerDrawIcon 1.1s cubic-bezier(0.4, 0, 0.2, 1) forwards',
-                            }}
-                        />
-                        <path
-                            d="M248.7,224.28c25.61-23.24,38.42-54.89,38.42-94.93s-12.77-71.62-38.33-94.71C223.26,11.55,188.25,0,143.76,0S64.03,11.53,38.42,34.64C12.81,57.73,0,89.31,0,129.35s12.88,71.69,38.62,94.93c23.6,21.29,55,32.82,94.24,34.6v-107.83H52.32v-53.05h6.8c24.97,0,43.96-4.2,56.95-12.62,12.97-8.39,21.38-21.87,25.23-40.44h63.22v205.05c16.96-5.84,31.69-14.37,44.18-25.72"
-                            transform="translate(2.84, 2.83)"
-                            fill="white"
-                            style={{
-                                opacity: initPhase === 'fill' || initPhase === 'done' ? 1 : 0,
-                                transition: 'opacity 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                            }}
-                        />
-                    </svg>
+                    <ScreensLockup reversed animate style={{ width: 240, height: 'auto' }} />
                 </div>
             )}
         </div>
@@ -1503,7 +1545,7 @@ export default function PlayerPage({ params }: { params: Promise<{ token: string
                 )
             ) : (
                 <div className="text-gray-500 font-mono">
-                    <h1 className="text-2xl mb-2">Onesign Player</h1>
+                    <h1 className="text-2xl mb-2">Screens Player</h1>
                     <p className="opacity-50 text-sm">No Content Assigned</p>
                     <p className="opacity-30 text-xs mt-4">{token}</p>
                 </div>

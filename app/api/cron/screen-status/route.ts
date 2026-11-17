@@ -1,6 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'node:crypto'
+import { sendOfflineAlerts } from '@/lib/screen-alerts'
 
 const OFFLINE_THRESHOLD_MS = 3 * 60 * 1000
 
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (!stale || stale.length === 0) {
-        return NextResponse.json({ flipped: 0 })
+        const alerted = await sendOfflineAlerts(supabase, now).catch(() => 0)
+        return NextResponse.json({ flipped: 0, alerted })
     }
 
     // Re-apply the staleness predicates on UPDATE so a ping that lands between
@@ -76,5 +78,6 @@ export async function GET(request: NextRequest) {
         }
     }
 
-    return NextResponse.json({ flipped: events.length })
+    const alerted = await sendOfflineAlerts(supabase, now).catch(() => 0)
+    return NextResponse.json({ flipped: events.length, alerted })
 }

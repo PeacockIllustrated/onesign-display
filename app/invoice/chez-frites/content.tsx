@@ -1,6 +1,6 @@
 "use client";
 
-import { Logo } from "@/components/marketing/Logo";
+import Image from "next/image";
 import { Printer } from "lucide-react";
 
 export default function ChezFritesInvoiceContent() {
@@ -42,7 +42,8 @@ export default function ChezFritesInvoiceContent() {
                 {/* Header */}
                 <div className="flex justify-between items-start mb-12">
                     <div>
-                        <Logo className="w-48 mb-6" width={200} height={64} />
+                        {/* Issued under the Onesign & Digital name, so it keeps the old logo. */}
+                        <Image src="/assets/OD-Logo-Dark.svg" alt="Onesign Display" className="w-48 mb-6 object-contain" width={200} height={64} />
                         <h1 className="text-2xl font-bold text-zinc-900">INVOICE</h1>
                         <p className="text-zinc-500 text-sm mt-1">Ref: {invoiceDetails.invoiceNumber}</p>
                     </div>

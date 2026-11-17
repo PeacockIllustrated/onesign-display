@@ -32,5 +32,15 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Expired pairing codes are useless after a day. Best-effort: the table
+    // only exists once the player-reliability migration has run.
+    await supabase
+        .from('display_pairing_codes')
+        .delete()
+        .lt('expires_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .then(({ error: pairErr }: { error: { message: string } | null }) => {
+            if (pairErr) console.warn('[cron/prune-events] pairing prune skipped:', pairErr.message)
+        })
+
     return NextResponse.json({ deleted: count ?? 0, cutoff })
 }

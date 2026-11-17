@@ -11,6 +11,7 @@ import { assignStream } from '@/app/actions/stream-actions'
 import { assignMenu } from '@/app/actions/menu-actions'
 import { MediaPickerItem } from './media-picker-item'
 import { v4 as uuidv4 } from 'uuid'
+import { confirmVideoUpload } from '@/lib/media/check-video'
 import { Radio } from 'lucide-react'
 
 type Asset = {
@@ -116,6 +117,7 @@ export function MediaPicker({ screenId, assets, playlists = [], streams = [], me
         const errors: string[] = []
 
         for (const file of files) {
+            if (!(await confirmVideoUpload(file))) continue
             try {
                 const ext = file.name.split('.').pop()
                 const storagePath = `${clientId}/${uuidv4()}.${ext}`

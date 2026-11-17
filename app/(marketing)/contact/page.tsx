@@ -13,7 +13,7 @@ export default function ContactPage() {
         <>
             <MarketingHero
                 headline="Let's talk."
-                subhead="Ready to see Onesign Display in action? Book a demo with our team."
+                subhead="Ready to see Onedesign Screens in action? Book a demo with our team."
             />
 
             <SectionWrapper>

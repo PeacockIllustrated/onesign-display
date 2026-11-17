@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client' // Client-side client
 import { registerMediaAsset } from '@/app/app/media/actions'
 import { v4 as uuidv4 } from 'uuid'
+import { confirmVideoUpload } from '@/lib/media/check-video'
 
 export function MediaUploader({ btnClassName, clientId }: { btnClassName?: string, clientId?: string }) {
     const [uploading, setUploading] = useState(false)
@@ -27,6 +28,7 @@ export function MediaUploader({ btnClassName, clientId }: { btnClassName?: strin
         let errors = []
 
         for (const file of files) {
+            if (!(await confirmVideoUpload(file))) continue
             try {
                 const ext = file.name.split('.').pop()
                 const storagePath = `${clientId}/${uuidv4()}.${ext}`
